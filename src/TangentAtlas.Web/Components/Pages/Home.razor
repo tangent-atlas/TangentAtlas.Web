@@ -1,7 +1,158 @@
 ﻿@page "/"
+<PageTitle>Tangent Atlas — Your portfolio, without the middleman.</PageTitle>
 
-<PageTitle>Home</PageTitle>
+<!-- Nav -->
+<nav class="ta-nav">
+    <a href="/" class="ta-logo">Tangent <span>Atlas</span></a>
+    <div class="ta-nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#indexes">Indexes</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#about">About</a>
+        <a href="/signin" class="ta-btn-outline">Sign in</a>
+        <a href="/signup" class="ta-btn-primary">Get started</a>
+    </div>
+</nav>
 
-<h1>Hello, world!</h1>
+<!-- Hero -->
+<section class="ta-hero">
+    <div class="ta-hero-eyebrow">Direct index investing</div>
+    <h1>Your portfolio,<br>without the <em>middleman.</em></h1>
+    <p class="ta-hero-sub">Own every stock in the S&amp;P 500 or NASDAQ 100 directly in your brokerage account — no ETF fees, no wealth manager markups.</p>
+    <div class="ta-hero-actions">
+        <a href="/signup" class="ta-btn-primary" style="padding: 10px 24px; font-size: 15px;">Get started free</a>
+        <a href="#how-it-works" class="ta-btn-outline" style="padding: 10px 24px; font-size: 15px;">See how it works</a>
+    </div>
+    <div class="ta-hero-social-proof">No account minimums &nbsp;·&nbsp; Works with your existing broker &nbsp;·&nbsp; Cancel anytime</div>
+    <div class="ta-fee-compare">
+        <div class="ta-fee-cell">
+            <div class="ta-fee-label">Wealth manager</div>
+            <div class="ta-fee-value muted">~1.2%</div>
+            <div class="ta-fee-sub">per year</div>
+        </div>
+        <div class="ta-fee-cell">
+            <div class="ta-fee-label">ETF expense ratio</div>
+            <div class="ta-fee-value muted">~0.03%</div>
+            <div class="ta-fee-sub">per year</div>
+        </div>
+        <div class="ta-fee-cell">
+            <div class="ta-fee-label">Tangent Atlas</div>
+            <div class="ta-fee-value green">$0</div>
+            <div class="ta-fee-sub">on the index itself</div>
+        </div>
+    </div>
+</section>
 
-Welcome to your new app.
+<!-- How it works -->
+<section class="ta-section" id="how-it-works">
+    <div class="ta-section-label">How it works</div>
+    <h2>Four steps to owning the index</h2>
+    <p class="ta-section-sub">Connect your existing brokerage account and we handle the rest — from initial purchase to ongoing rebalancing.</p>
+    <div class="ta-steps">
+        <div class="ta-step">
+            <div class="ta-step-num">01 — Sign up</div>
+            <div class="ta-step-title">Create your account</div>
+            <div class="ta-step-body">Set up your Tangent Atlas account in minutes. No minimums, no commitments.</div>
+        </div>
+        <div class="ta-step">
+            <div class="ta-step-num">02 — Connect</div>
+            <div class="ta-step-title">Link your broker</div>
+            <div class="ta-step-body">Securely connect your existing brokerage account via API. Your assets stay where they are.</div>
+        </div>
+        <div class="ta-step">
+            <div class="ta-step-num">03 — Invest</div>
+            <div class="ta-step-title">Purchase an index</div>
+            <div class="ta-step-body">Choose S&amp;P 500, NASDAQ 100, or others. We buy each constituent in the right proportions.</div>
+        </div>
+        <div class="ta-step">
+            <div class="ta-step-num">04 — Maintain</div>
+            <div class="ta-step-title">Stay rebalanced</div>
+            <div class="ta-step-body">Automatic rebalancing keeps your portfolio aligned as indexes change composition.</div>
+        </div>
+    </div>
+</section>
+
+<!-- Brokers -->
+<section class="ta-section" id="brokers">
+    <div class="ta-section-label">Brokers</div>
+    <h2>Works with your existing account</h2>
+    <p class="ta-section-sub">No need to move your money. Connect the brokerage you already use.</p>
+    <div class="ta-brokers">
+        <div class="ta-broker-pill">Fidelity</div>
+        <div class="ta-broker-pill">Schwab</div>
+        <div class="ta-broker-pill">TD Ameritrade</div>
+        <div class="ta-broker-pill">Interactive Brokers</div>
+        <div class="ta-broker-pill">Robinhood</div>
+        <div class="ta-broker-pill">+ more coming</div>
+    </div>
+</section>
+
+<!-- Indexes -->
+<section class="ta-section" id="indexes">
+    <div class="ta-section-label">Indexes</div>
+    <h2>Choose your benchmark</h2>
+    <p class="ta-section-sub">Start with the world's most followed indexes, with more added regularly.</p>
+    <div class="ta-indexes">
+        <div class="ta-index-card">
+            <div class="ta-index-name">S&amp;P 500</div>
+            <div class="ta-index-count">500 companies &nbsp;·&nbsp; US large cap</div>
+        </div>
+        <div class="ta-index-card">
+            <div class="ta-index-name">NASDAQ 100</div>
+            <div class="ta-index-count">100 companies &nbsp;·&nbsp; Tech-weighted</div>
+        </div>
+        <div class="ta-index-card">
+            <div class="ta-index-name">Dow Jones 30</div>
+            <div class="ta-index-count">30 companies &nbsp;·&nbsp; Blue chip</div>
+        </div>
+        <div class="ta-index-card">
+            <div class="ta-index-name">Russell 2000</div>
+            <div class="ta-index-count">2,000 companies &nbsp;·&nbsp; Small cap</div>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing -->
+<section class="ta-section" id="pricing">
+    <div class="ta-section-label">Pricing</div>
+    <h2>Simple, flat pricing</h2>
+    <p class="ta-section-sub">No percentage of assets. No hidden fees. Just a flat monthly subscription.</p>
+    <div class="ta-pricing">
+        <div class="ta-plan">
+            <div class="ta-plan-name">Starter</div>
+            <div class="ta-plan-price">$9<span>/month</span></div>
+            <div class="ta-plan-desc">For investors getting started with direct indexing.</div>
+            <div class="ta-plan-feature"><span class="check">✓</span> 1 index portfolio</div>
+            <div class="ta-plan-feature"><span class="check">✓</span> Quarterly rebalancing</div>
+            <div class="ta-plan-feature"><span class="check">✓</span> 1 broker connection</div>
+        </div>
+        <div class="ta-plan featured">
+            <div class="ta-plan-badge">Most popular</div>
+            <div class="ta-plan-name">Pro</div>
+            <div class="ta-plan-price">$29<span>/month</span></div>
+            <div class="ta-plan-desc">For serious investors who want full control.</div>
+            <div class="ta-plan-feature"><span class="check">✓</span> Unlimited portfolios</div>
+            <div class="ta-plan-feature"><span class="check">✓</span> Automatic rebalancing</div>
+            <div class="ta-plan-feature"><span class="check">✓</span> Multiple broker connections</div>
+            <div class="ta-plan-feature"><span class="check">✓</span> Tax-loss harvesting</div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="ta-cta">
+    <h2>Ready to own the index?</h2>
+    <p>Join investors who are ditching ETF fees and wealth manager markups.</p>
+    <a href="/signup" class="ta-btn-primary" style="padding: 12px 32px; font-size: 15px;">Get started free</a>
+</section>
+
+<!-- Footer -->
+<footer class="ta-footer">
+    <div class="ta-footer-left">© 2026 Tangent Atlas. All rights reserved.</div>
+    <div class="ta-footer-links">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="https://github.com/AtlasLedger" target="_blank">Atlas Ledger</a>
+        <a href="/contact">Contact</a>
+    </div>
+</footer>

@@ -58,3 +58,438 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* =====================
+   Tangent Atlas Styles
+   ===================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+    --ta-green: #1D9E75;
+    --ta-green-dark: #0F6E56;
+    --ta-green-light: #E1F5EE;
+    --ta-text: #1a1a1a;
+    --ta-text-muted: #6b7280;
+    --ta-text-hint: #9ca3af;
+    --ta-border: rgba(0,0,0,0.12);
+    --ta-bg: #ffffff;
+    --ta-bg-secondary: #f9f9f7;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ta-text);
+    background: var(--ta-bg);
+    margin: 0;
+    padding: 0;
+}
+
+/* Nav */
+.ta-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2rem;
+    border-bottom: 0.5px solid var(--ta-border);
+    background: var(--ta-bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.ta-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+    text-decoration: none;
+    color: var(--ta-text);
+}
+
+    .ta-logo span {
+        color: var(--ta-green);
+    }
+
+.ta-nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+    .ta-nav-links a {
+        font-size: 14px;
+        color: var(--ta-text-muted);
+        text-decoration: none;
+        font-weight: 400;
+    }
+
+        .ta-nav-links a:hover {
+            color: var(--ta-text);
+        }
+
+/* Buttons */
+.ta-btn-primary {
+    background: var(--ta-green);
+    color: #fff;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: none;
+}
+
+    .ta-btn-primary:hover {
+        background: var(--ta-green-dark);
+        color: #fff;
+    }
+
+.ta-btn-outline {
+    background: transparent;
+    border: 0.5px solid rgba(0,0,0,0.3);
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    color: var(--ta-text);
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: none;
+}
+
+    .ta-btn-outline:hover {
+        background: var(--ta-bg-secondary);
+    }
+
+/* Sections */
+.ta-section {
+    padding: 4rem 2rem;
+    border-bottom: 0.5px solid var(--ta-border);
+}
+
+.ta-section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ta-text-hint);
+    margin-bottom: 0.75rem;
+}
+
+.ta-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.75rem;
+}
+
+.ta-section-sub {
+    font-size: 15px;
+    color: var(--ta-text-muted);
+    font-weight: 300;
+    line-height: 1.7;
+    max-width: 480px;
+    margin-bottom: 2.5rem;
+}
+
+/* Hero */
+.ta-hero {
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+    border-bottom: 0.5px solid var(--ta-border);
+}
+
+.ta-hero-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ta-green);
+    margin-bottom: 1.25rem;
+}
+
+.ta-hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px;
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    margin-bottom: 1.25rem;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+    .ta-hero h1 em {
+        font-style: italic;
+        color: var(--ta-green);
+    }
+
+.ta-hero-sub {
+    font-size: 16px;
+    color: var(--ta-text-muted);
+    font-weight: 300;
+    line-height: 1.7;
+    max-width: 480px;
+    margin: 0 auto 2rem;
+}
+
+.ta-hero-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.ta-hero-social-proof {
+    font-size: 12px;
+    color: var(--ta-text-hint);
+    margin-bottom: 3rem;
+}
+
+/* Fee comparison */
+.ta-fee-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--ta-border);
+    border: 0.5px solid var(--ta-border);
+    border-radius: 12px;
+    max-width: 520px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.ta-fee-cell {
+    background: var(--ta-bg);
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.ta-fee-label {
+    font-size: 11px;
+    color: var(--ta-text-hint);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.ta-fee-value {
+    font-size: 22px;
+    font-weight: 500;
+}
+
+    .ta-fee-value.green {
+        color: var(--ta-green);
+    }
+
+    .ta-fee-value.muted {
+        color: var(--ta-text-muted);
+    }
+
+.ta-fee-sub {
+    font-size: 11px;
+    color: var(--ta-text-hint);
+    margin-top: 4px;
+}
+
+/* Steps */
+.ta-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--ta-border);
+    border: 0.5px solid var(--ta-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.ta-step {
+    background: var(--ta-bg);
+    padding: 1.5rem 1.25rem;
+}
+
+.ta-step-num {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ta-green);
+    letter-spacing: 1px;
+    margin-bottom: 0.75rem;
+}
+
+.ta-step-title {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.ta-step-body {
+    font-size: 13px;
+    color: var(--ta-text-muted);
+    line-height: 1.6;
+}
+
+/* Brokers */
+.ta-brokers {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.ta-broker-pill {
+    border: 0.5px solid var(--ta-border);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+/* Indexes */
+.ta-indexes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 1rem;
+}
+
+.ta-index-card {
+    background: var(--ta-bg-secondary);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+}
+
+.ta-index-name {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.ta-index-count {
+    font-size: 12px;
+    color: var(--ta-text-hint);
+}
+
+/* Pricing */
+.ta-pricing {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    max-width: 560px;
+}
+
+.ta-plan {
+    background: var(--ta-bg);
+    border: 0.5px solid var(--ta-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+    .ta-plan.featured {
+        border: 2px solid var(--ta-green);
+    }
+
+.ta-plan-badge {
+    display: inline-block;
+    background: var(--ta-green-light);
+    color: var(--ta-green-dark);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+}
+
+.ta-plan-name {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.ta-plan-price {
+    font-size: 28px;
+    font-weight: 500;
+    margin: 0.75rem 0 0.25rem;
+}
+
+    .ta-plan-price span {
+        font-size: 13px;
+        font-weight: 400;
+        color: var(--ta-text-muted);
+    }
+
+.ta-plan-desc {
+    font-size: 13px;
+    color: var(--ta-text-muted);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+}
+
+.ta-plan-feature {
+    font-size: 13px;
+    color: var(--ta-text-muted);
+    padding: 5px 0;
+    border-top: 0.5px solid var(--ta-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .ta-plan-feature .check {
+        color: var(--ta-green);
+        font-weight: 500;
+    }
+
+/* CTA */
+.ta-cta {
+    padding: 5rem 2rem;
+    text-align: center;
+}
+
+    .ta-cta h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 36px;
+        font-weight: 400;
+        letter-spacing: -0.5px;
+        margin-bottom: 1rem;
+    }
+
+    .ta-cta p {
+        font-size: 15px;
+        color: var(--ta-text-muted);
+        margin-bottom: 2rem;
+        font-weight: 300;
+    }
+
+/* Footer */
+.ta-footer {
+    padding: 1.5rem 2rem;
+    border-top: 0.5px solid var(--ta-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ta-footer-left {
+    font-size: 12px;
+    color: var(--ta-text-hint);
+}
+
+.ta-footer-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+    .ta-footer-links a {
+        font-size: 12px;
+        color: var(--ta-text-hint);
+        text-decoration: none;
+    }
+
+        .ta-footer-links a:hover {
+            color: var(--ta-text-muted);
+        }
