@@ -1,0 +1,63 @@
+name: Deploy corporate website to production
+
+# LOOKUP-REQUIRED: confirm 'main' is really your production branch. If you
+# push to main but don't consider it live until later, use a dedicated
+# 'production' branch instead and change this trigger to match.
+on:
+  push:
+    branches:
+      - main   # LOOKUP: confirm this is the production branch name
+
+# Required for OIDC login (azure/login) - lets GitHub mint a short-lived
+# token this workflow exchanges for an Azure access token. No client secret
+# is ever stored in GitHub.
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    # Matches the federated credential's Subject on the Azure side
+    # (repo:TangentAtlas/TangentAtlas.Web:environment:production). This line
+    # is what makes the three AZURE_* environment variables visible to the job.
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------------------------
+      # LOOKUP-REQUIRED: these build steps assume a single .NET project at the
+      # repo root. If the real layout differs (a src/ folder, multiple
+      # projects, or a static site with no build), adjust accordingly.
+      # --------------------------------------------------------------------
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'   # LOOKUP: confirm this matches the project's target framework
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish --configuration Release --no-restore --output ./publish
+        # LOOKUP: if more than one project exists, point this at the web
+        # project, e.g. dotnet publish ./src/TangentAtlas.Web.csproj -c Release -o ./publish
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: tangent-atlas-website
+          package: ./publish
