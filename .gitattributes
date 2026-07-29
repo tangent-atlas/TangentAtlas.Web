@@ -1,0 +1,2 @@
+# Vendored front-end libraries shouldn't count toward the repo's language stats.
+**/wwwroot/lib/** linguist-vendored
