@@ -1,10 +1,12 @@
 name: Deploy corporate website to production
 
-# Deploys on every push to main (the production branch).
+# Deploys on every push to main (the production branch), or by hand after the site is rebuilt:
+#   gh workflow run deploy-production.yml --repo tangent-atlas/TangentAtlas.Web
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 # Required for OIDC login (azure/login) - lets GitHub mint a short-lived
 # token this workflow exchanges for an Azure access token. No client secret
