@@ -1,10 +1,12 @@
 name: Deploy corporate website to production
 
-# Deploys on every push to main (the production branch).
+# Deploys on every push to main (the production branch), or by hand after the site is rebuilt:
+#   gh workflow run deploy-production.yml --repo tangent-atlas/TangentAtlas.Web
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 # Required for OIDC login (azure/login) - lets GitHub mint a short-lived
 # token this workflow exchanges for an Azure access token. No client secret
@@ -15,16 +17,17 @@ permissions:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
-    # Matches the federated credential's Subject on the Azure side
-    # (repo:TangentAtlas/TangentAtlas.Web:environment:production). This line
-    # is what makes the three AZURE_* environment variables visible to the job.
+    # Matches the federated credential on the Azure side (identity
+    # id-website-deploy-prod, made by TangentAtlas.Platform's
+    # Deploy-ManagedIdentities.ps1, which also sets the three AZURE_* variables
+    # in this repository's 'production' environment).
     environment: production
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # --------------------------------------------------------------------
       # The solution lives at the repo root; the web project is under src/.
@@ -32,7 +35,7 @@ jobs:
       # specifically (publishing a solution is ambiguous and fails).
       # --------------------------------------------------------------------
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
@@ -46,14 +49,16 @@ jobs:
         run: dotnet publish ./src/TangentAtlas.Web/TangentAtlas.Web.csproj --configuration Release --no-restore --output ./publish
 
       - name: Azure login (OIDC)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      # The site runs on a Linux App Service plan (B1, or Free while parked):
+      # TangentAtlas.Platform's Deploy-CorporateWebsite.ps1 and Set-WebsiteTier.ps1.
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: website-tangentatlas-corporate-production
+          app-name: app-tangentatlas-website-prod
           package: ./publish
