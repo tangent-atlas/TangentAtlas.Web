@@ -1,12 +1,24 @@
 using TangentAtlas.Web.Components;
+using TangentAtlas.Web.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// On a developer's computer, Deploy-EntraApplications.ps1 writes the external tenant's identifiers here.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile(SiteSignIn.DeveloperSettingsPath, optional: true, reloadOnChange: false);
+}
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddSiteSignIn(builder.Configuration);
 
 var app = builder.Build();
+
+if (!app.Services.GetRequiredService<IdentityProviderOptions>().IsConfigured)
+{
+    app.Logger.LogWarning("IdentityProvider:Authority and IdentityProvider:ClientId are not set: nobody can sign in, and the signed-in pages are refused.");
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -18,10 +30,16 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found");
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapAccountEndpoints();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+/// <summary>Visible to the tests' WebApplicationFactory.</summary>
+public partial class Program;

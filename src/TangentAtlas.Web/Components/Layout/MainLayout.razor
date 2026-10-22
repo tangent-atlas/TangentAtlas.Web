@@ -1,7 +1,40 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="ta-layout">
-    @Body
+    <nav class="ta-nav">
+        <div class="ta-container ta-nav-inner">
+            <a href="/" class="ta-logo">
+                <img src="images/logo-mark.png" alt="" class="ta-logo-mark" />
+                <span>Tangent <span class="ta-logo-accent">Atlas</span></span>
+            </a>
+            <div class="ta-nav-links">
+                <AuthorizeView>
+                    <Authorized>
+                        <a href="/accounts" class="ta-nav-link">My accounts</a>
+                        <form method="post" action="/account/signout" class="ta-inline-form">
+                            <AntiforgeryToken />
+                            <button type="submit" class="ta-btn ta-btn-outline">Sign out</button>
+                        </form>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="/#how" class="ta-nav-link">How it works</a>
+                        <a href="/account/signin" class="ta-btn ta-btn-outline" data-enhance-nav="false">Sign in</a>
+                        <a href="/signup" class="ta-btn ta-btn-primary">Sign up</a>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </nav>
+
+    <main class="ta-main">
+        @Body
+    </main>
+
+    <footer class="ta-footer">
+        <div class="ta-container ta-footer-inner">
+            <div>© @DateTime.UtcNow.Year Tangent Atlas. All rights reserved.</div>
+        </div>
+    </footer>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>

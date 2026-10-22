@@ -1,0 +1,41 @@
+@page "/signup"
+<PageTitle>Sign up · Tangent Atlas</PageTitle>
+
+<div class="ta-container ta-page ta-page-narrow">
+    <h1 class="ta-page-title">Create your account</h1>
+    <p class="ta-lead">Tangent Atlas is in beta. Before you sign up, here is where things stand, in plain words.</p>
+
+    @* DRAFT for counsel's review (the widened limited-scope opinion): the beta notice. *@
+    <ul class="ta-notice">
+        <li>
+            <span class="ta-notice-title">It's a beta.</span>
+            Some of what our home page describes isn't built yet. Features open in stages, and we'll tell you as each one does.
+        </li>
+        <li>
+            <span class="ta-notice-title">Your money stays where it is.</span>
+            Tangent Atlas never holds your money. It stays at your own bank and your own broker.
+        </li>
+        <li>
+            <span class="ta-notice-title">Nothing moves unless you say so.</span>
+            Tangent Atlas acts only on the rules you set.
+        </li>
+        <li>
+            <span class="ta-notice-title">It's a tool, not an adviser.</span>
+            It carries out your instructions. It doesn't recommend investments or give tax or legal advice.
+        </li>
+        <li>
+            <span class="ta-notice-title">Beta software can make mistakes.</span>
+            Check what you see here against your bank's and your broker's own statements.
+        </li>
+    </ul>
+
+    <form method="get" action="/account/signup" class="ta-signup-form" data-enhance="false">
+        <label class="ta-check">
+            <input type="checkbox" name="understood" value="yes" required />
+            <span>I've read this and understand that Tangent Atlas is in beta.</span>
+        </label>
+        <button type="submit" class="ta-btn ta-btn-primary ta-btn-large">Continue to create your account</button>
+    </form>
+
+    <p class="ta-small">Already have an account? <a href="/account/signin" data-enhance-nav="false">Sign in</a></p>
+</div>

@@ -45,6 +45,10 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
+      # xUnit v3 on Microsoft Testing Platform (global.json selects it for dotnet test).
+      - name: Test
+        run: dotnet test --configuration Release --no-build
+
       - name: Publish
         run: dotnet publish ./src/TangentAtlas.Web/TangentAtlas.Web.csproj --configuration Release --no-restore --output ./publish
 

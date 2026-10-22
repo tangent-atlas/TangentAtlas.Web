@@ -1,539 +1,629 @@
 /* =====================
-   Blazor Framework Styles
+   Tangent Atlas â€” design tokens
+   (The fonts are loaded by a <link> in App.razor: an @import here would come after other rules and be ignored.)
    ===================== */
 
+:root {
+    --ta-green: #1D9E75;          /* decoration only: too light for text or for white text on it */
+    --ta-green-dark: #0F6E56;     /* text, links and buttons (6:1 on white) */
+    --ta-green-darker: #0a4f3e;
+    --ta-green-light: #E1F5EE;
+    --ta-text: #1a1a1a;
+    --ta-text-body: #374151;
+    --ta-text-muted: #4b5563;
+    --ta-border: rgba(0, 0, 0, 0.12);
+    --ta-border-strong: rgba(0, 0, 0, 0.25);
+    --ta-bg: #ffffff;
+    --ta-bg-secondary: #f9f9f7;
+    --ta-serif: 'Playfair Display', Georgia, serif;
+    --ta-sans: 'DM Sans', system-ui, sans-serif;
+}
+
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    font-family: var(--ta-sans);
+    color: var(--ta-text);
+    background: var(--ta-bg);
 }
 
-a, .btn-link {
-    color: #006bb7;
+a {
+    color: var(--ta-green-dark);
 }
 
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-.content {
-    padding-top: 1.1rem;
-}
+    a:hover {
+        color: var(--ta-green-darker);
+    }
 
 h1:focus {
     outline: none;
 }
 
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+.ta-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.invalid {
-    outline: 1px solid #e50000;
+.ta-main {
+    flex: 1;
 }
 
-.validation-message {
-    color: #e50000;
+.ta-container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-left: 24px;
+    padding-right: 24px;
+    box-sizing: border-box;
 }
 
-.blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjY2LjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
-    padding: 1rem 1rem 1rem 3.7rem;
-    color: white;
+.ta-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
-
-.darker-border-checkbox.form-check-input {
-    border-color: #929292;
+.ta-eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--ta-green-dark);
 }
 
-.form-floating > .form-control-plaintext::placeholder,
-.form-floating > .form-control::placeholder {
-    color: var(--bs-secondary-color);
-    text-align: end;
+.ta-eyebrow-muted {
+    color: var(--ta-text-muted);
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder,
-.form-floating > .form-control:focus::placeholder {
-    text-align: start;
+.ta-lead {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ta-text-body);
+}
+
+.ta-small {
+    font-size: 14px;
+    color: var(--ta-text-muted);
 }
 
 /* =====================
-   Tangent Atlas — Design Tokens
+   Buttons
    ===================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-
-:root {
-    --ta-green: #1D9E75;
-    --ta-green-dark: #0F6E56;
-    --ta-green-light: #E1F5EE;
-    --ta-text: #1a1a1a;
-    --ta-text-muted: #6b7280;
-    --ta-text-hint: #9ca3af;
-    --ta-border: rgba(0,0,0,0.12);
-    --ta-bg: #ffffff;
-    --ta-bg-secondary: #f9f9f7;
+.ta-btn {
+    display: inline-block;
+    box-sizing: border-box;
+    font-family: var(--ta-sans);
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: center;
 }
 
-body {
-    font-family: 'DM Sans', sans-serif;
+.ta-btn-primary {
+    font-weight: 500;
+    color: #fff;
+    background: var(--ta-green-dark);
+    border: 1px solid var(--ta-green-dark);
+}
+
+    .ta-btn-primary:hover {
+        color: #fff;
+        background: var(--ta-green-darker);
+        border-color: var(--ta-green-darker);
+    }
+
+.ta-btn-outline {
     color: var(--ta-text);
-    background: var(--ta-bg);
+    background: transparent;
+    border: 1px solid var(--ta-border-strong);
+}
+
+    .ta-btn-outline:hover {
+        color: var(--ta-text);
+        background: var(--ta-bg-secondary);
+    }
+
+    .ta-btn-outline:disabled {
+        color: var(--ta-text-muted);
+        background: var(--ta-bg-secondary);
+        cursor: not-allowed;
+    }
+
+.ta-btn-large {
+    font-size: 15px;
+    padding: 13px 28px;
+}
+
+.ta-btn:focus-visible, .ta-nav-link:focus-visible, .ta-check input:focus-visible {
+    outline: 2px solid var(--ta-green-dark);
+    outline-offset: 2px;
+}
+
+.ta-inline-form {
+    display: inline;
     margin: 0;
-    padding: 0;
 }
 
 /* =====================
-   Navigation
+   Navigation and footer
    ===================== */
 
 .ta-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 2rem;
-    border-bottom: 0.5px solid var(--ta-border);
+    border-bottom: 1px solid var(--ta-border);
     background: var(--ta-bg);
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
+.ta-nav-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
 .ta-logo {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-family: 'Playfair Display', serif;
+    text-decoration: none;
+    color: var(--ta-text);
+    font-family: var(--ta-serif);
     font-size: 20px;
     font-weight: 500;
     letter-spacing: -0.3px;
-    text-decoration: none;
-    color: var(--ta-text);
 }
 
-    .ta-logo span {
-        color: var(--ta-green);
+    .ta-logo:hover {
+        color: var(--ta-text);
     }
 
 .ta-logo-mark {
-    height: 48px;
-    width: 48px;
-    object-fit: contain;
+    width: 36px;
+    height: 36px;
+    display: block;
+}
+
+.ta-logo-accent {
+    color: var(--ta-green-dark);
 }
 
 .ta-nav-links {
     display: flex;
-    gap: 1.5rem;
+    flex-wrap: wrap;
+    gap: 12px 20px;
     align-items: center;
 }
 
-    .ta-nav-links a {
-        font-size: 14px;
-        color: var(--ta-text-muted);
-        text-decoration: none;
-        font-weight: 400;
-    }
-
-        .ta-nav-links a:hover {
-            color: var(--ta-text);
-        }
-
-/* =====================
-   Buttons
-   ===================== */
-
-.ta-btn-primary {
-    background: var(--ta-green);
-    color: #fff;
-    border: none;
-    padding: 9px 20px;
-    border-radius: 8px;
+.ta-nav-link {
     font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    text-decoration: none;
-}
-
-    .ta-btn-primary:hover {
-        background: var(--ta-green-dark);
-        color: #fff;
-    }
-
-.ta-btn-outline {
-    background: transparent;
-    border: 0.5px solid rgba(0,0,0,0.3);
-    padding: 9px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 400;
-    cursor: pointer;
-    color: var(--ta-text);
-    font-family: 'DM Sans', sans-serif;
-    text-decoration: none;
-}
-
-    .ta-btn-outline:hover {
-        background: var(--ta-bg-secondary);
-    }
-
-/* =====================
-   Shared Section Styles
-   ===================== */
-
-.ta-section {
-    padding: 4rem 2rem;
-    border-bottom: 0.5px solid var(--ta-border);
-}
-
-.ta-section-label {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--ta-text-hint);
-    margin-bottom: 0.75rem;
-}
-
-.ta-section h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 32px;
-    font-weight: 400;
-    letter-spacing: -0.5px;
-    margin-bottom: 0.75rem;
-}
-
-.ta-section-sub {
-    font-size: 15px;
     color: var(--ta-text-muted);
-    font-weight: 300;
-    line-height: 1.7;
-    margin-bottom: 2.5rem;
+    text-decoration: none;
+}
+
+    .ta-nav-link:hover {
+        color: var(--ta-text);
+    }
+
+.ta-footer {
+    border-top: 1px solid var(--ta-border);
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+.ta-footer-inner {
+    padding-top: 24px;
+    padding-bottom: 24px;
 }
 
 /* =====================
-   Hero
+   Landing page
    ===================== */
 
 .ta-hero {
-    padding: 5rem 2rem 4rem;
-    text-align: center;
-    border-bottom: 0.5px solid var(--ta-border);
+    border-bottom: 1px solid var(--ta-border);
 }
 
-.ta-hero-eyebrow {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--ta-green);
-    margin-bottom: 1.25rem;
-}
-
-.ta-hero h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 52px;
-    font-weight: 400;
-    line-height: 1.15;
-    letter-spacing: -1px;
-    margin-bottom: 1.25rem;
-    max-width: 640px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-    .ta-hero h1 em {
-        font-style: italic;
-        color: var(--ta-green);
-    }
-
-.ta-hero-sub {
-    font-size: 16px;
-    color: var(--ta-text-muted);
-    font-weight: 300;
-    line-height: 1.7;
-    max-width: 480px;
-    margin: 0 auto 2rem;
-}
-
-.ta-hero-actions {
+.ta-hero-inner {
+    padding-top: 80px;
+    padding-bottom: 72px;
     display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-bottom: 1.5rem;
+    flex-direction: column;
+    gap: 48px;
 }
 
-.ta-hero-social-proof {
-    font-size: 12px;
-    color: var(--ta-text-hint);
-    margin-bottom: 3rem;
+.ta-hero-title {
+    margin: 0;
+    max-width: 980px;
+    font-family: var(--ta-serif);
+    font-weight: 400;
+    font-size: clamp(32px, 4.4vw, 50px);
+    line-height: 1.16;
+    letter-spacing: -0.8px;
 }
 
-/* =====================
-   Fee Comparison
-   ===================== */
+    .ta-hero-title em {
+        color: var(--ta-green-dark);
+    }
 
-.ta-fee-compare {
+.ta-hero-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1px;
-    background: var(--ta-border);
-    border: 0.5px solid var(--ta-border);
-    border-radius: 12px;
-    max-width: 520px;
-    margin: 0 auto;
-    overflow: hidden;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+    gap: 56px;
+    align-items: start;
 }
 
-.ta-fee-cell {
-    background: var(--ta-bg);
-    padding: 1.25rem;
-    text-align: center;
+.ta-hero-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
 }
 
-.ta-fee-label {
-    font-size: 11px;
-    color: var(--ta-text-hint);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 0.5rem;
+.ta-hero-lead {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.7;
+    font-weight: 300;
+    color: var(--ta-text-body);
 }
 
-.ta-fee-value {
-    font-size: 22px;
+.ta-pains {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+    .ta-pains li {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+.ta-pain-question {
+    font-size: 17px;
     font-weight: 500;
 }
 
-    .ta-fee-value.green {
-        color: var(--ta-green);
-    }
-
-    .ta-fee-value.muted {
-        color: var(--ta-text-muted);
-    }
-
-.ta-fee-sub {
-    font-size: 11px;
-    color: var(--ta-text-hint);
-    margin-top: 4px;
+.ta-pain-answer {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ta-text-body);
 }
 
-/* =====================
-   How It Works
-   ===================== */
+.ta-rules {
+    margin: 0;
+    border: 1px solid var(--ta-border);
+    border-radius: 16px;
+    background: var(--ta-bg-secondary);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.ta-rules-dial {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.ta-rules-dial-text {
+    flex: 1 1 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ta-rules-dial-title {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.ta-rules-dial-sub {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ta-text-muted);
+}
+
+.ta-rules-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .ta-rules-list li {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 0;
+        border-top: 1px solid var(--ta-border);
+        font-size: 15px;
+    }
+
+.ta-rules-caption {
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+.ta-section {
+    border-bottom: 1px solid var(--ta-border);
+}
+
+    .ta-section > .ta-container {
+        padding-top: 72px;
+        padding-bottom: 72px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+    }
 
 .ta-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
     gap: 1px;
     background: var(--ta-border);
-    border: 0.5px solid var(--ta-border);
-    border-radius: 12px;
+    border: 1px solid var(--ta-border);
+    border-radius: 14px;
     overflow: hidden;
 }
 
 .ta-step {
     background: var(--ta-bg);
-    padding: 1.5rem 1.25rem;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .ta-step-num {
-    font-size: 11px;
-    font-weight: 500;
+    font-family: var(--ta-serif);
+    font-size: 40px;
+    line-height: 1;
     color: var(--ta-green);
-    letter-spacing: 1px;
-    margin-bottom: 0.75rem;
 }
 
 .ta-step-title {
-    font-size: 15px;
+    font-size: 22px;
     font-weight: 500;
-    margin-bottom: 0.5rem;
 }
 
 .ta-step-body {
-    font-size: 13px;
-    color: var(--ta-text-muted);
+    font-size: 16px;
     line-height: 1.6;
+    color: var(--ta-text-body);
 }
 
-/* =====================
-   Brokers
-   ===================== */
-
-.ta-brokers {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-top: 1.5rem;
-}
-
-.ta-broker-pill {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 0.5px solid var(--ta-border);
-    border-radius: 10px;
-    padding: 0;
-    background: var(--ta-bg);
-    transition: border-color 0.15s, box-shadow 0.15s;
-    width: 200px;
-    height: 80px;
-}
-
-    .ta-broker-pill:hover {
-        border-color: var(--ta-green);
-        box-shadow: 0 2px 8px rgba(29, 158, 117, 0.1);
-    }
-
-.ta-broker-logo {
-    max-width: 150px;
-    object-fit: contain;
-}
-
-/* =====================
-   Pricing
-   ===================== */
-
-.ta-pricing {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-    max-width: 780px;
-}
-
-.ta-plan {
-    background: var(--ta-bg);
-    border: 0.5px solid var(--ta-border);
-    border-radius: 12px;
-    padding: 1.5rem;
+.ta-cta-inner {
+    max-width: 720px;
+    padding-top: 88px;
+    padding-bottom: 88px;
     display: flex;
     flex-direction: column;
-}
-
-    .ta-plan.featured {
-        border: 2px solid var(--ta-green);
-    }
-
-.ta-plan-badge {
-    display: inline-block;
-    background: var(--ta-green-light);
-    color: var(--ta-green-dark);
-    font-size: 11px;
-    font-weight: 500;
-    padding: 3px 10px;
-    border-radius: 100px;
-    margin-bottom: 0.75rem;
-}
-
-.ta-plan-badge-spacer {
-    height: 25px;
-    margin-bottom: 0.75rem;
-}
-
-.ta-plan-tier {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--ta-text);
-    margin-bottom: 0.75rem;
-    min-height: 28px;
-}
-
-.ta-plan-price {
-    font-size: 28px;
-    font-weight: 500;
-    margin: 0 0 0.75rem;
-}
-
-    .ta-plan-price span {
-        font-size: 13px;
-        font-weight: 400;
-        color: var(--ta-text-muted);
-    }
-
-.ta-plan-desc {
-    font-size: 13px;
-    color: var(--ta-text-muted);
-    line-height: 1.6;
-    margin-bottom: 1.25rem;
-}
-
-.ta-plan-feature {
-    font-size: 13px;
-    color: var(--ta-text-muted);
-    padding: 5px 0;
-    border-top: 0.5px solid var(--ta-border);
-    display: flex;
     align-items: center;
-    gap: 8px;
-}
-
-    .ta-plan-feature .check {
-        color: var(--ta-green);
-        font-weight: 500;
-    }
-
-/* =====================
-   Call to Action
-   ===================== */
-
-.ta-cta {
-    padding: 5rem 2rem;
+    gap: 20px;
     text-align: center;
 }
 
-    .ta-cta h2 {
-        font-family: 'Playfair Display', serif;
-        font-size: 36px;
-        font-weight: 400;
-        letter-spacing: -0.5px;
-        margin-bottom: 1rem;
-    }
+.ta-cta-title {
+    margin: 0;
+    font-family: var(--ta-serif);
+    font-weight: 400;
+    font-size: clamp(28px, 3.4vw, 40px);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
 
-    .ta-cta p {
-        font-size: 15px;
-        color: var(--ta-text-muted);
-        margin-bottom: 2rem;
-        font-weight: 300;
-    }
+.ta-cta-sub {
+    margin: 0 0 8px;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ta-text-body);
+}
 
 /* =====================
-   Footer
+   Inner pages: sign-up, signed-in
    ===================== */
 
-.ta-footer {
-    padding: 1.5rem 2rem;
-    border-top: 0.5px solid var(--ta-border);
+.ta-page {
+    padding-top: 56px;
+    padding-bottom: 72px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.ta-footer-left {
-    font-size: 12px;
-    color: var(--ta-text-hint);
+.ta-page-narrow {
+    max-width: 720px;
 }
 
-.ta-footer-links {
-    display: flex;
-    gap: 1.5rem;
+.ta-page-title {
+    margin: 0;
+    font-family: var(--ta-serif);
+    font-weight: 400;
+    font-size: clamp(28px, 3.4vw, 40px);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
 }
 
-    .ta-footer-links a {
-        font-size: 12px;
-        color: var(--ta-text-hint);
-        text-decoration: none;
+.ta-section-title {
+    margin: 0 0 16px;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.ta-notice {
+    list-style: none;
+    margin: 8px 0;
+    padding: 0;
+    border: 1px solid var(--ta-border);
+    border-radius: 14px;
+    background: var(--ta-bg-secondary);
+}
+
+    .ta-notice li {
+        padding: 16px 20px;
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--ta-text-body);
     }
 
-        .ta-footer-links a:hover {
-            color: var(--ta-text-muted);
+        .ta-notice li + li {
+            border-top: 1px solid var(--ta-border);
         }
+
+.ta-notice-title {
+    font-weight: 500;
+    color: var(--ta-text);
+}
+
+.ta-signup-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.ta-check {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 16px;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+    .ta-check input {
+        width: 20px;
+        height: 20px;
+        margin: 2px 0 0;
+        accent-color: var(--ta-green-dark);
+        flex: none;
+    }
+
+.ta-status {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: var(--ta-green-light);
+    color: var(--ta-text);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.ta-chip {
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--ta-green-dark);
+    border-radius: 100px;
+    padding: 3px 10px;
+}
+
+.ta-app-section {
+    margin-top: 20px;
+}
+
+.ta-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 16px;
+}
+
+.ta-tile {
+    border: 1px solid var(--ta-border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ta-tile-label {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--ta-text-muted);
+}
+
+.ta-tile-value {
+    font-family: var(--ta-serif);
+    font-size: 32px;
+    line-height: 1.2;
+}
+
+.ta-tile-sub {
+    font-size: 14px;
+    color: var(--ta-text-muted);
+}
+
+.ta-kinds {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 16px;
+}
+
+.ta-kind {
+    border: 1px solid var(--ta-border);
+    border-radius: 12px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.ta-kind-title {
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.ta-kind-body {
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ta-text-body);
+}
+
+.ta-rules-empty {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 560px;
+}
+
+/* =====================
+   Blazor framework
+   ===================== */
+
+.blazor-error-boundary {
+    background: #b32121;
+    padding: 1rem 1rem 1rem 1.5rem;
+    color: white;
+}
+
+    .blazor-error-boundary::after {
+        content: "An error has occurred."
+    }
