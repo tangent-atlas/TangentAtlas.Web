@@ -1,0 +1,3 @@
+# Partner preview, shared by link only: not for search engines.
+User-agent: *
+Disallow: /

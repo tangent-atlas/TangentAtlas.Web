@@ -25,6 +25,26 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         Assert.DoesNotContain("S&amp;P", html);
     }
 
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/signup")]
+    [InlineData("/robots.txt")]
+    public async Task NothingIsIndexed(string path)
+    {
+        var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("noindex", string.Join(",", response.Headers.GetValues("X-Robots-Tag")));
+    }
+
+    [Fact]
+    public async Task RobotsAreTurnedAway()
+    {
+        var robots = await client.GetStringAsync("/robots.txt", TestContext.Current.CancellationToken);
+
+        Assert.Contains("Disallow: /", robots);
+    }
+
     [Fact]
     public async Task TheSignUpPageRequiresTheBetaNoticeToBeAcknowledged()
     {
