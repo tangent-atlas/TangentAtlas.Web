@@ -2,175 +2,80 @@
 <PageTitle>Tangent Atlas</PageTitle>
 
 @* =====================
-   Navigation
-   ===================== *@
-<nav class="ta-nav">
-    <a href="/" class="ta-logo">
-        <img src="/images/light logo.png" alt="Tangent Atlas" class="ta-logo-mark" />
-        Tangent <span>Atlas</span>
-    </a>
-    <div class="ta-nav-links">
-        <a href="#pricing">Pricing</a>
-        <a href="/signin" class="ta-btn-outline">Sign in</a>
-        <a href="/signup" class="ta-btn-primary">Get started</a>
-    </div>
-</nav>
-
-@* =====================
    Hero
    ===================== *@
 <section class="ta-hero">
-    <div class="ta-hero-eyebrow">Direct index investing</div>
-    <h1>Your portfolio,<br>without the <em>middleman.</em></h1>
-    <p class="ta-hero-sub">
-        Own the stocks in the S&amp;P 500 or NASDAQ 100 directly in your brokerage account —
-        no ETF fees, no wealth manager markups.
-    </p>
-    <div class="ta-hero-actions">
-        <a href="/signup" class="ta-btn-primary" style="padding: 10px 24px; font-size: 15px;">Get started free</a>
-        <a href="#how-it-works" class="ta-btn-outline" style="padding: 10px 24px; font-size: 15px;">See how it works</a>
-    </div>
-    <div class="ta-hero-social-proof">
-        Better performance than ETFs &nbsp;·&nbsp; Works with your existing online broker &nbsp;·&nbsp; Cancel anytime
-    </div>
-    <div class="ta-fee-compare">
-        <div class="ta-fee-cell">
-            <div class="ta-fee-label">Wealth manager</div>
-            <div class="ta-fee-value muted">~1.2%</div>
-            <div class="ta-fee-sub">per year</div>
-        </div>
-        <div class="ta-fee-cell">
-            <div class="ta-fee-label">ETF expense ratio</div>
-            <div class="ta-fee-value muted">~0.09%</div>
-            <div class="ta-fee-sub">per year</div>
-        </div>
-        <div class="ta-fee-cell">
-            <div class="ta-fee-label">Tangent Atlas</div>
-            <div class="ta-fee-value green">$0</div>
-            <div class="ta-fee-sub">on the index itself</div>
+    <div class="ta-container ta-hero-inner">
+        <h1 class="ta-hero-title">Tangent Atlas makes managing all your money — paychecks, bonuses, savings, credit cards, 401(k), investments — <em>as simple as setting a thermostat.</em></h1>
+
+        <div class="ta-hero-grid">
+            <div class="ta-hero-copy">
+                <p class="ta-hero-lead">Connect your bank, brokerage, credit cards and 401(k), and manage everything you own and owe from one place. Trade a single stock or an entire index with the same ease. Set your rules, and every dollar coming in or going out follows them. Sleep at night knowing you have a plan, and when the storm hits, respond with discipline, not panic.</p>
+                <ul class="ta-pains">
+                    <li>
+                        <span class="ta-pain-question">Bonus sitting in checking?</span>
+                        <span class="ta-pain-answer">Pay the cards, top up savings and invest the rest, in the order you choose.</span>
+                    </li>
+                    <li>
+                        <span class="ta-pain-question">Need cash fast?</span>
+                        <span class="ta-pain-answer">Draw down your brokerage without changing the mix you've chosen.</span>
+                    </li>
+                    <li>
+                        <span class="ta-pain-question">Dividends piling up?</span>
+                        <span class="ta-pain-answer">Sweep them to checking automatically.</span>
+                    </li>
+                    <li>
+                        <span class="ta-pain-question">Love your stocks, but know you should diversify?</span>
+                        <span class="ta-pain-answer">Keep your favorites at the percentages you choose and fill the rest with a popular index, rebalanced automatically.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <RulesPanel />
         </div>
     </div>
 </section>
 
 @* =====================
-   How It Works
+   How it works
    ===================== *@
-<section class="ta-section" id="how-it-works">
-    <div class="ta-section-label">How it works</div>
-    <h2>Four steps to owning the index</h2>
-    <p class="ta-section-sub">
-        Connect your existing brokerage account and we handle the rest —
-        from initial purchase to ongoing rebalancing.
-    </p>
-    <div class="ta-steps">
-        <div class="ta-step">
-            <div class="ta-step-num">01 — Sign up</div>
-            <div class="ta-step-title">Create your account</div>
-            <div class="ta-step-body">Set up your Tangent Atlas account in minutes. No minimums, no commitments.</div>
-        </div>
-        <div class="ta-step">
-            <div class="ta-step-num">02 — Connect</div>
-            <div class="ta-step-title">Link your broker</div>
-            <div class="ta-step-body">Securely connect your existing brokerage account via API. Your assets stay where they are.</div>
-        </div>
-        <div class="ta-step">
-            <div class="ta-step-num">03 — Invest</div>
-            <div class="ta-step-title">Purchase an index</div>
-            <div class="ta-step-body">Choose S&amp;P 500, NASDAQ 100, or others. We buy each constituent in the right proportions.</div>
-        </div>
-        <div class="ta-step">
-            <div class="ta-step-num">04 — Maintain</div>
-            <div class="ta-step-title">Stay rebalanced</div>
-            <div class="ta-step-body">Automatic rebalancing keeps your portfolio aligned as indexes change composition.</div>
-        </div>
+<section class="ta-section" id="how">
+    <div class="ta-container">
+        <div class="ta-eyebrow">How it works</div>
+        <ol class="ta-steps">
+            <li class="ta-step">
+                <div class="ta-step-num">1</div>
+                <div class="ta-step-title">Link</div>
+                <div class="ta-step-body">Link your accounts. We never see your passwords.</div>
+            </li>
+            <li class="ta-step">
+                <div class="ta-step-num">2</div>
+                <div class="ta-step-title">Set</div>
+                <div class="ta-step-body">Set your rules, like setting a thermostat.</div>
+            </li>
+            <li class="ta-step">
+                <div class="ta-step-num">3</div>
+                <div class="ta-step-title">Relax</div>
+                <div class="ta-step-body">Atlas keeps every account the way you set it, in calm markets and rough ones.</div>
+            </li>
+        </ol>
     </div>
 </section>
 
 @* =====================
-   Supported Brokers
-   ===================== *@
-<section class="ta-section" id="brokers">
-    <div class="ta-section-label">Supported Brokers</div>
-    <h2>Works with your existing account</h2>
-    <p class="ta-section-sub">Connect to your online brokerage account and we'll handle the rest.</p>
-    <div class="ta-brokers">
-        <div class="ta-broker-pill">
-            <img src="/images/brokers/interactive-brokers-logo.svg" alt="Interactive Brokers" class="ta-broker-logo" />
-        </div>
-        <div class="ta-broker-pill">
-            <img src="/images/brokers/charles-schwab-logo.svg" alt="Schwab" class="ta-broker-logo" />
-        </div>
-        <div class="ta-broker-pill">
-            <img src="/images/brokers/tastytrade-logo.svg" alt="TastyTrade" class="ta-broker-logo" />
-        </div>
-        <div class="ta-broker-pill">
-            <img src="/images/brokers/alpaca-logo.svg" alt="Alpaca" class="ta-broker-logo" />
-        </div>
-    </div>
-</section>
-
-@* =====================
-   Pricing
-   ===================== *@
-<section class="ta-section" id="pricing">
-    <div class="ta-section-label">Pricing</div>
-    <h2>Simple, flat monthly pricing</h2>
-    <p class="ta-section-sub">
-        A flat software subscription — not a percentage of your assets.
-        No advisory fees, no hidden markups.
-    </p>
-    <div class="ta-pricing">
-        <div class="ta-plan">
-            <div class="ta-plan-badge-spacer"></div>
-            <div class="ta-plan-tier">Beta Program</div>
-            <div class="ta-plan-price">$0<span>/year</span></div>
-            <div class="ta-plan-desc">Join our beta and use Tangent Atlas free for the first year. Credit card required at signup.</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> Full access to all indexes</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> Automatic rebalancing</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> All supported brokers</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> Free for first year</div>
-        </div>
-        <div class="ta-plan">
-            <div class="ta-plan-badge-spacer"></div>
-            <div class="ta-plan-tier">NASDAQ 100</div>
-            <div class="ta-plan-price">$29<span>/month</span></div>
-            <div class="ta-plan-desc">Own all 100 stocks directly in your brokerage account, rebalanced automatically to the NASDAQ 100 methodology.</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> Follows NASDAQ 100 methodology exactly</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> Automatic rebalancing on index changes</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> Works with your existing broker</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> No ETF expense ratios</div>
-        </div>
-        <div class="ta-plan featured">
-            <div class="ta-plan-badge">Most popular</div>
-            <div class="ta-plan-tier">S&amp;P 500</div>
-            <div class="ta-plan-price">$49<span>/month</span></div>
-            <div class="ta-plan-desc">Own all 500 stocks directly in your brokerage account, rebalanced automatically to the S&amp;P 500 methodology.</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> Follows S&amp;P 500 methodology exactly</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> Automatic rebalancing on index changes</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> Works with your existing broker</div>
-            <div class="ta-plan-feature"><span class="check">✓</span> No ETF expense ratios</div>
-        </div>
-    </div>
-</section>
-
-@* =====================
-   Call to Action
+   Call to action
    ===================== *@
 <section class="ta-cta">
-    <h2>Ready to own the index?</h2>
-    <p>Join investors who are ditching ETF fees and wealth manager markups.</p>
-    <a href="/signup" class="ta-btn-primary" style="padding: 12px 32px; font-size: 15px;">Get started free</a>
-</section>
-
-@* =====================
-   Footer
-   ===================== *@
-<footer class="ta-footer">
-    <div class="ta-footer-left">© 2026 Tangent Atlas. All rights reserved.</div>
-    <div class="ta-footer-links">
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-        <a href="https://github.com/AtlasLedger" target="_blank">Atlas Ledger</a>
-        <a href="/contact">Contact</a>
+    <div class="ta-container ta-cta-inner">
+        <h2 class="ta-cta-title">A thermostat for all your money.</h2>
+        <p class="ta-cta-sub">Discipline, built in. Keep your bank, your broker and your stocks.</p>
+        <AuthorizeView>
+            <Authorized>
+                <a href="/accounts" class="ta-btn ta-btn-primary ta-btn-large">Go to my accounts</a>
+            </Authorized>
+            <NotAuthorized>
+                <a href="/signup" class="ta-btn ta-btn-primary ta-btn-large">Sign up</a>
+            </NotAuthorized>
+        </AuthorizeView>
     </div>
-</footer>
+</section>

@@ -1,0 +1,78 @@
+@page "/accounts"
+@attribute [Authorize]
+<PageTitle>My accounts · Tangent Atlas</PageTitle>
+
+<div class="ta-container ta-page">
+    <div class="ta-eyebrow">Your money</div>
+    <h1 class="ta-page-title">Welcome, @person?.DisplayName</h1>
+
+    <div class="ta-status" role="status">
+        <span class="ta-chip">Beta</span>
+        <span>Linking accounts is the next step to open. We'll let you know when it does@(person?.Email is { } email ? $", at {email}" : "").</span>
+    </div>
+
+    <section class="ta-app-section" aria-labelledby="summary-heading">
+        <h2 id="summary-heading" class="ta-visually-hidden">Summary</h2>
+        <div class="ta-tiles">
+            <div class="ta-tile">
+                <div class="ta-tile-label">What you own</div>
+                <div class="ta-tile-value">—</div>
+                <div class="ta-tile-sub">Link an account to see this</div>
+            </div>
+            <div class="ta-tile">
+                <div class="ta-tile-label">What you owe</div>
+                <div class="ta-tile-value">—</div>
+                <div class="ta-tile-sub">Link an account to see this</div>
+            </div>
+            <div class="ta-tile">
+                <div class="ta-tile-label">Net</div>
+                <div class="ta-tile-value">—</div>
+                <div class="ta-tile-sub">Link an account to see this</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="ta-app-section" aria-labelledby="accounts-heading">
+        <h2 id="accounts-heading" class="ta-section-title">Your accounts</h2>
+        <div class="ta-kinds">
+            @foreach (var kind in AccountKinds)
+            {
+                <div class="ta-kind">
+                    <div class="ta-kind-title">@kind.Title</div>
+                    <div class="ta-kind-body">@kind.Body</div>
+                    <button type="button" class="ta-btn ta-btn-outline" disabled>Link: coming soon</button>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="ta-app-section" aria-labelledby="rules-heading">
+        <h2 id="rules-heading" class="ta-section-title">Your rules</h2>
+        <div class="ta-rules-empty">
+            <p class="ta-lead">Once your accounts are linked, you'll set your rules here, like these.</p>
+            <RulesPanel Heading="Example rules" />
+        </div>
+    </section>
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private SignedInPerson? person;
+
+    private static readonly (string Title, string Body)[] AccountKinds =
+    [
+        ("Bank accounts", "Checking and savings, from your own bank."),
+        ("Brokerage", "Your investment accounts, with the stocks you already own."),
+        ("Credit cards", "Balances, statement amounts and due dates."),
+        ("401(k)", "Shown and counted in your picture. Your plan controls its trades and contributions."),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState is not null)
+        {
+            person = SignedInPerson.From((await AuthenticationState).User);
+        }
+    }
+}

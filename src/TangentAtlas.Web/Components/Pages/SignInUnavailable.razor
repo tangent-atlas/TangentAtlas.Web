@@ -1,0 +1,21 @@
+@page "/account/unavailable"
+<PageTitle>Sign-in unavailable · Tangent Atlas</PageTitle>
+
+<div class="ta-container ta-page ta-page-narrow">
+    <h1 class="ta-page-title">Sign-in isn't available right now</h1>
+    <p class="ta-lead">Please try again later.</p>
+    <p><a href="/">Back to the home page</a></p>
+</div>
+
+@code {
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Only reached when the site has no identity provider configured (see SiteSignIn): say so with 503.
+        if (HttpContext is not null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        }
+    }
+}
