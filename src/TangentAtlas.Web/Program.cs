@@ -27,6 +27,12 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+// Partner preview: the site is shared by link only, so no page, file or redirect is to be indexed (decisions, October 22).
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
+    await next();
+});
 app.UseStatusCodePagesWithReExecute("/not-found");
 app.UseHttpsRedirection();
 

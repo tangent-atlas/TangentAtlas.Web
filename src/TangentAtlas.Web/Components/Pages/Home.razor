@@ -1,81 +1,36 @@
 ﻿@page "/"
 <PageTitle>Tangent Atlas</PageTitle>
 
-@* =====================
-   Hero
-   ===================== *@
+@* The home page is the first section only; the menu leads to a page for each of the others. *@
 <section class="ta-hero">
     <div class="ta-container ta-hero-inner">
         <h1 class="ta-hero-title">Tangent Atlas makes managing all your money — paychecks, bonuses, savings, credit cards, 401(k), investments — <em>as simple as setting a thermostat.</em></h1>
 
         <div class="ta-hero-grid">
             <div class="ta-hero-copy">
-                <p class="ta-hero-lead">Connect your bank, brokerage, credit cards and 401(k), and manage everything you own and owe from one place. Trade a single stock or an entire index with the same ease. Set your rules, and every dollar coming in or going out follows them. Sleep at night knowing you have a plan, and when the storm hits, respond with discipline, not panic.</p>
+                <p class="ta-hero-lead">Connect your online accounts and manage everything you own and owe from one place. See your real net worth at a glance, then act on it: trade a single stock or an entire index with the same ease.</p>
+                <p class="ta-hero-lead">Your house, your rules. Set the rules and every dollar coming in or going out follows them. Sleep at night knowing you have a plan for the future, and when things don’t go according to plan, respond with discipline, not panic.</p>
                 <ul class="ta-pains">
                     <li>
-                        <span class="ta-pain-question">Bonus sitting in checking?</span>
-                        <span class="ta-pain-answer">Pay the cards, top up savings and invest the rest, in the order you choose.</span>
+                        <span class="ta-pain-question">Has your best pick become your biggest bet?</span>
+                        <span class="ta-pain-answer">Winners grow. Sometimes they grow too big for your portfolio. Keep your favorites, choose how much of each, and your rules keep you steady as the market moves.</span>
                     </li>
                     <li>
                         <span class="ta-pain-question">Need cash fast?</span>
                         <span class="ta-pain-answer">Draw down your brokerage without changing the mix you've chosen.</span>
                     </li>
                     <li>
-                        <span class="ta-pain-question">Dividends piling up?</span>
-                        <span class="ta-pain-answer">Sweep them to checking automatically.</span>
+                        <span class="ta-pain-question">Bonus sitting in checking?</span>
+                        <span class="ta-pain-answer">Pay the cards, top up savings and invest the rest, in the order you choose.</span>
                     </li>
                     <li>
-                        <span class="ta-pain-question">Love your stocks, but know you should diversify?</span>
-                        <span class="ta-pain-answer">Keep your favorites at the percentages you choose and fill the rest with a popular index, rebalanced automatically.</span>
+                        <span class="ta-pain-question">Dividends piling up?</span>
+                        <span class="ta-pain-answer">Sweep them to checking automatically.</span>
                     </li>
                 </ul>
             </div>
 
             <RulesPanel />
         </div>
-    </div>
-</section>
-
-@* =====================
-   How it works
-   ===================== *@
-<section class="ta-section" id="how">
-    <div class="ta-container">
-        <div class="ta-eyebrow">How it works</div>
-        <ol class="ta-steps">
-            <li class="ta-step">
-                <div class="ta-step-num">1</div>
-                <div class="ta-step-title">Link</div>
-                <div class="ta-step-body">Link your accounts. We never see your passwords.</div>
-            </li>
-            <li class="ta-step">
-                <div class="ta-step-num">2</div>
-                <div class="ta-step-title">Set</div>
-                <div class="ta-step-body">Set your rules, like setting a thermostat.</div>
-            </li>
-            <li class="ta-step">
-                <div class="ta-step-num">3</div>
-                <div class="ta-step-title">Relax</div>
-                <div class="ta-step-body">Atlas keeps every account the way you set it, in calm markets and rough ones.</div>
-            </li>
-        </ol>
-    </div>
-</section>
-
-@* =====================
-   Call to action
-   ===================== *@
-<section class="ta-cta">
-    <div class="ta-container ta-cta-inner">
-        <h2 class="ta-cta-title">A thermostat for all your money.</h2>
-        <p class="ta-cta-sub">Discipline, built in. Keep your bank, your broker and your stocks.</p>
-        <AuthorizeView>
-            <Authorized>
-                <a href="/accounts" class="ta-btn ta-btn-primary ta-btn-large">Go to my accounts</a>
-            </Authorized>
-            <NotAuthorized>
-                <a href="/signup" class="ta-btn ta-btn-primary ta-btn-large">Sign up</a>
-            </NotAuthorized>
-        </AuthorizeView>
     </div>
 </section>

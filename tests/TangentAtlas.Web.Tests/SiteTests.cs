@@ -15,14 +15,59 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
         Assert.Contains("as simple as setting a thermostat.", html);
-        Assert.Contains("Love your stocks, but know you should diversify?", html);
+        Assert.Contains("Has your best pick become your biggest bet?", html);
         Assert.Contains("respond with discipline, not panic", html);
-        Assert.Contains("Discipline, built in.", html);
         Assert.Contains("href=\"/signup\"", html);
         Assert.Contains("href=\"/account/signin\"", html);
         Assert.DoesNotContain("founding", html, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("read-only", html, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("S&amp;P", html);
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/signup")]
+    [InlineData("/robots.txt")]
+    public async Task NothingIsIndexed(string path)
+    {
+        var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("noindex", string.Join(",", response.Headers.GetValues("X-Robots-Tag")));
+    }
+
+    [Fact]
+    public async Task RobotsAreTurnedAway()
+    {
+        var robots = await client.GetStringAsync("/robots.txt", TestContext.Current.CancellationToken);
+
+        Assert.Contains("Disallow: /", robots);
+    }
+
+    [Theory]
+    [InlineData("/how-it-works", "How it works", "Link your accounts. We never see your passwords.")]
+    [InlineData("/your-money", "Your money, one place", "Every account, every rule, one screen.")]
+    [InlineData("/when-the-storm-hits", "When the storm hits", "You decided in March. In October, your rules respond.")]
+    [InlineData("/built-in-the-open", "Built in the open", "Read the code")]
+    public async Task EachMenuItemOpensAPageHeadedByItsName(string path, string headline, string content)
+    {
+        var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
+
+        Assert.Contains($"<h1 class=\"ta-page-headline\">{headline}</h1>", html);
+        Assert.Contains(content, html);
+        Assert.Contains("class=\"ta-nav-link active\"", html);   // the menu marks the page you are on
+    }
+
+    [Fact]
+    public async Task TheMenuReachesEveryPage()
+    {
+        var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
+
+        foreach (var page in new[] { "how-it-works", "your-money", "when-the-storm-hits", "built-in-the-open" })
+        {
+            Assert.Contains($"href=\"{page}\"", html);
+        }
+        Assert.DoesNotContain("NVDA", html);
     }
 
     [Fact]
@@ -132,7 +177,7 @@ public class SignedInTests(SignedInSiteFactory factory) : IClassFixture<SignedIn
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
-        Assert.Contains("Go to my accounts", html);
+        Assert.Contains("My accounts", html);
         Assert.DoesNotContain("href=\"/signup\"", html);
     }
 }
