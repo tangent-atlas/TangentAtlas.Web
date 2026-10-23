@@ -74,11 +74,11 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     [Theory]
     [InlineData("/all-under-one-roof")]
     [InlineData("/your-money")]
-    public async Task OldAddressesStillWork(string path)
+    public async Task EachPageHasOnlyTheAddressOfItsMenuLabel(string path)
     {
-        var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
+        var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
 
-        Assert.Contains("<h1 class=\"ta-page-headline\">Under one roof</h1>", html);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Theory]
