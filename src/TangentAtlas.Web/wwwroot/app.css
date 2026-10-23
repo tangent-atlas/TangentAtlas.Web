@@ -211,7 +211,14 @@ h1:focus {
     font-size: 14px;
     color: var(--ta-text-muted);
     text-decoration: none;
+    padding: 6px 0;
+    border-bottom: 2px solid transparent;
 }
+
+    .ta-nav-link.active {
+        color: var(--ta-text);
+        border-bottom-color: var(--ta-green-dark);
+    }
 
     .ta-nav-link:hover {
         color: var(--ta-text);
@@ -612,6 +619,218 @@ h1:focus {
     flex-direction: column;
     gap: 20px;
     max-width: 560px;
+}
+
+/* =====================
+   Section pages: how it works, your money, the storm, built in the open
+   ===================== */
+
+.ta-page-headline {
+    margin: 0;
+    font-family: var(--ta-serif);
+    font-weight: 400;
+    font-size: clamp(34px, 4.4vw, 52px);
+    line-height: 1.12;
+    letter-spacing: -0.8px;
+}
+
+.ta-page-sub {
+    margin: 0 0 12px;
+    max-width: 760px;
+    font-size: 18px;
+    line-height: 1.7;
+    font-weight: 300;
+    color: var(--ta-text-body);
+}
+
+.ta-caption {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+.ta-net {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 40px;
+    align-items: baseline;
+    padding: 20px 24px;
+    background: var(--ta-bg-secondary);
+    border: 1px solid var(--ta-border);
+    border-radius: 12px;
+}
+
+.ta-net-label {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--ta-text-muted);
+}
+
+.ta-net-value {
+    font-family: var(--ta-serif);
+    font-size: 30px;
+}
+
+.ta-net-value-accent {
+    color: var(--ta-green-dark);
+}
+
+.ta-net-note {
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--ta-text-muted);
+}
+
+.ta-accounts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 16px;
+}
+
+.ta-account {
+    border: 1px solid var(--ta-border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ta-account-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: baseline;
+}
+
+.ta-account-name {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.ta-account-where {
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+.ta-account-value {
+    font-family: var(--ta-serif);
+    font-size: 26px;
+    line-height: 1.2;
+}
+
+.ta-account-status {
+    align-self: flex-start;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ta-green-dark);
+    background: var(--ta-green-light);
+    border-radius: 100px;
+    padding: 3px 10px;
+}
+
+.ta-account-status-neutral {
+    color: var(--ta-text-body);
+    background: #f3f4f6;
+}
+
+.ta-storm {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+    gap: 40px;
+    align-items: start;
+}
+
+.ta-storm-rules {
+    border: 1px solid var(--ta-border);
+    border-radius: 14px;
+    background: var(--ta-bg-secondary);
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+    .ta-storm-rules ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ta-storm-rules li {
+        padding: 12px 0;
+        border-top: 1px solid var(--ta-border);
+        font-size: 15px;
+    }
+
+.ta-storm-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+    .ta-storm-steps li {
+        display: flex;
+        gap: 16px;
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--ta-text-body);
+    }
+
+    .ta-storm-steps strong {
+        font-weight: 500;
+        color: var(--ta-text);
+    }
+
+.ta-storm-dot {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--ta-green-dark);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ta-trust {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 20px;
+}
+
+.ta-trust-card {
+    border: 1px solid var(--ta-border);
+    border-radius: 14px;
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ta-trust-title {
+    font-size: 19px;
+    font-weight: 500;
+}
+
+.ta-trust-body {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ta-text-body);
+}
+
+.ta-trust-link {
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
 }
 
 /* =====================
