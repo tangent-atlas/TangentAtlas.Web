@@ -233,7 +233,19 @@ h1:focus {
 .ta-footer-inner {
     padding-top: 24px;
     padding-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    justify-content: space-between;
 }
+
+.ta-footer-link {
+    color: var(--ta-text-muted);
+}
+
+    .ta-footer-link:hover {
+        color: var(--ta-text);
+    }
 
 /* =====================
    Landing page
@@ -904,3 +916,32 @@ h1:focus {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+/* =====================
+   Privacy
+   ===================== */
+
+.ta-privacy h2 {
+    margin: 16px 0 0;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.ta-privacy p,
+.ta-privacy li {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ta-text-body);
+}
+
+.ta-privacy p {
+    margin: 0;
+}
+
+.ta-privacy ul {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
