@@ -251,14 +251,27 @@ h1:focus {
     gap: 48px;
 }
 
+.ta-hero-head {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 .ta-hero-title {
     margin: 0;
-    max-width: 980px;
     font-family: var(--ta-serif);
     font-weight: 400;
-    font-size: clamp(32px, 4.4vw, 50px);
-    line-height: 1.16;
-    letter-spacing: -0.8px;
+    font-size: clamp(38px, 5.4vw, 64px);
+    line-height: 1.08;
+    letter-spacing: -1px;
+}
+
+.ta-hero-subtitle {
+    margin: 0;
+    max-width: 900px;
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--ta-text-body);
 }
 
     .ta-hero-title em {
