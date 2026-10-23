@@ -15,7 +15,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
         Assert.Contains("A thermostat for <em>all your money.</em>", html);
-        Assert.Contains("You set it; Tangent Atlas keeps it there.", html);
+        Assert.Contains("Set the temperature, and Tangent Atlas keeps your money from running too hot or too cold.", html);
         Assert.Contains("Has your best pick become your biggest bet?", html);
         Assert.Contains("respond with discipline, not panic", html);
         Assert.Contains("href=\"/signup\"", html);
