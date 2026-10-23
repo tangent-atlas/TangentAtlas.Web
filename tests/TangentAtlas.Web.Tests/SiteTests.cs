@@ -47,8 +47,8 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
     [Theory]
     [InlineData("/how-it-works", "How it works", "Link your accounts. We never see your passwords.")]
-    [InlineData("/your-money", "Your money, one place", "Every account, every rule, one screen.")]
-    [InlineData("/when-the-storm-hits", "When the storm hits", "You decided in March. In October, your rules respond.")]
+    [InlineData("/all-under-one-roof", "All under one roof", "Every account, every rule, one screen.")]
+    [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t turn it off.")]
     [InlineData("/built-in-the-open", "Built in the open", "Read the code")]
     public async Task EachMenuItemOpensAPageHeadedByItsName(string path, string headline, string content)
     {
@@ -64,7 +64,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
-        foreach (var page in new[] { "how-it-works", "your-money", "when-the-storm-hits", "built-in-the-open" })
+        foreach (var page in new[] { "all-under-one-roof", "when-the-storm-hits", "built-in-the-open", "how-it-works" })
         {
             Assert.Contains($"href=\"{page}\"", html);
         }
