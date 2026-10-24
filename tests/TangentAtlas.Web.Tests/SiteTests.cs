@@ -47,7 +47,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
     [Theory]
     [InlineData("/how-it-works", "How it works", "Link your accounts. We never see your passwords.")]
-    [InlineData("/all-under-one-roof", "All under one roof", "Every account, every rule, one screen.")]
+    [InlineData("/under-one-roof", "Under one roof", "Every account, every rule, one screen.")]
     [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t turn it off.")]
     [InlineData("/built-in-the-open", "Built in the open", "Read the code")]
     public async Task EachMenuItemOpensAPageHeadedByItsName(string path, string headline, string content)
@@ -64,11 +64,42 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
-        foreach (var page in new[] { "all-under-one-roof", "when-the-storm-hits", "built-in-the-open", "how-it-works" })
+        foreach (var page in new[] { "under-one-roof", "when-the-storm-hits", "built-in-the-open", "how-it-works" })
         {
             Assert.Contains($"href=\"{page}\"", html);
         }
         Assert.DoesNotContain("NVDA", html);
+    }
+
+    [Theory]
+    [InlineData("/all-under-one-roof")]
+    [InlineData("/your-money")]
+    public async Task EachPageHasOnlyTheAddressOfItsMenuLabel(string path)
+    {
+        var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/when-the-storm-hits")]
+    [InlineData("/signup")]
+    public async Task EveryPageLinksToThePrivacyStatement(string path)
+    {
+        var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
+
+        Assert.Contains("href=\"/privacy\"", html);
+    }
+
+    [Fact]
+    public async Task ThePrivacyStatementSaysWhatWeCollect()
+    {
+        var html = await client.GetStringAsync("/privacy", TestContext.Current.CancellationToken);
+
+        Assert.Contains("<h1 class=\"ta-page-headline\">Privacy</h1>", html);
+        Assert.Contains("What we collect", html);
+        Assert.Contains("we never see it", html);
     }
 
     [Fact]
