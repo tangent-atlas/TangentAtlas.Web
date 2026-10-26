@@ -647,7 +647,7 @@ h1:focus {
 }
 
 /* =====================
-   Section pages: your net worth, the storm, built in the open, how it works
+   Section pages: your net worth, the storm, you hold the keys, how it works
    ===================== */
 
 .ta-page-headline {
@@ -880,7 +880,8 @@ h1:focus {
     line-height: 1.25;
 }
 
-.ta-storm-final {
+.ta-page-final {
+    margin-top: 12px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -889,7 +890,7 @@ h1:focus {
     border-top: 1px solid var(--ta-border);
 }
 
-.ta-storm-close {
+.ta-page-close {
     margin: 0;
     font-family: var(--ta-serif);
     font-size: clamp(24px, 2.6vw, 30px);
@@ -898,7 +899,7 @@ h1:focus {
 
 .ta-trust {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
     gap: 20px;
 }
 

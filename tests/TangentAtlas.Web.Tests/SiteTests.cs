@@ -48,7 +48,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     [Theory]
     [InlineData("/your-net-worth", "Your net worth", "Every account, every rule, one screen.")]
     [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t switch it off.")]
-    [InlineData("/built-in-the-open", "Built in the open", "Read the code")]
+    [InlineData("/you-hold-the-keys", "You hold the keys", "A new company should have to earn your trust.")]
     [InlineData("/how-it-works", "How it works", "Link your accounts. We never see your passwords.")]
     public async Task EachMenuItemOpensAPageHeadedByItsName(string path, string headline, string content)
     {
@@ -59,16 +59,36 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         Assert.Contains("class=\"ta-nav-link active\"", html);   // the menu marks the page you are on
     }
 
+    [Theory]
+    [InlineData("/when-the-storm-hits", "Respond with discipline, not panic.")]
+    [InlineData("/you-hold-the-keys", "Your house, your rules.")]
+    public async Task EachPitchPageEndsWithItsLineAndSignUp(string path, string closing)
+    {
+        var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
+
+        var close = html.IndexOf($"<p class=\"ta-page-close\">{closing}</p>", StringComparison.Ordinal);
+        Assert.True(close > 0);
+        Assert.Contains("href=\"/signup\" class=\"ta-btn ta-btn-primary ta-btn-large\"", html[close..]);
+    }
+
     [Fact]
-    public async Task TheStormPageEndsWithItsLineAndSignUp()
+    public async Task TheStormPageIsAboutRaisingCash()
     {
         var html = await client.GetStringAsync("/when-the-storm-hits", TestContext.Current.CancellationToken);
 
         Assert.Contains("Sooner or later, everyone needs cash", html);
         Assert.Contains("Don’t change your plan. Adjust it.", html);
-        var close = html.IndexOf("Respond with discipline, not panic.", StringComparison.Ordinal);
-        Assert.True(close > 0);
-        Assert.Contains("href=\"/signup\" class=\"ta-btn ta-btn-primary ta-btn-large\"", html[close..]);
+    }
+
+    [Fact]
+    public async Task TheKeysPageGivesFourProofs()
+    {
+        var html = await client.GetStringAsync("/you-hold-the-keys", TestContext.Current.CancellationToken);
+
+        foreach (var proof in new[] { "Your money stays in your name", "We never see your passwords", "You decide how far it goes", "Read the code" })
+        {
+            Assert.Contains($"<div class=\"ta-trust-title\">{proof}</div>", html);
+        }
     }
 
     [Fact]
@@ -76,7 +96,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
-        foreach (var page in new[] { "your-net-worth", "when-the-storm-hits", "built-in-the-open", "how-it-works" })
+        foreach (var page in new[] { "your-net-worth", "when-the-storm-hits", "you-hold-the-keys", "how-it-works" })
         {
             Assert.Contains($"href=\"{page}\"", html);
         }
@@ -84,6 +104,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     }
 
     [Theory]
+    [InlineData("/built-in-the-open")]
     [InlineData("/under-one-roof")]
     [InlineData("/all-under-one-roof")]
     [InlineData("/your-money")]
