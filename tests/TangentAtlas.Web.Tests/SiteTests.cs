@@ -60,6 +60,18 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     }
 
     [Fact]
+    public async Task TheStormPageEndsWithItsLineAndSignUp()
+    {
+        var html = await client.GetStringAsync("/when-the-storm-hits", TestContext.Current.CancellationToken);
+
+        Assert.Contains("Sooner or later, everyone needs cash", html);
+        Assert.Contains("Don’t change your plan. Adjust it.", html);
+        var close = html.IndexOf("Respond with discipline, not panic.", StringComparison.Ordinal);
+        Assert.True(close > 0);
+        Assert.Contains("href=\"/signup\" class=\"ta-btn ta-btn-primary ta-btn-large\"", html[close..]);
+    }
+
+    [Fact]
     public async Task TheMenuReachesEveryPage()
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);

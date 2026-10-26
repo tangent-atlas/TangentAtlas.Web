@@ -25,51 +25,39 @@
         <div class="ta-storm-bars">
             <div class="ta-storm-row">
                 <div class="ta-storm-label">Before: $500,000 invested</div>
-                <div class="ta-storm-bar" role="img" aria-label="Before: your favorite 30%, your second favorite 20%, an index fund 40%, everything else 10%">
-                    <div class="ta-seg ta-seg-1" style="width: 30%">$150k</div>
-                    <div class="ta-seg ta-seg-2" style="width: 20%">$100k</div>
-                    <div class="ta-seg ta-seg-3" style="width: 40%">$200k</div>
-                    <div class="ta-seg ta-seg-4" style="width: 10%">$50k</div>
+                <div class="ta-storm-bar" role="img" aria-label="Before: your favorite $150,000, your second favorite $100,000, an index fund $200,000, everything else $50,000">
+                    <div class="ta-seg ta-seg-1" style="width: 30%"><span class="ta-seg-name">Favorite</span>$150k</div>
+                    <div class="ta-seg ta-seg-2" style="width: 20%"><span class="ta-seg-name">2nd favorite</span>$100k</div>
+                    <div class="ta-seg ta-seg-3" style="width: 40%"><span class="ta-seg-name">Index fund</span>$200k</div>
+                    <div class="ta-seg ta-seg-4" style="width: 10%"><span class="ta-seg-name">Other</span>$50k</div>
                 </div>
             </div>
             <div class="ta-storm-row">
                 <div class="ta-storm-label">After: $400,000 invested, $100,000 in cash</div>
-                <div class="ta-storm-bar" role="img" aria-label="After: each holding 20% smaller, the same mix, and $100,000 in cash">
-                    <div class="ta-seg ta-seg-1" style="width: 24%">$120k</div>
-                    <div class="ta-seg ta-seg-2" style="width: 16%">$80k</div>
-                    <div class="ta-seg ta-seg-3" style="width: 32%">$160k</div>
-                    <div class="ta-seg ta-seg-4" style="width: 8%">$40k</div>
-                    <div class="ta-seg ta-seg-cash" style="width: 20%">Cash $100k</div>
+                <div class="ta-storm-bar" role="img" aria-label="After: every holding 20% smaller, the same mix, and $100,000 in cash">
+                    <div class="ta-seg ta-seg-1" style="width: 24%"><span class="ta-seg-name">Favorite</span>$120k</div>
+                    <div class="ta-seg ta-seg-2" style="width: 16%"><span class="ta-seg-name">2nd favorite</span>$80k</div>
+                    <div class="ta-seg ta-seg-3" style="width: 32%"><span class="ta-seg-name">Index fund</span>$160k</div>
+                    <div class="ta-seg ta-seg-4" style="width: 8%"><span class="ta-seg-name">Other</span>$40k</div>
+                    <div class="ta-seg ta-seg-cash" style="width: 20%"><span class="ta-seg-name">Cash</span>$100k</div>
                 </div>
             </div>
-            <div class="ta-legend">
-                <span><span class="ta-swatch ta-seg-1"></span>Your favorite</span>
-                <span><span class="ta-swatch ta-seg-2"></span>Your second favorite</span>
-                <span><span class="ta-swatch ta-seg-3"></span>An index fund</span>
-                <span><span class="ta-swatch ta-seg-4"></span>Everything else</span>
-            </div>
-            <p class="ta-storm-note">The whole house cools together, not one room. Every holding is 20% smaller, and the mix inside is exactly what it was: your favorite is still 30% of what you hold, your index fund still 40%.</p>
-            <p class="ta-caption">Selling can create taxes, and in a falling market it can mean selling before prices recover.</p>
+            <p class="ta-storm-note">When you sell blindly, your mix drifts. Here the whole house cools together: every holding is 20% smaller, and the mix is exactly what it was.</p>
         </div>
     </div>
 </section>
 
 <div class="ta-container ta-page">
-    <ol class="ta-steps">
-        <li class="ta-step">
-            <div class="ta-step-num">1</div>
-            <div class="ta-step-title">Adjust the thermostat</div>
-            <div class="ta-step-body">One simple dial that sets how much you want invested, in calm or in a storm.</div>
-        </li>
-        <li class="ta-step">
-            <div class="ta-step-num">2</div>
-            <div class="ta-step-title">The whole house adjusts</div>
-            <div class="ta-step-body">Every holding in every account adjusts to the new setting. Don’t change your plan, adjust it.</div>
-        </li>
-        <li class="ta-step">
-            <div class="ta-step-num">3</div>
-            <div class="ta-step-title">Turn it back up when you’re ready</div>
-            <div class="ta-step-body">Getting back into your positions is as easy as getting out. Just turn the dial back up until you’re fully invested again.</div>
-        </li>
-    </ol>
-    <p class="ta-storm-close">Respond with discipline, not panic.</p></div>
+    <div class="ta-storm-adjust">
+        <h2 class="ta-storm-adjust-title">Don’t change your plan. Adjust it.</h2>
+        <p class="ta-page-sub">Getting back into your positions is as easy as getting out. Just turn the dial back up.</p>
+    </div>
+    <div class="ta-storm-final">
+        <p class="ta-storm-close">Respond with discipline, not panic.</p>
+        <AuthorizeView>
+            <NotAuthorized>
+                <a href="/signup" class="ta-btn ta-btn-primary ta-btn-large">Sign up</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
