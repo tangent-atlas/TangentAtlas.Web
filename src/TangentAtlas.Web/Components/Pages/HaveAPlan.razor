@@ -1,0 +1,67 @@
+@page "/have-a-plan"
+<PageTitle>Have a plan · Tangent Atlas</PageTitle>
+
+<div class="ta-container ta-page">
+    <h1 class="ta-page-headline">Have a plan</h1>
+    <p class="ta-page-idea">Why do you own what you own?</p>
+    <p class="ta-page-sub">A few shares of one company. A few of another. A big chunk in an index fund. Cash in two banks and a brokerage account.</p>
+    <p class="ta-page-sub">But why, exactly, this combination?</p>
+    <p class="ta-plan-big">Do you have a plan?</p>
+</div>
+
+<section class="ta-band">
+    <div class="ta-container ta-plan">
+        <h2 class="ta-plan-turn">Tangent Atlas gives you one: your own personal index.</h2>
+        <p class="ta-page-sub">Set to the level of risk you choose, without the companies you’d rather not own, and kept there by the same method the big index funds use.</p>
+        <p class="ta-page-sub"><strong>Why buy an ETF when you can own the index yourself?</strong> Every share in your name, at your own broker. Every dividend straight to you.</p>
+
+        <div class="ta-plan-example">
+            <div class="ta-plan-name">Ken today</div>
+            <div class="ta-plan-bar" role="img" aria-label="Ken today: JPM $60,000, DIS $40,000, SPY $200,000, QQQ $120,000, cash $80,000">
+                <div class="ta-plan-seg ta-plan-c1" style="width: 12%"><b>JPM</b>$60k</div>
+                <div class="ta-plan-seg ta-plan-c2" style="width: 8%"><b>DIS</b>$40k</div>
+                <div class="ta-plan-seg ta-plan-c3" style="width: 40%"><b>SPY</b>$200k</div>
+                <div class="ta-plan-seg ta-plan-c4" style="width: 24%"><b>QQQ</b>$120k</div>
+                <div class="ta-plan-seg ta-plan-cash" style="width: 16%"><b>Cash</b>$80k</div>
+            </div>
+            <div class="ta-plan-stats">
+                <div class="ta-plan-stat"><span>Return a year</span><span class="ta-plan-value">10.4%</span></div>
+                <div class="ta-plan-stat"><span>Volatility</span><span class="ta-plan-value">15.5%</span></div>
+                <div class="ta-plan-stat"><span>Sharpe ratio</span><span class="ta-plan-value">0.48</span></div>
+                <div class="ta-plan-stat"><span>Worst drop</span><span class="ta-plan-value">−26%</span></div>
+            </div>
+        </div>
+
+        <div class="ta-plan-example">
+            <div class="ta-plan-name">The Ken 30: Ken’s own personal index of the 30 largest S&amp;P 500 companies</div>
+            <div class="ta-plan-bar" role="img" aria-label="The Ken 30: NVDA $47,000, AAPL $41,000, MSFT $33,000, 27 more companies $199,000, cash $180,000">
+                <div class="ta-plan-seg ta-plan-c1" style="width: 9.4%"><b>NVDA</b>$47k</div>
+                <div class="ta-plan-seg ta-plan-c3" style="width: 8.2%"><b>AAPL</b>$41k</div>
+                <div class="ta-plan-seg ta-plan-c2" style="width: 6.6%"><b>MSFT</b>$33k</div>
+                <div class="ta-plan-seg ta-plan-rest" style="width: 39.8%"><b>27 more</b>$199k</div>
+                <div class="ta-plan-seg ta-plan-cash" style="width: 36%"><b>Cash</b>$180k</div>
+            </div>
+            <div class="ta-plan-stats ta-plan-stats-better">
+                <div class="ta-plan-stat"><span>Return a year</span><span class="ta-plan-value">10.5%</span></div>
+                <div class="ta-plan-stat"><span>Volatility</span><span class="ta-plan-value">12.8%</span></div>
+                <div class="ta-plan-stat"><span>Sharpe ratio</span><span class="ta-plan-value">0.56</span></div>
+                <div class="ta-plan-stat"><span>Worst drop</span><span class="ta-plan-value">−19%</span></div>
+            </div>
+        </div>
+
+        <p class="ta-plan-big">The same return. Less risk. More cash.</p>
+        <p class="ta-page-sub">We don’t promise the next five years will look like the last five. A plan isn’t a forecast. Tangent Atlas gives you the tools to manage your risk, build a diversified portfolio and see what a plan would have done for you. Then you decide. Having a plan beats not having one.</p>
+    </div>
+</section>
+
+<div class="ta-container ta-page">
+    <div class="ta-page-final">
+        <p class="ta-page-close">Your index. Your shares. Your plan.</p>
+        <AuthorizeView>
+            <NotAuthorized>
+                <a href="/signup" class="ta-btn ta-btn-primary ta-btn-large">Sign up</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+    <p class="ta-figures"><strong>About these figures.</strong> These are backtested results: a hypothetical illustration, not a prediction or a recommendation. They look backward, showing how each mix would have performed had it been held from October 22, 2021 to October 23, 2026. “Ken today” is an illustrative portfolio whose return and volatility sit at the median of 208,000 portfolios built from two S&amp;P 500 stocks held alongside SPY, QQQ and cash. The Ken 30 holds the 30 largest S&amp;P 500 companies as of each quarterly rebalancing date, weighted by the index method, with 36% in cash. Returns include dividends and exclude taxes, fees and trading costs. Volatility is annualized from daily returns; Sharpe ratios measure return above the risk-free rate for each unit of volatility; the worst drop is the largest fall from a peak. The Ken 30 holdings shown are approximate current weights. Past performance does not predict future results. All investing involves risk, including the loss of money you invest.</p>
+</div>

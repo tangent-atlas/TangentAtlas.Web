@@ -47,6 +47,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
     [Theory]
     [InlineData("/your-net-worth", "Your net worth", "Every account, every rule, one screen.")]
+    [InlineData("/have-a-plan", "Have a plan", "Why do you own what you own?")]
     [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t switch it off.")]
     [InlineData("/you-hold-the-keys", "You hold the keys", "A new company should have to earn your trust.")]
     [InlineData("/how-it-works", "How it works", "Link your accounts. We never see your passwords.")]
@@ -60,6 +61,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     }
 
     [Theory]
+    [InlineData("/have-a-plan", "Your index. Your shares. Your plan.")]
     [InlineData("/when-the-storm-hits", "Respond with discipline, not panic.")]
     [InlineData("/you-hold-the-keys", "Your house, your rules.")]
     public async Task EachPitchPageEndsWithItsLineAndSignUp(string path, string closing)
@@ -69,6 +71,16 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         var close = html.IndexOf($"<p class=\"ta-page-close\">{closing}</p>", StringComparison.Ordinal);
         Assert.True(close > 0);
         Assert.Contains("href=\"/signup\" class=\"ta-btn ta-btn-primary ta-btn-large\"", html[close..]);
+    }
+
+    [Fact]
+    public async Task ThePlanPagesFiguresAreLabelledAsBacktested()
+    {
+        var html = await client.GetStringAsync("/have-a-plan", TestContext.Current.CancellationToken);
+
+        Assert.Contains("The same return. Less risk. More cash.", html);
+        Assert.Contains("These are backtested results", html);
+        Assert.True(html.IndexOf("These are backtested results", StringComparison.Ordinal) > html.IndexOf("The same return.", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -96,7 +108,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
-        foreach (var page in new[] { "your-net-worth", "when-the-storm-hits", "you-hold-the-keys", "how-it-works" })
+        foreach (var page in new[] { "your-net-worth", "have-a-plan", "when-the-storm-hits", "you-hold-the-keys", "how-it-works" })
         {
             Assert.Contains($"href=\"{page}\"", html);
         }
