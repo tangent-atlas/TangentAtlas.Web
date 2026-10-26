@@ -21,7 +21,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         Assert.Contains("Why buy the fund when you can own the index?", html);
         Assert.DoesNotContain("Dividends piling up?", html);
         Assert.Contains("Checking gets topped off first.", html);
-        Assert.Equal(4, html.Split("class=\"ta-rule-dial\"").Length - 1);   // every rule has the same dial
+        Assert.Equal(4, html.Split("class=\"ta-rule-graphic\"").Length - 1);   // every rule has the same size and layout
         Assert.Contains("href=\"/signup\"", html);
         Assert.Contains("href=\"/account/signin\"", html);
         Assert.DoesNotContain("founding", html, StringComparison.OrdinalIgnoreCase);

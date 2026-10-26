@@ -358,7 +358,7 @@ h1:focus {
     display: flex;
     align-items: center;
     gap: 20px;
-    padding: 12px 0;
+    padding: 14px 0;
     border-top: 1px solid var(--ta-border);
 }
 
@@ -367,8 +367,12 @@ h1:focus {
         padding-top: 0;
     }
 
-.ta-rule-dial {
-    flex: 0 0 auto;
+.ta-rule-graphic {
+    flex: 0 0 72px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .ta-rule-text {
