@@ -18,6 +18,10 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         Assert.Contains("Set the temperature, and Tangent Atlas keeps your money from running too hot or too cold.", html);
         Assert.Contains("Has your best pick become your biggest bet?", html);
         Assert.Contains("respond with discipline, not panic", html);
+        Assert.Contains("Why buy the fund when you can own the index?", html);
+        Assert.DoesNotContain("Dividends piling up?", html);
+        Assert.Contains("Checking gets topped off first.", html);
+        Assert.Equal(4, html.Split("class=\"ta-rule-dial\"").Length - 1);   // every rule has the same dial
         Assert.Contains("href=\"/signup\"", html);
         Assert.Contains("href=\"/account/signin\"", html);
         Assert.DoesNotContain("founding", html, StringComparison.OrdinalIgnoreCase);
