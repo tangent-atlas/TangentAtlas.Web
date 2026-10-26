@@ -47,7 +47,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
     [Theory]
     [InlineData("/your-net-worth", "Your net worth", "Every account, every rule, one screen.")]
-    [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t turn it off.")]
+    [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t switch it off.")]
     [InlineData("/built-in-the-open", "Built in the open", "Read the code")]
     [InlineData("/how-it-works", "How it works", "Link your accounts. We never see your passwords.")]
     public async Task EachMenuItemOpensAPageHeadedByItsName(string path, string headline, string content)
