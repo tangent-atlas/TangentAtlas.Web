@@ -348,45 +348,45 @@ h1:focus {
     gap: 24px;
 }
 
-.ta-rules-dial {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-
-.ta-rules-dial-text {
-    flex: 1 1 200px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.ta-rules-dial-title {
-    font-size: 16px;
-    font-weight: 500;
-}
-
-.ta-rules-dial-sub {
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--ta-text-muted);
-}
-
 .ta-rules-list {
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
-    .ta-rules-list li {
-        display: flex;
-        gap: 14px;
-        align-items: center;
-        padding: 14px 0;
-        border-top: 1px solid var(--ta-border);
-        font-size: 15px;
+.ta-rule {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 0;
+    border-top: 1px solid var(--ta-border);
+}
+
+    .ta-rule:first-child {
+        border-top: 0;
+        padding-top: 0;
     }
+
+.ta-rule-dial {
+    flex: 0 0 auto;
+}
+
+.ta-rule-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ta-rule-title {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.ta-rule-sub {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ta-text-muted);
+}
 
 .ta-rules-caption {
     font-size: 13px;
