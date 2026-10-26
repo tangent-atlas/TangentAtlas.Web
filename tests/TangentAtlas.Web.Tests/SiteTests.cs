@@ -65,6 +65,8 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     }
 
     [Theory]
+    [InlineData("/", "Keep your bank, your broker and your stocks.")]
+    [InlineData("/your-net-worth", "Finally, the whole picture.")]
     [InlineData("/have-a-plan", "Your index. Your shares. Your plan.")]
     [InlineData("/when-the-storm-hits", "Respond with discipline, not panic.")]
     [InlineData("/you-hold-the-keys", "Your house, your rules.")]
@@ -85,6 +87,23 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         Assert.Contains("The same return. Less risk. More cash.", html);
         Assert.Contains("These are backtested results", html);
         Assert.True(html.IndexOf("These are backtested results", StringComparison.Ordinal) > html.IndexOf("The same return.", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task TheNetWorthPageNamesRealInstitutionsAndShowsTheFigures()
+    {
+        var html = await client.GetStringAsync("/your-net-worth", TestContext.Current.CancellationToken);
+
+        foreach (var name in new[] { "Bank of America", "Schwab", "American Express", "Fidelity" })
+        {
+            Assert.Contains(name, html);
+        }
+        foreach (var figure in new[] { "Return, last 12 months", "Volatility", "Sharpe ratio" })
+        {
+            Assert.Contains(figure, html);
+        }
+        Assert.DoesNotContain("Your card issuer", html);
+        Assert.DoesNotContain("An example.", html);
     }
 
     [Fact]

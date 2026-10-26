@@ -2,7 +2,15 @@
 <PageTitle>Your net worth · Tangent Atlas</PageTitle>
 
 <div class="ta-container ta-page">
-    <h1 class="ta-page-headline">Your net worth</h1>
+    <div class="ta-net-head">
+        <h1 class="ta-page-headline">Your net worth</h1>
+        @* The example's last 12 months (October 2025 to October 2026): its stocks followed the market, savings earned Treasury-bill interest. *@
+        <div class="ta-net-stats">
+            <div class="ta-net-stat"><span>Return, last 12 months</span><span class="ta-net-stat-value">13.6%</span></div>
+            <div class="ta-net-stat"><span>Volatility</span><span class="ta-net-stat-value">11.9%</span></div>
+            <div class="ta-net-stat"><span>Sharpe ratio</span><span class="ta-net-stat-value">0.83</span></div>
+        </div>
+    </div>
     <p class="ta-page-sub">Every account, every rule, one screen.</p>
 
     <div class="ta-net">
@@ -22,17 +30,25 @@
             </div>
         }
     </div>
-    <p class="ta-caption">An example. Your accounts stay at your own bank, broker and card issuer.</p>
+
+    <div class="ta-page-final">
+        <p class="ta-page-close">Finally, the whole picture.</p>
+        <AuthorizeView>
+            <NotAuthorized>
+                <a href="/signup" class="ta-btn ta-btn-primary ta-btn-large">Sign up</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
 </div>
 
 @code {
     private static readonly (string Name, string Where, string Balance, string Status, bool ReadOnly)[] ExampleAccounts =
     [
-        ("Checking", "Your bank", "$7,420", "Inside your $5k–$10k band", false),
-        ("Savings", "Your bank", "$24,000", "Topped up this month", false),
-        ("Brokerage", "Your broker", "$186,500", "On your model", false),
-        ("IRA", "Your broker", "$98,200", "Maxed for the year", false),
-        ("Credit card", "Your card issuer", "$3,850", "Paid in full on the 14th", false),
-        ("401(k)", "Your employer's plan", "$95,000", "Counted, never traded", true),
+        ("Checking", "Bank of America", "$7,420", "Inside your $5k–$10k band", false),
+        ("Savings", "Bank of America", "$24,000", "Topped up this month", false),
+        ("Brokerage", "Schwab", "$186,500", "On your model", false),
+        ("IRA", "Schwab", "$98,200", "Maxed for the year", false),
+        ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", false),
+        ("401(k)", "Fidelity", "$95,000", "Counted, never traded", true),
     ];
 }

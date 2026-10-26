@@ -673,6 +673,38 @@ h1:focus {
     color: var(--ta-text-muted);
 }
 
+.ta-net-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 40px;
+}
+
+.ta-net-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 36px;
+}
+
+.ta-net-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+.ta-net-stat-value {
+    font-family: var(--ta-serif);
+    font-size: 28px;
+    color: var(--ta-green-dark);
+}
+
+.ta-home-final {
+    margin-top: 56px;
+}
+
 .ta-net {
     display: flex;
     flex-wrap: wrap;
