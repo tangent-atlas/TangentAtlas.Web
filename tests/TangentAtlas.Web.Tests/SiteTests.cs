@@ -98,7 +98,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         {
             Assert.Contains(name, html);
         }
-        foreach (var figure in new[] { "12-month return", "Volatility", "Sharpe ratio" })
+        foreach (var figure in new[] { "Annual return", "Volatility", "Sharpe ratio" })
         {
             Assert.Contains($"<div class=\"ta-net-label\">{figure}</div>", html);   // on the same line as what you own and owe
         }
