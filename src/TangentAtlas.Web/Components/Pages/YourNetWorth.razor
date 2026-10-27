@@ -12,11 +12,11 @@
             <div><div class="ta-net-label">You owe</div><div class="ta-net-value">$5,090</div></div>
             <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$494,910</div></div>
         </div>
-        @* Ken's last 12 months (October 2025 to October 2026), from real prices for his holdings (JPM, DIS, SPY, QQQ); his savings earned Treasury-bill interest. *@
+        @* Ken's last 12 months (October 2025 to October 2026), from real prices for his holdings (JPM, DIS, SPY, QQQ); as on "Have a plan", all cash earns nothing. *@
         <div class="ta-net-group ta-net-group-end">
-            <div><div class="ta-net-label">12-month return</div><div class="ta-net-value">11.7%</div></div>
+            <div><div class="ta-net-label">12-month return</div><div class="ta-net-value">11.2%</div></div>
             <div><div class="ta-net-label">Volatility</div><div class="ta-net-value">11.7%</div></div>
-            <div><div class="ta-net-label">Sharpe ratio</div><div class="ta-net-value">0.69</div></div>
+            <div><div class="ta-net-label">Sharpe ratio</div><div class="ta-net-value">0.66</div></div>
         </div>
     </div>
 
@@ -43,6 +43,10 @@
                     <span class="ta-account-where">@account.Where</span>
                 </div>
                 <div class="ta-account-value">@account.Balance</div>
+                @if (account.Holdings is not null)
+                {
+                    <div class="ta-account-holdings">@account.Holdings</div>
+                }
                 <div class="ta-account-status @StatusClass(account.State)">@account.Status</div>
             </div>
         }
@@ -63,16 +67,16 @@
     // They add up to his holdings on "Have a plan": JPM $60k, DIS $40k, SPY $200k (Roth IRA, plus the S&P 500 fund in his 401(k)), QQQ $120k, cash $80k.
     private const string OnTrack = "on-track", Warning = "warning", ReadOnly = "read-only";
 
-    private static readonly (string Name, string Where, string Balance, string Status, string State)[] ExampleAccounts =
+    private static readonly (string Name, string Where, string Balance, string Status, string State, string? Holdings)[] ExampleAccounts =
     [
-        ("Checking", "Bank of America", "$4,180", "Below your $5k–$10k band", Warning),
-        ("Savings", "Ally", "$45,000", "Topped up this month", OnTrack),
-        ("Savings", "Chase", "$12,000", "No rule yet", ReadOnly),
-        ("Brokerage", "Schwab", "$238,820", "Drifted from your model", Warning),
-        ("Roth IRA", "Schwab", "$105,000", "Maxed for the year", OnTrack),
-        ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", OnTrack),
-        ("Credit card", "Discover", "$1,240", "Set to pay in full on the 21st", OnTrack),
-        ("401(k)", "Fidelity", "$95,000", "Counted, never traded", ReadOnly),
+        ("Checking", "Bank of America", "$4,180", "Below your $5k–$10k band", Warning, null),
+        ("Savings", "Ally", "$45,000", "Topped up this month", OnTrack, null),
+        ("Savings", "Chase", "$12,000", "No rule yet", ReadOnly, null),
+        ("Brokerage", "Schwab", "$238,820", "Drifted from your model", Warning, "JPM $60k · DIS $40k · QQQ $120k · cash $18.8k"),
+        ("Roth IRA", "Schwab", "$105,000", "Maxed for the year", OnTrack, "SPY $105k"),
+        ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", OnTrack, null),
+        ("Credit card", "Discover", "$1,240", "Set to pay in full on the 21st", OnTrack, null),
+        ("401(k)", "Fidelity", "$95,000", "Counted, never traded", ReadOnly, "S&P 500 fund $95k"),
     ];
 
     private static string StatusClass(string state) => state switch

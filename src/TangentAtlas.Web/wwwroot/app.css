@@ -761,6 +761,11 @@ h1:focus {
     line-height: 1.2;
 }
 
+.ta-account-holdings {
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
 .ta-account-status {
     align-self: flex-start;
     font-size: 12px;
