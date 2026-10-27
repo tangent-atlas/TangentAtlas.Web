@@ -718,6 +718,11 @@ h1:focus {
     color: var(--ta-text-muted);
 }
 
+.ta-net-approval {
+    font-weight: 500;
+    color: var(--ta-green-dark);
+}
+
 .ta-accounts {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
