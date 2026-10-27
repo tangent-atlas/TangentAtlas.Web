@@ -876,20 +876,20 @@ h1:focus {
 }
 
 .ta-page-final {
-    margin-top: 12px;
+    margin-top: 24px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 16px 28px;
-    padding-top: 28px;
-    border-top: 1px solid var(--ta-border);
 }
 
+/* The closing line answers the opening line, in the same voice. */
 .ta-page-close {
     margin: 0;
     font-family: var(--ta-serif);
-    font-size: clamp(24px, 2.6vw, 30px);
-    line-height: 1.3;
+    font-size: clamp(26px, 3vw, 36px);
+    line-height: 1.25;
+    color: var(--ta-green-dark);
 }
 
 .ta-trust {
@@ -972,8 +972,8 @@ h1:focus {
    ===================== */
 
 .ta-plan {
-    padding-top: 56px;
-    padding-bottom: 56px;
+    padding-top: 0;
+    padding-bottom: 72px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -1075,8 +1075,18 @@ h1:focus {
     color: var(--ta-green-dark);
 }
 
+/* Fine print sits apart, at the foot of the page. */
+.ta-fineprint {
+    border-bottom: 0;
+}
+
+    .ta-fineprint .ta-container {
+        padding-top: 28px;
+        padding-bottom: 28px;
+    }
+
 .ta-figures {
-    margin: 16px 0 0;
+    margin: 0;
     max-width: 900px;
     font-size: 12px;
     line-height: 1.7;
