@@ -8,9 +8,9 @@
 
     <div class="ta-net">
         <div class="ta-net-group">
-            <div><div class="ta-net-label">You own</div><div class="ta-net-value">$500,000</div></div>
+            <div><div class="ta-net-label">You own</div><div class="ta-net-value">$505,090</div></div>
             <div><div class="ta-net-label">You owe</div><div class="ta-net-value">$5,090</div></div>
-            <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$494,910</div></div>
+            <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$500,000</div></div>
         </div>
         @* The same figures as "Ken today" on "Have a plan": his mix over five years, October 2021 to October 2026, cash earning nothing. *@
         <div class="ta-net-group ta-net-group-end">
@@ -64,14 +64,15 @@
 
 @code {
     // Ken: eight accounts and six rules (the old Chase savings has none; the 401(k) is counted, never traded); two rules are warning, none in error.
-    // They add up to his holdings on "Have a plan": JPM $60k, DIS $40k, SPY $200k (Roth IRA, plus the S&P 500 fund in his 401(k)), QQQ $120k, cash $80k.
+    // His net worth is "Ken today" on "Have a plan", $500,000: JPM $60k, DIS $40k, SPY $200k (Roth IRA, plus the S&P 500 fund in his 401(k)),
+    // QQQ $120k, and cash $80k net of the $5,090 on his cards ($85,090 in checking, savings and the brokerage account).
     private const string OnTrack = "on-track", Warning = "warning", ReadOnly = "read-only";
 
     private static readonly (string Name, string Where, string Balance, string Status, string State, string? Holdings)[] ExampleAccounts =
     [
         ("Checking", "Bank of America", "$4,180", "Below your $5k–$10k band", Warning, null),
         ("Savings", "Ally", "$45,000", "Topped up this month", OnTrack, null),
-        ("Savings", "Chase", "$12,000", "No rule yet", ReadOnly, null),
+        ("Savings", "Chase", "$17,090", "No rule yet", ReadOnly, null),
         ("Brokerage", "Schwab", "$238,820", "Drifted from your model", Warning, "JPM $60k · DIS $40k · QQQ $120k · cash $18.8k"),
         ("Roth IRA", "Schwab", "$105,000", "Maxed for the year", OnTrack, "SPY $105k"),
         ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", OnTrack, null),
