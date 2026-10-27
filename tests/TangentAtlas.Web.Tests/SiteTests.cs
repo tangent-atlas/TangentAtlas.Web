@@ -51,7 +51,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
     [Theory]
     [InlineData("/your-net-worth", "Your net worth", "Every account, every rule, one screen.")]
-    [InlineData("/have-a-plan", "What do you own?", "But why, exactly, do you own this combination?")]
+    [InlineData("/have-a-plan", "Have a plan", "What do you own?")]
     [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t switch it off.")]
     [InlineData("/you-hold-the-keys", "You hold the keys", "A new company should have to earn your trust.")]
     [InlineData("/how-it-works", "How it works", "Link your accounts. We never see your passwords.")]
