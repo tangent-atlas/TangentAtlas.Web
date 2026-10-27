@@ -98,9 +98,9 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         {
             Assert.Contains(name, html);
         }
-        foreach (var figure in new[] { "Return, last 12 months", "Volatility", "Sharpe ratio" })
+        foreach (var figure in new[] { "12-month return", "Volatility", "Sharpe ratio" })
         {
-            Assert.Contains(figure, html);
+            Assert.Contains($"<div class=\"ta-net-label\">{figure}</div>", html);   // on the same line as what you own and owe
         }
         Assert.DoesNotContain("Your card issuer", html);
         Assert.DoesNotContain("An example.", html);
