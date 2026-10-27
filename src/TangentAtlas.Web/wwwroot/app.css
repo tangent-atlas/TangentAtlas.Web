@@ -386,12 +386,6 @@ h1:focus {
     font-weight: 500;
 }
 
-.ta-rule-sub {
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--ta-text-muted);
-}
-
 .ta-section {
     border-bottom: 1px solid var(--ta-border);
 }
