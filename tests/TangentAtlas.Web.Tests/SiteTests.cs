@@ -103,7 +103,11 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
             Assert.Contains($"<div class=\"ta-net-label\">{figure}</div>", html);   // on the same line as what you own and owe
         }
         Assert.DoesNotContain("Your card issuer", html);
-        Assert.Contains("7 accounts, 6 rules, 2 warnings, 0 errors", html);
+        foreach (var chip in new[] { "<b>7</b> accounts", "<b>6</b> rules", "<b>2</b> warnings", "<b>0</b> errors" })
+        {
+            Assert.Contains(chip, html);
+        }
+        Assert.Contains("<b>3 trades</b> waiting for your approval", html);
         Assert.Equal(2, html.Split("class=\"ta-warning\"").Length - 1);   // checking and brokerage carry the warnings
         Assert.DoesNotContain("An example.", html);
     }

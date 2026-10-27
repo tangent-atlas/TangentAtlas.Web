@@ -19,7 +19,13 @@
         </div>
     </div>
 
-    <p class="ta-net-count">7 accounts, 6 rules, 2 warnings, 0 errors · <span class="ta-net-approval">3 trades and 1 transfer waiting for your approval</span></p>
+    <div class="ta-status-bar">
+        <span class="ta-chip"><b>7</b> accounts</span>
+        <span class="ta-chip"><b>6</b> rules</span>
+        <span class="ta-chip ta-chip-warning"><b>2</b> warnings</span>
+        <span class="ta-chip ta-chip-quiet"><b>0</b> errors</span>
+        <span class="ta-status-approval"><span><b>3 trades</b> waiting for your approval</span> <span class="ta-btn ta-btn-primary ta-btn-small">Review</span></span>
+    </div>
 
     <div class="ta-accounts">
         @foreach (var account in ExampleAccounts)

@@ -1169,3 +1169,14 @@ h1:focus {
     }
 
 }
+
+/* Your net worth: the status bar */
+.ta-status-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ta-chip { font-size: 13px; color: var(--ta-text-body); background: #fff; border: 1px solid var(--ta-border); border-radius: 100px; padding: 4px 12px; }
+.ta-chip b { font-weight: 600; color: var(--ta-text); }
+.ta-chip-warning { background: #fdf1d8; border-color: #f3d79b; color: #8a4b08; }
+.ta-chip-warning b { color: #8a4b08; }
+.ta-chip-quiet { color: var(--ta-text-muted); }
+.ta-status-approval { margin-left: auto; display: inline-flex; align-items: center; gap: 12px; font-size: 14px; color: var(--ta-green-dark); }
+.ta-btn-small { font-size: 13px; padding: 6px 14px; }
+@media (max-width: 520px) { .ta-status-approval { margin-left: 0; width: 100%; justify-content: space-between; } }
