@@ -971,14 +971,6 @@ h1:focus {
    Have a plan: Ken today against the Ken 30
    ===================== */
 
-.ta-plan {
-    padding-top: 0;
-    padding-bottom: 72px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
 .ta-plan-turn {
     margin: 0;
     max-width: 820px;
