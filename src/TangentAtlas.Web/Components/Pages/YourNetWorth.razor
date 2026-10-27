@@ -2,23 +2,24 @@
 <PageTitle>Your net worth · Tangent Atlas</PageTitle>
 
 <div class="ta-container ta-page">
-    <div class="ta-net-head">
-        <h1 class="ta-page-headline">Your net worth</h1>
-        @* The example's last 12 months (October 2025 to October 2026): its stocks followed the market, savings earned Treasury-bill interest. *@
-        <div class="ta-net-stats">
-            <div class="ta-net-stat"><span>Return, last 12 months</span><span class="ta-net-stat-value">13.6%</span></div>
-            <div class="ta-net-stat"><span>Volatility</span><span class="ta-net-stat-value">11.9%</span></div>
-            <div class="ta-net-stat"><span>Sharpe ratio</span><span class="ta-net-stat-value">0.83</span></div>
-        </div>
-    </div>
+    <h1 class="ta-page-headline">Your net worth</h1>
     <p class="ta-page-sub">Every account, every rule, one screen.</p>
 
     <div class="ta-net">
-        <div><div class="ta-net-label">You own</div><div class="ta-net-value">$411,120</div></div>
-        <div><div class="ta-net-label">You owe</div><div class="ta-net-value">$3,850</div></div>
-        <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$407,270</div></div>
-        <div class="ta-net-note">6 accounts at 4 institutions · every rule on track</div>
+        <div class="ta-net-group">
+            <div><div class="ta-net-label">You own</div><div class="ta-net-value">$411,120</div></div>
+            <div><div class="ta-net-label">You owe</div><div class="ta-net-value">$3,850</div></div>
+            <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$407,270</div></div>
+        </div>
+        @* The example's last 12 months (October 2025 to October 2026): its stocks followed the market, its savings earned Treasury-bill interest. *@
+        <div class="ta-net-group ta-net-group-end">
+            <div><div class="ta-net-label">12-month return</div><div class="ta-net-value">13.6%</div></div>
+            <div><div class="ta-net-label">Volatility</div><div class="ta-net-value">11.9%</div></div>
+            <div><div class="ta-net-label">Sharpe ratio</div><div class="ta-net-value">0.83</div></div>
+        </div>
     </div>
+
+    <div class="ta-net-divider">6 accounts at 4 institutions · every rule on track</div>
 
     <div class="ta-accounts">
         @foreach (var account in ExampleAccounts)
