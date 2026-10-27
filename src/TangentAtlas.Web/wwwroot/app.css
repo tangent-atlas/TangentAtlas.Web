@@ -1109,6 +1109,12 @@ h1:focus {
     color: var(--ta-green-dark);
 }
 
+.ta-curve {
+    width: 100%;
+    height: auto;
+    font-family: var(--ta-sans);
+}
+
 .ta-figures {
     margin: 16px 0 0;
     max-width: 900px;
