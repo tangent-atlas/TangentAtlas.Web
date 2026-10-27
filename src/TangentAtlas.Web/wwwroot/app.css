@@ -398,44 +398,10 @@ h1:focus {
         gap: 32px;
     }
 
-.ta-steps {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
-    gap: 1px;
-    background: var(--ta-border);
-    border: 1px solid var(--ta-border);
-    border-radius: 14px;
-    overflow: hidden;
-}
 
-.ta-step {
-    background: var(--ta-bg);
-    padding: 32px 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
 
-.ta-step-num {
-    font-family: var(--ta-serif);
-    font-size: 40px;
-    line-height: 1;
-    color: var(--ta-green);
-}
 
-.ta-step-title {
-    font-size: 22px;
-    font-weight: 500;
-}
 
-.ta-step-body {
-    font-size: 16px;
-    line-height: 1.6;
-    color: var(--ta-text-body);
-}
 
 .ta-cta-inner {
     max-width: 720px;
