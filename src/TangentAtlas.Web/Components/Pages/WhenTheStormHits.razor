@@ -4,54 +4,55 @@
 <div class="ta-container ta-page">
     <h1 class="ta-visually-hidden">When the storm hits</h1>   @* The menu already names the page; the heading is kept for screen readers and search. *@
     <p class="ta-page-idea">Turn it down. Don’t switch it off.</p>
-    <p class="ta-page-sub">Sooner or later, everyone needs cash: a new roof, a lost job, a market that keeps you up at night. Tangent Atlas makes it easy to raise. Turn the dial down a few degrees and every holding in every account comes down together. Your mix stays your mix, and your favorites keep their place.</p>
-</div>
 
-<section class="ta-band">
-    <div class="ta-container ta-storm-grid">
+    <div class="ta-storm-grid">
+        <div class="ta-storm-copy">
+            <p class="ta-page-sub">Sooner or later, everyone needs cash: a new roof, a lost job, a market that keeps you up at night.</p>
+            <p class="ta-page-sub">Buying a stock is hard. Selling under pressure is harder, because it means giving up on your plan. With Tangent Atlas, turn the dial down. We reduce your holdings according to your plan and raise the cash. Needing cash becomes part of your plan, not the end of it.</p>
+        </div>
         <div class="ta-storm-dial">
-            <svg width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="A round thermostat turned down from 100% invested to 80% invested">
+            <svg width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="A round thermostat turned down from 84% invested to 64% invested">
                 <circle cx="120" cy="120" r="112" fill="#ffffff" stroke="rgba(0,0,0,0.12)" stroke-width="2"></circle>
                 <circle cx="120" cy="120" r="92" fill="none" stroke="#e5e7eb" stroke-width="14" stroke-dasharray="433.5 578" transform="rotate(135 120 120)" stroke-linecap="round"></circle>
-                <circle cx="120" cy="120" r="92" fill="none" stroke="#1D9E75" stroke-width="14" stroke-dasharray="346.8 578" transform="rotate(135 120 120)" stroke-linecap="round"></circle>
+                <circle cx="120" cy="120" r="92" fill="none" stroke="#1D9E75" stroke-width="14" stroke-dasharray="277.4 578" transform="rotate(135 120 120)" stroke-linecap="round"></circle>
                 <circle cx="120" cy="120" r="70" fill="#f9f9f7"></circle>
-                <text x="120" y="122" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-size="44" fill="#1a1a1a">80%</text>
+                <text x="120" y="122" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-size="44" fill="#1a1a1a">64%</text>
                 <text x="120" y="148" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="13" fill="#4b5563">invested</text>
-                <text x="120" y="168" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="12" font-weight="500" fill="#0F6E56">▼ from 100%</text>
+                <text x="120" y="168" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="12" font-weight="500" fill="#0F6E56">▼ from 84%</text>
             </svg>
             <div class="ta-storm-dial-caption">You set the temperature.</div>
         </div>
+    </div>
 
-        <div class="ta-storm-bars">
-            <div class="ta-storm-row">
-                <div class="ta-storm-label">Before: $500,000 invested</div>
-                <div class="ta-storm-bar" role="img" aria-label="Before: your favorite $150,000, your second favorite $100,000, an index fund $200,000, everything else $50,000">
-                    <div class="ta-seg ta-seg-1" style="width: 30%"><span class="ta-seg-name">Favorite</span>$150k</div>
-                    <div class="ta-seg ta-seg-2" style="width: 20%"><span class="ta-seg-name">2nd favorite</span>$100k</div>
-                    <div class="ta-seg ta-seg-3" style="width: 40%"><span class="ta-seg-name">Index fund</span>$200k</div>
-                    <div class="ta-seg ta-seg-4" style="width: 10%"><span class="ta-seg-name">Other</span>$50k</div>
-                </div>
-            </div>
-            <div class="ta-storm-row">
-                <div class="ta-storm-label">After: $400,000 invested, $100,000 in cash</div>
-                <div class="ta-storm-bar" role="img" aria-label="After: every holding 20% smaller, the same mix, and $100,000 in cash">
-                    <div class="ta-seg ta-seg-1" style="width: 24%"><span class="ta-seg-name">Favorite</span>$120k</div>
-                    <div class="ta-seg ta-seg-2" style="width: 16%"><span class="ta-seg-name">2nd favorite</span>$80k</div>
-                    <div class="ta-seg ta-seg-3" style="width: 32%"><span class="ta-seg-name">Index fund</span>$160k</div>
-                    <div class="ta-seg ta-seg-4" style="width: 8%"><span class="ta-seg-name">Other</span>$40k</div>
-                    <div class="ta-seg ta-seg-cash" style="width: 20%"><span class="ta-seg-name">Cash</span>$100k</div>
-                </div>
-            </div>
-            <p class="ta-storm-note">When you sell blindly, your mix drifts. Here the whole house cools together: every holding is 20% smaller, and the mix is exactly what it was.</p>
+    <div class="ta-holdings">
+        <div class="ta-holdings-name">Ken today: $420,000 invested, $80,000 in cash</div>
+        <div class="ta-holdings-bar" role="img" aria-label="Ken today: JPM $60,000, DIS $40,000, SPY $105,000, 401(k) $95,000, QQQ $120,000, cash $80,000">
+            <div class="ta-holdings-seg ta-holdings-c1" style="width: 12%"><b>JPM</b>$60k</div>
+            <div class="ta-holdings-seg ta-holdings-c2" style="width: 8%"><b>DIS</b>$40k</div>
+            <div class="ta-holdings-seg ta-holdings-c3" style="width: 21%"><b>SPY</b>$105k</div>
+            <div class="ta-holdings-seg ta-holdings-read-only" style="width: 19%"><b>401(k)</b>$95k</div>
+            <div class="ta-holdings-seg ta-holdings-c4" style="width: 24%"><b>QQQ</b>$120k</div>
+            <div class="ta-holdings-seg ta-holdings-cash" style="width: 16%"><b>Cash</b>$80k</div>
         </div>
     </div>
-</section>
 
-<div class="ta-container ta-page">
-    <div class="ta-storm-adjust">
-        <h2 class="ta-storm-adjust-title">Don’t change your plan. Adjust it.</h2>
-        <p class="ta-page-sub">When the storm is over, getting back into your positions is as easy as getting out. Just turn the dial back up.</p>
+    <div class="ta-holdings">
+        <div class="ta-holdings-name">After Ken turns the dial down: $320,000 invested, $180,000 in cash</div>
+        <div class="ta-holdings-bar" role="img" aria-label="After: JPM $41,500, DIS $27,700, SPY $72,700, 401(k) $95,000 unchanged, QQQ $83,100, cash $180,000">
+            <div class="ta-holdings-seg ta-holdings-c1" style="width: 8.3%"><b>JPM</b>$41.5k</div>
+            <div class="ta-holdings-seg ta-holdings-c2" style="width: 5.54%"><b>DIS</b>$27.7k</div>
+            <div class="ta-holdings-seg ta-holdings-c3" style="width: 14.54%"><b>SPY</b>$72.7k</div>
+            <div class="ta-holdings-seg ta-holdings-read-only" style="width: 19%"><b>401(k)</b>$95k</div>
+            <div class="ta-holdings-seg ta-holdings-c4" style="width: 16.62%"><b>QQQ</b>$83.1k</div>
+            <div class="ta-holdings-seg ta-holdings-cash" style="width: 36%"><b>Cash</b>$180k</div>
+        </div>
     </div>
+
+    <p class="ta-page-sub">The whole house cools together: every holding Ken can trade comes down by the same 31%. His 401(k) is counted, never traded.</p>
+
+    <h2 class="ta-page-statement">Don’t change your plan. Adjust it.</h2>
+    <p class="ta-page-sub">When the storm is over, getting back into your positions is as easy as getting out. Just turn the dial back up.</p>
+
     <div class="ta-page-final">
         <p class="ta-page-close">Respond with discipline, not panic.</p>
         <AuthorizeView>
