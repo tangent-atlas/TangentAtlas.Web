@@ -59,7 +59,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
 
-        Assert.Contains($"<h1 class=\"ta-page-headline\">{headline}</h1>", html);
+        Assert.Contains($">{headline}</h1>", html);   // shown, or hidden where the menu already names the page
         Assert.Contains(content, html);
         Assert.Contains("class=\"ta-nav-link active\"", html);   // the menu marks the page you are on
     }

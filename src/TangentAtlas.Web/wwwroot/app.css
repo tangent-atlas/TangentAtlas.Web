@@ -1185,3 +1185,4 @@ h1:focus {
 .ta-status-approval { margin-left: auto; display: inline-flex; align-items: center; gap: 12px; font-size: 14px; color: var(--ta-green-dark); }
 .ta-btn-small { font-size: 13px; padding: 6px 14px; }
 @media (max-width: 520px) { .ta-status-approval { margin-left: 0; width: 100%; justify-content: space-between; } }
+
