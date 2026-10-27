@@ -712,21 +712,11 @@ h1:focus {
     gap: 12px 40px;
 }
 
-.ta-net-divider {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+.ta-net-count {
+    margin: 0;
     font-size: 14px;
     color: var(--ta-text-muted);
-    text-align: center;
 }
-
-    .ta-net-divider::before,
-    .ta-net-divider::after {
-        content: "";
-        flex: 1 1 24px;
-        border-top: 1px solid var(--ta-border);
-    }
 
 .ta-accounts {
     display: grid;
@@ -779,6 +769,21 @@ h1:focus {
 .ta-account-status-neutral {
     color: var(--ta-text-body);
     background: #f3f4f6;
+}
+
+.ta-account-status-warning {
+    color: #8a4b08;
+    background: #fdf1d8;
+}
+
+.ta-account-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ta-warning {
+    flex: 0 0 auto;
 }
 
 .ta-page-idea {
@@ -1158,7 +1163,4 @@ h1:focus {
         font-size: 22px;
     }
 
-    .ta-net-divider {
-        font-size: 13px;
-    }
 }

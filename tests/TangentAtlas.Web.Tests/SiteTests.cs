@@ -94,7 +94,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/your-net-worth", TestContext.Current.CancellationToken);
 
-        foreach (var name in new[] { "Bank of America", "Schwab", "American Express", "Fidelity" })
+        foreach (var name in new[] { "Bank of America", "Schwab", "American Express", "Discover", "Fidelity" })
         {
             Assert.Contains(name, html);
         }
@@ -103,6 +103,8 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
             Assert.Contains($"<div class=\"ta-net-label\">{figure}</div>", html);   // on the same line as what you own and owe
         }
         Assert.DoesNotContain("Your card issuer", html);
+        Assert.Contains("7 accounts, 6 rules, 2 warnings, 0 errors", html);
+        Assert.Equal(2, html.Split("class=\"ta-warning\"").Length - 1);   // checking and brokerage carry the warnings
         Assert.DoesNotContain("An example.", html);
     }
 
