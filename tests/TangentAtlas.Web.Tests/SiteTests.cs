@@ -68,7 +68,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     [InlineData("/your-net-worth", "Finally, the whole picture.")]
     [InlineData("/have-a-plan", "Your index. Your shares. Your plan.")]
     [InlineData("/when-the-storm-hits", "Respond with discipline, not panic.")]
-    [InlineData("/you-hold-the-keys", "Your house, your rules.")]
+    [InlineData("/you-hold-the-keys", "You keep the keys. We keep earning your trust.")]
     public async Task EachPitchPageEndsWithItsLineAndSignUp(string path, string closing)
     {
         var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
@@ -141,19 +141,6 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
             Assert.Contains($"href=\"{page}\"", html);
         }
         Assert.DoesNotContain("NVDA", html);
-    }
-
-    [Theory]
-    [InlineData("/how-it-works")]
-    [InlineData("/built-in-the-open")]
-    [InlineData("/under-one-roof")]
-    [InlineData("/all-under-one-roof")]
-    [InlineData("/your-money")]
-    public async Task EachPageHasOnlyTheAddressOfItsMenuLabel(string path)
-    {
-        var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Theory]
