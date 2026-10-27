@@ -68,7 +68,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     [InlineData("/your-net-worth", "Finally, the whole picture.")]
     [InlineData("/have-a-plan", "Your index. Your shares. Your plan.")]
     [InlineData("/when-the-storm-hits", "Respond with discipline, not panic.")]
-    [InlineData("/you-hold-the-keys", "Don’t take our word for it. Check our work.")]
+    [InlineData("/you-hold-the-keys", "You keep the keys. We keep earning your trust.")]
     public async Task EachPitchPageEndsWithItsLineAndSignUp(string path, string closing)
     {
         var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
