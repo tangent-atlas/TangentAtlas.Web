@@ -4,22 +4,29 @@
 <div class="ta-container ta-page">
     <h1 class="ta-page-headline">Your net worth</h1>
     <p class="ta-page-sub">Every account, every rule, one screen.</p>
+    <p class="ta-page-sub">Meet Ken. He’s 46, and he’s had three employers in 26 years. Along the way he collected a checking account, savings at two other banks, a brokerage account, a Roth IRA, a 401(k) and two credit cards. Here is all of it, in one place.</p>
 
     <div class="ta-net">
         <div class="ta-net-group">
-            <div><div class="ta-net-label">You own</div><div class="ta-net-value">$407,880</div></div>
+            <div><div class="ta-net-label">You own</div><div class="ta-net-value">$500,000</div></div>
             <div><div class="ta-net-label">You owe</div><div class="ta-net-value">$5,090</div></div>
-            <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$402,790</div></div>
+            <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$494,910</div></div>
         </div>
-        @* The example's last 12 months (October 2025 to October 2026): its stocks followed the market, its savings earned Treasury-bill interest. *@
+        @* Ken's last 12 months (October 2025 to October 2026), from real prices for his holdings (JPM, DIS, SPY, QQQ); as on "Have a plan", all cash earns nothing. *@
         <div class="ta-net-group ta-net-group-end">
-            <div><div class="ta-net-label">12-month return</div><div class="ta-net-value">13.7%</div></div>
-            <div><div class="ta-net-label">Volatility</div><div class="ta-net-value">12.0%</div></div>
-            <div><div class="ta-net-label">Sharpe ratio</div><div class="ta-net-value">0.83</div></div>
+            <div><div class="ta-net-label">12-month return</div><div class="ta-net-value">11.2%</div></div>
+            <div><div class="ta-net-label">Volatility</div><div class="ta-net-value">11.7%</div></div>
+            <div><div class="ta-net-label">Sharpe ratio</div><div class="ta-net-value">0.66</div></div>
         </div>
     </div>
 
-    <p class="ta-net-count">7 accounts, 6 rules, 2 warnings, 0 errors</p>
+    <div class="ta-status-bar">
+        <span class="ta-chip"><b>8</b> accounts</span>
+        <span class="ta-chip"><b>6</b> rules</span>
+        <span class="ta-chip ta-chip-warning"><b>2</b> warnings</span>
+        <span class="ta-chip ta-chip-quiet"><b>0</b> errors</span>
+        <span class="ta-status-approval"><span><b>3 trades</b> waiting for your approval</span> <span class="ta-btn ta-btn-primary ta-btn-small">Review</span></span>
+    </div>
 
     <div class="ta-accounts">
         @foreach (var account in ExampleAccounts)
@@ -36,6 +43,10 @@
                     <span class="ta-account-where">@account.Where</span>
                 </div>
                 <div class="ta-account-value">@account.Balance</div>
+                @if (account.Holdings is not null)
+                {
+                    <div class="ta-account-holdings">@account.Holdings</div>
+                }
                 <div class="ta-account-status @StatusClass(account.State)">@account.Status</div>
             </div>
         }
@@ -52,18 +63,20 @@
 </div>
 
 @code {
-    // Seven accounts and six rules (the 401(k) is counted, never traded); two rules are warning, none in error.
+    // Ken: eight accounts and six rules (the old Chase savings has none; the 401(k) is counted, never traded); two rules are warning, none in error.
+    // They add up to his holdings on "Have a plan": JPM $60k, DIS $40k, SPY $200k (Roth IRA, plus the S&P 500 fund in his 401(k)), QQQ $120k, cash $80k.
     private const string OnTrack = "on-track", Warning = "warning", ReadOnly = "read-only";
 
-    private static readonly (string Name, string Where, string Balance, string Status, string State)[] ExampleAccounts =
+    private static readonly (string Name, string Where, string Balance, string Status, string State, string? Holdings)[] ExampleAccounts =
     [
-        ("Checking", "Bank of America", "$4,180", "Below your $5k–$10k band", Warning),
-        ("Savings", "Bank of America", "$24,000", "Topped up this month", OnTrack),
-        ("Brokerage", "Schwab", "$186,500", "Drifted from your model", Warning),
-        ("IRA", "Schwab", "$98,200", "Maxed for the year", OnTrack),
-        ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", OnTrack),
-        ("Credit card", "Discover", "$1,240", "Set to pay in full on the 21st", OnTrack),
-        ("401(k)", "Fidelity", "$95,000", "Counted, never traded", ReadOnly),
+        ("Checking", "Bank of America", "$4,180", "Below your $5k–$10k band", Warning, null),
+        ("Savings", "Ally", "$45,000", "Topped up this month", OnTrack, null),
+        ("Savings", "Chase", "$12,000", "No rule yet", ReadOnly, null),
+        ("Brokerage", "Schwab", "$238,820", "Drifted from your model", Warning, "JPM $60k · DIS $40k · QQQ $120k · cash $18.8k"),
+        ("Roth IRA", "Schwab", "$105,000", "Maxed for the year", OnTrack, "SPY $105k"),
+        ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", OnTrack, null),
+        ("Credit card", "Discover", "$1,240", "Set to pay in full on the 21st", OnTrack, null),
+        ("401(k)", "Fidelity", "$95,000", "Counted, never traded", ReadOnly, "S&P 500 fund $95k"),
     ];
 
     private static string StatusClass(string state) => state switch

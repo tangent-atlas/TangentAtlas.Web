@@ -51,7 +51,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
     [Theory]
     [InlineData("/your-net-worth", "Your net worth", "Every account, every rule, one screen.")]
-    [InlineData("/have-a-plan", "Have a plan", "Why do you own what you own?")]
+    [InlineData("/have-a-plan", "What do you own?", "But why, exactly, do you own this combination?")]
     [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t switch it off.")]
     [InlineData("/you-hold-the-keys", "You hold the keys", "A new company should have to earn your trust.")]
     [InlineData("/how-it-works", "How it works", "Link your accounts. We never see your passwords.")]
@@ -94,7 +94,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/your-net-worth", TestContext.Current.CancellationToken);
 
-        foreach (var name in new[] { "Bank of America", "Schwab", "American Express", "Discover", "Fidelity" })
+        foreach (var name in new[] { "Bank of America", "Ally", "Chase", "Schwab", "American Express", "Discover", "Fidelity", "Meet Ken." })
         {
             Assert.Contains(name, html);
         }
@@ -103,7 +103,11 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
             Assert.Contains($"<div class=\"ta-net-label\">{figure}</div>", html);   // on the same line as what you own and owe
         }
         Assert.DoesNotContain("Your card issuer", html);
-        Assert.Contains("7 accounts, 6 rules, 2 warnings, 0 errors", html);
+        foreach (var chip in new[] { "<b>8</b> accounts", "<b>6</b> rules", "<b>2</b> warnings", "<b>0</b> errors" })
+        {
+            Assert.Contains(chip, html);
+        }
+        Assert.Contains("<b>3 trades</b> waiting for your approval", html);
         Assert.Equal(2, html.Split("class=\"ta-warning\"").Length - 1);   // checking and brokerage carry the warnings
         Assert.DoesNotContain("An example.", html);
     }
