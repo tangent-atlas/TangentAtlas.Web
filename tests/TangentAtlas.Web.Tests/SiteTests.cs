@@ -59,7 +59,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
 
-        Assert.Contains($"<h1 class=\"ta-page-headline\">{headline}</h1>", html);
+        Assert.Contains($">{headline}</h1>", html);   // shown, or hidden where the menu already names the page
         Assert.Contains(content, html);
         Assert.Contains("class=\"ta-nav-link active\"", html);   // the menu marks the page you are on
     }
@@ -98,7 +98,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         {
             Assert.Contains(name, html);
         }
-        foreach (var figure in new[] { "12-month return", "Volatility", "Sharpe ratio" })
+        foreach (var figure in new[] { "Annual return", "Volatility", "Sharpe ratio" })
         {
             Assert.Contains($"<div class=\"ta-net-label\">{figure}</div>", html);   // on the same line as what you own and owe
         }
