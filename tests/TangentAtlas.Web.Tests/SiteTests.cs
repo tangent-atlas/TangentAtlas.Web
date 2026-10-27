@@ -54,7 +54,6 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     [InlineData("/have-a-plan", "Have a plan", "What do you own?")]
     [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t switch it off.")]
     [InlineData("/you-hold-the-keys", "You hold the keys", "A new company should have to earn your trust.")]
-    [InlineData("/how-it-works", "How it works", "Link your accounts. We never see your passwords.")]
     public async Task EachMenuItemOpensAPageHeadedByItsName(string path, string headline, string content)
     {
         var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
@@ -126,7 +125,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/you-hold-the-keys", TestContext.Current.CancellationToken);
 
-        foreach (var proof in new[] { "Your money stays in your name", "We never see your passwords", "You decide how far it goes", "Read the code" })
+        foreach (var proof in new[] { "Your money stays where it is", "We never see your passwords", "Nothing moves until you approve it", "Read the code" })
         {
             Assert.Contains($"<div class=\"ta-trust-title\">{proof}</div>", html);
         }
@@ -137,7 +136,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
-        foreach (var page in new[] { "your-net-worth", "have-a-plan", "when-the-storm-hits", "you-hold-the-keys", "how-it-works" })
+        foreach (var page in new[] { "your-net-worth", "have-a-plan", "when-the-storm-hits", "you-hold-the-keys" })
         {
             Assert.Contains($"href=\"{page}\"", html);
         }
@@ -145,6 +144,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     }
 
     [Theory]
+    [InlineData("/how-it-works")]
     [InlineData("/built-in-the-open")]
     [InlineData("/under-one-roof")]
     [InlineData("/all-under-one-roof")]
