@@ -7,27 +7,36 @@
 
     <div class="ta-net">
         <div class="ta-net-group">
-            <div><div class="ta-net-label">You own</div><div class="ta-net-value">$411,120</div></div>
-            <div><div class="ta-net-label">You owe</div><div class="ta-net-value">$3,850</div></div>
-            <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$407,270</div></div>
+            <div><div class="ta-net-label">You own</div><div class="ta-net-value">$407,880</div></div>
+            <div><div class="ta-net-label">You owe</div><div class="ta-net-value">$5,090</div></div>
+            <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$402,790</div></div>
         </div>
         @* The example's last 12 months (October 2025 to October 2026): its stocks followed the market, its savings earned Treasury-bill interest. *@
         <div class="ta-net-group ta-net-group-end">
-            <div><div class="ta-net-label">12-month return</div><div class="ta-net-value">13.6%</div></div>
-            <div><div class="ta-net-label">Volatility</div><div class="ta-net-value">11.9%</div></div>
+            <div><div class="ta-net-label">12-month return</div><div class="ta-net-value">13.7%</div></div>
+            <div><div class="ta-net-label">Volatility</div><div class="ta-net-value">12.0%</div></div>
             <div><div class="ta-net-label">Sharpe ratio</div><div class="ta-net-value">0.83</div></div>
         </div>
     </div>
 
-    <div class="ta-net-divider">6 accounts at 4 institutions · every rule on track</div>
+    <p class="ta-net-count">7 accounts, 6 rules, 2 warnings, 0 errors</p>
 
     <div class="ta-accounts">
         @foreach (var account in ExampleAccounts)
         {
             <div class="ta-account">
-                <div class="ta-account-head"><span class="ta-account-name">@account.Name</span><span class="ta-account-where">@account.Where</span></div>
+                <div class="ta-account-head">
+                    <span class="ta-account-name">
+                        @account.Name
+                        @if (account.State == Warning)
+                        {
+                            <svg class="ta-warning" width="16" height="16" viewBox="0 0 16 16" role="img" aria-label="Warning"><path d="M8 1.5 15 14.5H1z" fill="#E8A317" stroke="#E8A317" stroke-width="1.5" stroke-linejoin="round"></path><rect x="7.2" y="5.5" width="1.6" height="5" rx="0.8" fill="#ffffff"></rect><circle cx="8" cy="12.3" r="0.95" fill="#ffffff"></circle></svg>
+                        }
+                    </span>
+                    <span class="ta-account-where">@account.Where</span>
+                </div>
                 <div class="ta-account-value">@account.Balance</div>
-                <div class="ta-account-status @(account.ReadOnly ? "ta-account-status-neutral" : "")">@account.Status</div>
+                <div class="ta-account-status @StatusClass(account.State)">@account.Status</div>
             </div>
         }
     </div>
@@ -43,13 +52,24 @@
 </div>
 
 @code {
-    private static readonly (string Name, string Where, string Balance, string Status, bool ReadOnly)[] ExampleAccounts =
+    // Seven accounts and six rules (the 401(k) is counted, never traded); two rules are warning, none in error.
+    private const string OnTrack = "on-track", Warning = "warning", ReadOnly = "read-only";
+
+    private static readonly (string Name, string Where, string Balance, string Status, string State)[] ExampleAccounts =
     [
-        ("Checking", "Bank of America", "$7,420", "Inside your $5k–$10k band", false),
-        ("Savings", "Bank of America", "$24,000", "Topped up this month", false),
-        ("Brokerage", "Schwab", "$186,500", "On your model", false),
-        ("IRA", "Schwab", "$98,200", "Maxed for the year", false),
-        ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", false),
-        ("401(k)", "Fidelity", "$95,000", "Counted, never traded", true),
+        ("Checking", "Bank of America", "$4,180", "Below your $5k–$10k band", Warning),
+        ("Savings", "Bank of America", "$24,000", "Topped up this month", OnTrack),
+        ("Brokerage", "Schwab", "$186,500", "Drifted from your model", Warning),
+        ("IRA", "Schwab", "$98,200", "Maxed for the year", OnTrack),
+        ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", OnTrack),
+        ("Credit card", "Discover", "$1,240", "Set to pay in full on the 21st", OnTrack),
+        ("401(k)", "Fidelity", "$95,000", "Counted, never traded", ReadOnly),
     ];
+
+    private static string StatusClass(string state) => state switch
+    {
+        Warning => "ta-account-status-warning",
+        ReadOnly => "ta-account-status-neutral",
+        _ => "",
+    };
 }
