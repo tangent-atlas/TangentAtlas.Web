@@ -94,7 +94,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/your-net-worth", TestContext.Current.CancellationToken);
 
-        foreach (var name in new[] { "Bank of America", "Schwab", "American Express", "Discover", "Fidelity" })
+        foreach (var name in new[] { "Bank of America", "Ally", "Chase", "Schwab", "American Express", "Discover", "Fidelity", "Meet Ken." })
         {
             Assert.Contains(name, html);
         }
@@ -103,7 +103,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
             Assert.Contains($"<div class=\"ta-net-label\">{figure}</div>", html);   // on the same line as what you own and owe
         }
         Assert.DoesNotContain("Your card issuer", html);
-        foreach (var chip in new[] { "<b>7</b> accounts", "<b>6</b> rules", "<b>2</b> warnings", "<b>0</b> errors" })
+        foreach (var chip in new[] { "<b>8</b> accounts", "<b>6</b> rules", "<b>2</b> warnings", "<b>0</b> errors" })
         {
             Assert.Contains(chip, html);
         }
