@@ -126,7 +126,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/you-hold-the-keys", TestContext.Current.CancellationToken);
 
-        foreach (var proof in new[] { "Your money stays in your name", "We never see your passwords", "You decide how far it goes", "Read the code" })
+        foreach (var proof in new[] { "Your money stays where it is", "We never see your passwords", "You decide how far it goes", "Read the code" })
         {
             Assert.Contains($"<div class=\"ta-trust-title\">{proof}</div>", html);
         }
