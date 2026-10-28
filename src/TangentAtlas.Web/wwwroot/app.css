@@ -701,6 +701,9 @@ h1:focus {
 }
 
 .ta-account-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 15px;
     font-weight: 500;
 }
@@ -721,7 +724,9 @@ h1:focus {
     color: var(--ta-text-muted);
 }
 
+/* The status sits on the tile's bottom edge, so statuses line up across a row. */
 .ta-account-status {
+    margin-top: auto;
     align-self: flex-start;
     font-size: 12px;
     font-weight: 500;
@@ -731,20 +736,9 @@ h1:focus {
     padding: 3px 10px;
 }
 
-.ta-account-status-neutral {
-    color: var(--ta-text-body);
-    background: #f3f4f6;
-}
-
 .ta-account-status-warning {
     color: #8a4b08;
     background: #fdf1d8;
-}
-
-.ta-account-name {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
 }
 
 .ta-warning {
