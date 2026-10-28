@@ -12,7 +12,7 @@
             <div><div class="ta-net-label">You owe</div><div class="ta-net-value">$5,090</div></div>
             <div><div class="ta-net-label">Net worth</div><div class="ta-net-value ta-net-value-accent">$500,000</div></div>
         </div>
-        @* The same figures as "Ken today" on "Have a plan": his mix over five years, October 2021 to October 2026, cash earning nothing. *@
+        @* The same figures as "Ken today" on "Your plan": his mix over five years, October 2021 to October 2026, cash earning nothing. *@
         <div class="ta-net-group ta-net-group-end">
             <div><div class="ta-net-label">Annual return</div><div class="ta-net-value">10.4%</div></div>
             <div><div class="ta-net-label">Volatility</div><div class="ta-net-value">15.5%</div></div>
@@ -63,7 +63,7 @@
 
 @code {
     // Ken: eight accounts and six rules (the old Chase savings has none; the 401(k) is counted, never traded); two rules are warning, none in error.
-    // His net worth is "Ken today" on "Have a plan", $500,000: JPM $60k, DIS $40k, SPY $200k (Roth IRA, plus the S&P 500 fund in his 401(k)),
+    // His net worth is "Ken today" on "Your plan", $500,000: JPM $60k, DIS $40k, SPY $200k (Roth IRA, plus the S&P 500 fund in his 401(k)),
     // QQQ $120k, and cash $80k net of the $5,090 on his cards ($85,090 in checking, savings and the brokerage account).
     // An account with nothing to report (no rule, or read-only) shows no status at all.
     private const string OnTrack = "on-track", Warning = "warning", Clear = "clear";
