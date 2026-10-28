@@ -47,7 +47,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
     [Theory]
     [InlineData("/your-net-worth", "Your net worth", "Every account, every rule, one screen.")]
-    [InlineData("/have-a-plan", "Have a plan", "What do you own?")]
+    [InlineData("/your-plan", "Your plan", "What do you own?")]
     [InlineData("/when-the-storm-hits", "When the storm hits", "Turn it down. Don’t switch it off.")]
     [InlineData("/you-hold-the-keys", "You hold the keys", "A new company should have to earn your trust.")]
     public async Task EachMenuItemOpensAPageHeadedByItsName(string path, string headline, string content)
@@ -62,7 +62,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     [Theory]
     [InlineData("/", "Keep your bank, your broker and your stocks.")]
     [InlineData("/your-net-worth", "Finally, the whole picture.")]
-    [InlineData("/have-a-plan", "Your index. Your shares. Your plan.")]
+    [InlineData("/your-plan", "Your index. Your shares. Your plan.")]
     [InlineData("/when-the-storm-hits", "Respond with discipline, not panic.")]
     [InlineData("/you-hold-the-keys", "You keep the keys. We keep earning your trust.")]
     public async Task EachPitchPageEndsWithItsLineAndSignUp(string path, string closing)
@@ -77,7 +77,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     [Fact]
     public async Task ThePlanPagesFiguresAreLabelledAsBacktested()
     {
-        var html = await client.GetStringAsync("/have-a-plan", TestContext.Current.CancellationToken);
+        var html = await client.GetStringAsync("/your-plan", TestContext.Current.CancellationToken);
 
         Assert.Contains("The same return. Less risk. More cash.", html);
         Assert.Contains("These are backtested results", html);
@@ -132,7 +132,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
-        foreach (var page in new[] { "your-net-worth", "have-a-plan", "when-the-storm-hits", "you-hold-the-keys" })
+        foreach (var page in new[] { "your-net-worth", "your-plan", "when-the-storm-hits", "you-hold-the-keys" })
         {
             Assert.Contains($"href=\"{page}\"", html);
         }
