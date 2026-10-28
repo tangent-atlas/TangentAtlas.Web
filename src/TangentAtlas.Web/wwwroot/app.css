@@ -312,30 +312,12 @@ h1:focus {
     color: var(--ta-text-body);
 }
 
-.ta-pains {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-    .ta-pains li {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-.ta-pain-question {
-    font-size: 17px;
+/* A link onward, such as "See it on GitHub →". */
+.ta-more-link {
+    align-self: flex-start;
+    font-size: 15px;
     font-weight: 500;
-}
-
-.ta-pain-answer {
-    font-size: 16px;
-    line-height: 1.6;
-    color: var(--ta-text-body);
+    text-decoration: none;
 }
 
 .ta-rules {
@@ -841,12 +823,6 @@ h1:focus {
     font-size: 15px;
     line-height: 1.6;
     color: var(--ta-text-body);
-}
-
-.ta-trust-link {
-    font-size: 15px;
-    font-weight: 500;
-    text-decoration: none;
 }
 
 /* =====================
