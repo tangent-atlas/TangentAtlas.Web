@@ -16,7 +16,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
         Assert.Contains("A thermostat for <em>all</em> your money.", html);
         Assert.Contains("Set the temperature, and Tangent Atlas keeps your money from running too hot or too cold.", html);
-        Assert.Contains("What’s the last thing you want to touch?", html);
+        Assert.Contains("What do you sell first? What do you sell last?", html);
         Assert.Contains("Pay every credit card in full", html);
         Assert.Equal(4, html.Split("class=\"ta-rule-graphic\"").Length - 1);   // every rule has the same size and layout
         Assert.Contains("href=\"/signup\"", html);
