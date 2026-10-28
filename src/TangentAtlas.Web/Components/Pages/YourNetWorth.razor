@@ -47,7 +47,10 @@
                 {
                     <div class="ta-account-holdings">@account.Holdings</div>
                 }
-                <div class="ta-account-status @StatusClass(account.State)">@account.Status</div>
+                @if (account.Status is not null)
+                {
+                    <div class="ta-account-status @StatusClass(account.State)">@account.Status</div>
+                }
             </div>
         }
     </div>
@@ -66,24 +69,24 @@
     // Ken: eight accounts and six rules (the old Chase savings has none; the 401(k) is counted, never traded); two rules are warning, none in error.
     // His net worth is "Ken today" on "Have a plan", $500,000: JPM $60k, DIS $40k, SPY $200k (Roth IRA, plus the S&P 500 fund in his 401(k)),
     // QQQ $120k, and cash $80k net of the $5,090 on his cards ($85,090 in checking, savings and the brokerage account).
-    private const string OnTrack = "on-track", Warning = "warning", ReadOnly = "read-only";
+    // An account with nothing to report (no rule, or read-only) shows no status at all.
+    private const string OnTrack = "on-track", Warning = "warning", Clear = "clear";
 
-    private static readonly (string Name, string Where, string Balance, string Status, string State, string? Holdings)[] ExampleAccounts =
+    private static readonly (string Name, string Where, string Balance, string? Status, string State, string? Holdings)[] ExampleAccounts =
     [
         ("Checking", "Bank of America", "$4,180", "Below your $5k–$10k band", Warning, null),
         ("Savings", "Ally", "$45,000", "Topped up this month", OnTrack, null),
-        ("Savings", "Chase", "$17,090", "No rule yet", ReadOnly, null),
+        ("Savings", "Chase", "$17,090", null, Clear, null),
         ("Brokerage", "Schwab", "$238,820", "Drifted from your model", Warning, "JPM $60k · DIS $40k · QQQ $120k · cash $18.8k"),
         ("Roth IRA", "Schwab", "$105,000", "Maxed for the year", OnTrack, "SPY $105k"),
         ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", OnTrack, null),
         ("Credit card", "Discover", "$1,240", "Set to pay in full on the 21st", OnTrack, null),
-        ("401(k)", "Fidelity", "$95,000", "Counted, never traded", ReadOnly, "S&P 500 fund $95k"),
+        ("401(k)", "Fidelity", "$95,000", null, Clear, "S&P 500 fund $95k"),
     ];
 
     private static string StatusClass(string state) => state switch
     {
         Warning => "ta-account-status-warning",
-        ReadOnly => "ta-account-status-neutral",
         _ => "",
     };
 }
