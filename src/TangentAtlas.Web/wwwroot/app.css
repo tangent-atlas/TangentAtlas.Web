@@ -713,15 +713,12 @@ h1:focus {
     color: var(--ta-text-muted);
 }
 
+/* One blank line below the balance, kept for a subtitle or nickname later. */
 .ta-account-value {
+    margin-bottom: 20px;
     font-family: var(--ta-serif);
     font-size: 26px;
     line-height: 1.2;
-}
-
-.ta-account-holdings {
-    font-size: 13px;
-    color: var(--ta-text-muted);
 }
 
 /* The status sits on the tile's bottom edge, so statuses line up across a row. */
