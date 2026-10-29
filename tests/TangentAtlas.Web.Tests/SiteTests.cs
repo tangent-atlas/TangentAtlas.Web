@@ -61,7 +61,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
     [Theory]
     [InlineData("/", "Keep your bank, your broker and your stocks.")]
-    [InlineData("/your-net-worth", "Finally, the whole picture.")]
+    [InlineData("/your-net-worth", "You can’t tell if you’re winning without knowing the score.")]
     [InlineData("/your-plan", "Your index. Your shares. Your plan.")]
     [InlineData("/when-the-storm-hits", "Respond with discipline, not panic.")]
     [InlineData("/you-hold-the-keys", "You keep the keys. We keep earning your trust.")]
