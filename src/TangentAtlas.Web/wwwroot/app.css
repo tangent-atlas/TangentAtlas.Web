@@ -28,6 +28,11 @@ html, body {
     background: var(--ta-bg);
 }
 
+/* Always reserve the scroll bar's space, so a short page and a long one centre the same way and the frame never shifts between pages. */
+html {
+    scrollbar-gutter: stable;
+}
+
 a {
     color: var(--ta-green-dark);
 }
