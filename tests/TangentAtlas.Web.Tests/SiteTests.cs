@@ -79,9 +79,9 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/your-plan", TestContext.Current.CancellationToken);
 
-        Assert.Contains("The same return. Less risk. More cash.", html);
+        Assert.Contains("More return. Less risk. More cash.", html);
         Assert.Contains("These are backtested results", html);
-        Assert.True(html.IndexOf("These are backtested results", StringComparison.Ordinal) > html.IndexOf("The same return.", StringComparison.Ordinal));
+        Assert.True(html.IndexOf("These are backtested results", StringComparison.Ordinal) > html.IndexOf("More return. Less risk.", StringComparison.Ordinal));
     }
 
     [Fact]
