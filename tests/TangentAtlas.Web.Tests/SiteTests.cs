@@ -89,7 +89,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/your-net-worth", TestContext.Current.CancellationToken);
 
-        foreach (var name in new[] { "Bank of America", "Ally", "Chase", "Schwab", "American Express", "Discover", "Fidelity", "Meet Ken." })
+        foreach (var name in new[] { "Bank of America", "Ally", "Chase", "Schwab", "American Express", "Discover", "Rollover IRA", "Meet Ken." })
         {
             Assert.Contains(name, html);
         }
