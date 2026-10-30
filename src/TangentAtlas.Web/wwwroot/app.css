@@ -777,12 +777,13 @@ h1:focus {
     color: var(--ta-text-muted);
 }
 
+/* Every page ends the same way: the closing line, then the Sign up button on its own line beneath it. */
 .ta-page-final {
     margin-top: 24px;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px 28px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
 }
 
 /* A statement partway down a page: the turn in the story. */
