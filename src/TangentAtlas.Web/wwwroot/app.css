@@ -245,6 +245,20 @@ h1:focus {
     justify-content: space-between;
 }
 
+/* What is live and what is planned, on every page: the site shows the product before it's built. */
+.ta-footer-status {
+    padding-top: 24px;
+}
+
+    .ta-footer-status p {
+        margin: 0;
+        max-width: var(--ta-measure);
+    }
+
+.ta-footer-status + .ta-footer-inner {
+    padding-top: 12px;
+}
+
 .ta-footer-link {
     color: var(--ta-text-muted);
 }

@@ -150,6 +150,21 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         Assert.Contains("href=\"/privacy\"", html);
     }
 
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/your-net-worth")]
+    [InlineData("/your-plan")]
+    [InlineData("/when-the-storm-hits")]
+    [InlineData("/you-hold-the-keys")]
+    public async Task EveryPageSaysWhatIsNotLiveYet(string path)
+    {
+        var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
+
+        Assert.Contains("Tangent Atlas is in development.", html);
+        Assert.Contains("Ken is a fictional customer.", html);
+        Assert.Contains("aren’t live yet.", html);
+    }
+
     [Fact]
     public async Task ThePrivacyStatementSaysWhatWeCollect()
     {
