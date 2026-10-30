@@ -923,7 +923,6 @@ h1:focus {
 .ta-holdings-c3 { background: #2f5f8a; }
 .ta-holdings-c4 { background: #5b86ad; }
 .ta-holdings-cash { background: #d8d2c4; color: var(--ta-text); }
-.ta-holdings-read-only { background: #8a94a6; }   /* counted, never traded: an employer plan */
 
 .ta-holdings-rest {
     background: #4473a0 linear-gradient(90deg, transparent calc(100% - 1px), rgba(255, 255, 255, 0.22) 0) repeat-x;

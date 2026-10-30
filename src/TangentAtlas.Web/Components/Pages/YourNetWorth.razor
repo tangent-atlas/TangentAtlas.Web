@@ -4,7 +4,7 @@
 <div class="ta-container ta-page">
     <h1 class="ta-visually-hidden">Your net worth</h1>   @* The menu already names the page; the heading is kept for screen readers and search. *@
     <p class="ta-page-idea">Every account, every rule, one screen.</p>
-    <p class="ta-page-sub">Meet Ken. He’s 46, and he’s had three employers in 23 years. Along the way he collected a checking account, savings at two other banks, a brokerage account, a Roth IRA, a 401(k) and two credit cards. Here is Ken’s dashboard in Tangent Atlas.</p>
+    <p class="ta-page-sub">Meet Ken. He’s 46, and he’s had three employers in 23 years. Along the way he collected a checking account, savings at two other banks, a brokerage account, a Roth IRA, a rollover IRA from his old jobs, and two credit cards. Here is Ken’s dashboard in Tangent Atlas.</p>
 
     <div class="ta-net">
         <div class="ta-net-group">
@@ -61,11 +61,18 @@
     </div>
 </div>
 
+
+<section class="ta-band ta-fineprint">
+    <div class="ta-container">
+        <p class="ta-figures"><strong>About employer plans.</strong> Employer plans such as 401(k)s are shown and counted toward your net worth, but Tangent Atlas never trades in them.</p>
+    </div>
+</section>
+
 @code {
-    // Ken: eight accounts and six rules (the old Chase savings has none; the 401(k) is counted, never traded); two rules are warning, none in error.
-    // His net worth is "Ken today" on "Your plan", $500,000: JPM $60k, DIS $40k, SPY $200k (Roth IRA, plus the S&P 500 fund in his 401(k)),
+    // Ken: eight accounts and six rules (the old Chase savings and the rollover IRA have none); two rules are warning, none in error.
+    // His net worth is "Ken today" on "Your plan", $500,000: JPM $60k, DIS $40k, SPY $200k (his Roth IRA and his rollover IRA),
     // QQQ $120k, and cash $80k net of the $5,090 on his cards ($85,090 in checking, savings and the brokerage account).
-    // An account with nothing to report (no rule, or read-only) shows no status at all.
+    // An account with nothing to report shows no status at all.
     private const string OnTrack = "on-track", Warning = "warning", Clear = "clear";
 
     private static readonly (string Name, string Where, string Balance, string? Status, string State)[] ExampleAccounts =
@@ -77,7 +84,7 @@
         ("Roth IRA", "Schwab", "$105,000", "Maxed for the year", OnTrack),
         ("Credit card", "American Express", "$3,850", "Paid in full on the 14th", OnTrack),
         ("Credit card", "Discover", "$1,240", "Set to pay in full on the 21st", OnTrack),
-        ("401(k)", "Fidelity", "$95,000", null, Clear),
+        ("Rollover IRA", "Schwab", "$95,000", null, Clear),
     ];
 
     private static string StatusClass(string state) => state switch
