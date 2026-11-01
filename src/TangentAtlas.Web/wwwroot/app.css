@@ -310,6 +310,13 @@ h1:focus {
 }
 
 /* A link onward, such as "See it on GitHub →". */
+/* A paragraph of the home page and the link to the page that shows it. */
+.ta-hero-point {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .ta-more-link {
     align-self: flex-start;
     font-size: 15px;
