@@ -15,9 +15,13 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
         Assert.Contains("A thermostat for <em>all</em> your money.", html);
-        Assert.Contains("Set the temperature, and Tangent Atlas keeps your money from running too hot or too cold.", html);
+        Assert.Contains("Set your rules, and every dollar coming in or going out follows them", html);
         Assert.Contains("What do you sell first? What do you sell last?", html);
         Assert.Contains("Pay every credit card in full", html);
+        foreach (var page in new[] { "/your-net-worth", "/your-plan", "/when-the-storm-hits" })
+        {
+            Assert.Contains($"href=\"{page}\" class=\"ta-more-link\"", html);   // each paragraph links to the page that shows it
+        }
         Assert.Equal(4, html.Split("class=\"ta-rule-graphic\"").Length - 1);   // every rule has the same size and layout
         Assert.Contains("href=\"/signup\"", html);
         Assert.Contains("href=\"/account/signin\"", html);
@@ -60,7 +64,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     }
 
     [Theory]
-    [InlineData("/", "Keep your bank, your broker and your stocks.")]
+    [InlineData("/", "Keep your bank and your broker. Lose the chaos.")]
     [InlineData("/your-net-worth", "You can’t tell if you’re winning when you don’t know the score.")]
     [InlineData("/your-plan", "Your index. Your shares. Your plan.")]
     [InlineData("/when-the-storm-hits", "Respond with discipline, not panic.")]

@@ -284,14 +284,6 @@ h1:focus {
     letter-spacing: -1px;
 }
 
-.ta-hero-subtitle {
-    margin: 0;
-    max-width: 900px;
-    font-size: 20px;
-    line-height: 1.6;
-    color: var(--ta-text-body);
-}
-
     .ta-hero-title em {
         color: var(--ta-green-dark);
     }
@@ -318,6 +310,13 @@ h1:focus {
 }
 
 /* A link onward, such as "See it on GitHub →". */
+/* A paragraph of the home page and the link to the page that shows it. */
+.ta-hero-point {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .ta-more-link {
     align-self: flex-start;
     font-size: 15px;
