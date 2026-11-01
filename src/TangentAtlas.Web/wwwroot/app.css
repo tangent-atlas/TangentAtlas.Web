@@ -927,12 +927,12 @@ h1:focus {
 
 .ta-holdings-rest {
     background: #4473a0 linear-gradient(90deg, transparent calc(100% - 1px), rgba(255, 255, 255, 0.22) 0) repeat-x;
-    background-size: calc(100% / 27) 100%;
+    background-size: calc(100% / 22) 100%;
     text-shadow: 0 0 6px #4473a0, 0 0 2px #4473a0;
 }
 
 /* =====================
-   Your plan: Ken today against the Ken 30
+   Your plan: Ken today against the Ken 25
    ===================== */
 
 .ta-plan-stats {
