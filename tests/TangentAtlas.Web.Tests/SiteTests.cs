@@ -85,6 +85,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
         Assert.Contains("Higher returns. Same risk. More cash.", html);
         Assert.Contains("These are backtested results", html);
+        Assert.Contains("Why not just own an index fund and be done with it?", html);
         Assert.True(html.IndexOf("These are backtested results", StringComparison.Ordinal) > html.IndexOf("Higher returns. Same risk.", StringComparison.Ordinal));
     }
 
