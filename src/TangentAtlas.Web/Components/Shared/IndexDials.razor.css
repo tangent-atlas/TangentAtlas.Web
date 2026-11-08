@@ -9,6 +9,14 @@
     gap: 28px;
 }
 
+/* Inside a dashboard card: no frame of its own. */
+.ta-dials-inset {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+}
+
 .ta-dials-head {
     display: flex;
     flex-direction: column;

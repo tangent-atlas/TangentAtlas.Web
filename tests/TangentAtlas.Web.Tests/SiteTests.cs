@@ -275,10 +275,26 @@ public class SignedInTests(SignedInSiteFactory factory) : IClassFixture<SignedIn
         Assert.Contains("Your personal index", html);
         Assert.Contains("How many companies?", html);
         Assert.Contains("How much risk?", html);
-        Assert.Contains("aria-valuetext=\"500 companies\"", html);   // starts where an index fund starts: no setting is marked as ours
+        Assert.Contains("aria-valuetext=\"11 companies\"", html);    // the dials start from the customer's own index
         Assert.DoesNotContain("recommended", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("An illustration, not a backtest.", html);
         Assert.True(html.IndexOf("Your personal index", StringComparison.Ordinal) < html.IndexOf("Your accounts</h2>", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task TheDashboardReadsLikeAThermostatInThePlansOrder()
+    {
+        var html = await client.GetStringAsync("/accounts", TestContext.Current.CancellationToken);
+
+        var order = new[] { "Needs you</h2>", "Your personal index</h2>", "Your rules</h2>", "Your accounts</h2>" }
+            .Select(heading => html.IndexOf(heading, StringComparison.Ordinal))
+            .ToArray();
+        Assert.All(order, position => Assert.True(position > 0));
+        Assert.Equal(order.Order(), order);
+        Assert.Equal(5, html.Split(">Set to</dt>").Length - 1);   // the index and four rules: set to, now, doing
+        Assert.Equal(html.Split(">Set to</dt>").Length, html.Split(">Doing</dt>").Length);
+        Assert.Contains("$500,000", html);                            // Ken's net worth, as on the public pages
+        Assert.Contains("This is Ken’s dashboard", html);             // sample data, said so
     }
 
     [Fact]

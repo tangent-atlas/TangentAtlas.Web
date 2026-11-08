@@ -1,0 +1,242 @@
+/* The signed-in dashboard: a dashboard of cards, each a thermostat (set to, now, doing). */
+.ta-dash {
+    gap: 28px;
+}
+
+.ta-dash-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.ta-dash-title {
+    margin: 0;
+    font-family: var(--ta-serif);
+    font-weight: 400;
+    font-size: clamp(28px, 3.4vw, 40px);
+    line-height: 1.15;
+}
+
+.ta-dash-net {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 28px;
+    font-size: 15px;
+    color: var(--ta-text-muted);
+}
+
+    .ta-dash-net b {
+        font-weight: 500;
+        color: var(--ta-text);
+    }
+
+.ta-dash-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ta-dash-section-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--ta-text-muted);
+}
+
+/* Needs you: a short list, gone when empty. */
+.ta-needs {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ta-need {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    border: 1px solid var(--ta-border);
+    border-left: 4px solid var(--ta-green-dark);
+    border-radius: 10px;
+    background: var(--ta-bg);
+}
+
+    .ta-need.ta-state-warning {
+        border-left-color: #E8A317;
+    }
+
+.ta-need-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ta-need-what {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.ta-need-why {
+    font-size: 14px;
+    color: var(--ta-text-muted);
+}
+
+/* Cards. */
+.ta-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: 16px;
+}
+
+.ta-card {
+    border: 1px solid var(--ta-border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    background: var(--ta-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.ta-card-plan {
+    padding: 26px 28px;
+    background: var(--ta-bg-secondary);
+    gap: 12px;
+}
+
+.ta-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.ta-card-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.ta-card-plan .ta-card-title {
+    font-family: var(--ta-serif);
+    font-weight: 400;
+    font-size: clamp(24px, 2.6vw, 30px);
+    color: var(--ta-green-dark);
+}
+
+.ta-card-badge {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: var(--ta-green-light);
+    color: var(--ta-green-dark);
+}
+
+.ta-state-warning .ta-card-badge {
+    background: #fdf1d8;
+    color: #8a4b08;
+}
+
+.ta-state-waiting .ta-card-badge {
+    background: #e6eef6;
+    color: #2f5f8a;
+}
+
+.ta-card-where,
+.ta-card-note {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ta-text-muted);
+}
+
+/* The thermostat's three lines. */
+.ta-reading {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    .ta-reading div {
+        display: grid;
+        grid-template-columns: 4.5em 1fr;
+        gap: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .ta-reading dt {
+        color: var(--ta-text-muted);
+    }
+
+    .ta-reading dd {
+        margin: 0;
+        color: var(--ta-text);
+    }
+
+.ta-reading-plan div {
+    font-size: 16px;
+}
+
+.ta-card-more {
+    margin-top: 6px;
+}
+
+    .ta-card-more summary {
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--ta-green-dark);
+        margin-bottom: 16px;
+    }
+
+/* Accounts: lines under each institution. */
+.ta-lines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 15px;
+}
+
+    .ta-lines li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--ta-text-body);
+    }
+
+.ta-line-value {
+    font-variant-numeric: tabular-nums;
+    color: var(--ta-text);
+}
+
+.ta-card-add {
+    border-style: dashed;
+    align-items: flex-start;
+}
+
+@media (max-width: 520px) {
+    .ta-need {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ta-card-plan {
+        padding: 20px 18px;
+    }
+}

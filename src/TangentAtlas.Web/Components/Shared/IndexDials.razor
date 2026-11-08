@@ -4,11 +4,14 @@
 @* The signed-in dashboard's prototype: the personal index on two dials, how many companies and how much risk.
    It starts where an index fund starts (all 500, fully invested) and marks no setting as recommended: the visitor turns
    the dials and sees what each setting means for his own money (Path A). The figures are an approximation, labelled as one. *@
-<section class="ta-dials" aria-labelledby="ta-dials-title">
-    <div class="ta-dials-head">
-        <h2 id="ta-dials-title" class="ta-dials-title">Your personal index</h2>
-        <p class="ta-dials-sub">Start where an index fund starts: all 500 companies, fully invested. Then turn the dials to make it yours.</p>
-    </div>
+<section class="ta-dials @(ShowHeading ? "" : "ta-dials-inset")" aria-label="Your personal index on two dials">
+    @if (ShowHeading)
+    {
+        <div class="ta-dials-head">
+            <h2 id="ta-dials-title" class="ta-dials-title">Your personal index</h2>
+            <p class="ta-dials-sub">Start where an index fund starts: all 500 companies, fully invested. Then turn the dials to make it yours.</p>
+        </div>
+    }
 
     <div class="ta-dials-controls">
         <fieldset class="ta-dial">
@@ -28,10 +31,10 @@
 
         <fieldset class="ta-dial">
             <legend class="ta-dial-name">How much risk?</legend>
-            <svg class="ta-dial-gauge" viewBox="0 0 140 120" role="img" aria-label="@($"Volatility {Percent(Result.Volatility)}")">
+            <svg class="ta-dial-gauge" viewBox="0 0 140 120" role="img" aria-label="@($"Volatility {Percent(Result.Volatility, "0.#")}")">
                 <circle cx="70" cy="66" r="52" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round" stroke-dasharray="@Arc(1.0)" transform="rotate(135 70 66)"></circle>
                 <circle cx="70" cy="66" r="52" fill="none" stroke="#2f5f8a" stroke-width="10" stroke-linecap="round" stroke-dasharray="@Arc(RiskDialFraction)" transform="rotate(135 70 66)"></circle>
-                <text x="70" y="70" text-anchor="middle" class="ta-dial-reading">@Percent(Result.Volatility)</text>
+                <text x="70" y="70" text-anchor="middle" class="ta-dial-reading">@Percent(Result.Volatility, "0.#")</text>
                 <text x="70" y="90" text-anchor="middle" class="ta-dial-unit">volatility</text>
             </svg>
 
@@ -52,9 +55,9 @@
 
             @if (risk == RiskSetting.HoldSteady)
             {
-                <input class="ta-dial-slider" type="range" min="@TargetMinimum" max="@TargetMaximum" step="1"
+                <input class="ta-dial-slider" type="range" min="@TargetMinimum" max="@TargetMaximum" step="0.1"
                        @bind="targetPercent" @bind:event="oninput"
-                       aria-label="Volatility to hold" aria-valuetext="@($"{targetPercent}% volatility")" />
+                       aria-label="Volatility to hold" aria-valuetext="@($"{targetPercent.ToString("0.#", Invariant)}% volatility")" />
                 <div class="ta-dial-scale" aria-hidden="true"><span>@(TargetMinimum)%</span><span>@(TargetMaximum)%</span></div>
                 <label class="ta-dial-field">
                     <span>Or set it by the loss you could live with in a bad year: $</span>
@@ -100,7 +103,7 @@
             <div class="ta-plan-stat"><span>Companies</span><span class="ta-plan-value">@Result.CompanyCount</span></div>
             <div class="ta-plan-stat"><span>Largest company</span><span class="ta-plan-value">@Percent(Result.LargestWeights[0], "0.0")</span></div>
             <div class="ta-plan-stat"><span>Cash today</span><span class="ta-plan-value">@Dollars(accountValue * (decimal)Result.CashWeight)</span></div>
-            <div class="ta-plan-stat"><span>Volatility</span><span class="ta-plan-value">@Percent(Result.Volatility)</span></div>
+            <div class="ta-plan-stat"><span>Volatility</span><span class="ta-plan-value">@Percent(Result.Volatility, "0.#")</span></div>
             <div class="ta-plan-stat"><span>Drop in a bad year</span><span class="ta-plan-value">@Dollars(Result.BadYearLow)–@Dollars(Result.BadYearHigh)</span></div>
         </div>
         <p class="ta-caption">An illustration, not a backtest. In past bad years, worst drops ran about two to three times the volatility.</p>
@@ -117,14 +120,34 @@
     private static readonly string[] SegmentClasses = ["ta-holdings-c1", "ta-holdings-c3", "ta-holdings-c2"];
     private static readonly double ArcLength = 2 * Math.PI * 52 * 0.75;   // a 270° dial
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
-    private static IReadOnlyList<int> Stops => PersonalIndexIllustration.CompanyStops;
 
-    private int stopIndex = PersonalIndexIllustration.CompanyStops.Count - 1;   // all 500: where an index fund starts
-    private RiskSetting risk = RiskSetting.FullyInvested;
-    private int targetPercent = 15;
-    private decimal accountValue = 500_000m;
+    /// <summary>False inside a card that already names the index.</summary>
+    [Parameter] public bool ShowHeading { get; set; } = true;
+
+    /// <summary>Where the dials start. The defaults are an index fund: all 500, fully invested.</summary>
+    [Parameter] public int InitialCompanyCount { get; set; } = PersonalIndexIllustration.UniverseSize;
+    [Parameter] public RiskSetting InitialRisk { get; set; } = RiskSetting.FullyInvested;
+    [Parameter] public double InitialTargetPercent { get; set; } = 15;
+    [Parameter] public decimal InitialAccountValue { get; set; } = 500_000m;
+
+    private IReadOnlyList<int> Stops = PersonalIndexIllustration.CompanyStops;
+
+    private int stopIndex;
+    private RiskSetting risk;
+    private double targetPercent;
+    private decimal accountValue;
     private decimal cashAmount = 100_000m;
     private decimal? lossYouCouldLiveWith;
+
+    protected override void OnInitialized()
+    {
+        // A customer's own count (the Ken 11, say) becomes a stop of its own, so the dial starts exactly where he is.
+        Stops = PersonalIndexIllustration.CompanyStops.Append(InitialCompanyCount).Distinct().Order().ToArray();
+        stopIndex = Stops.ToList().IndexOf(InitialCompanyCount);
+        risk = InitialRisk;
+        targetPercent = Math.Clamp(InitialTargetPercent, TargetMinimum, TargetMaximum);
+        accountValue = InitialAccountValue;
+    }
 
     private IndexIllustration Result => PersonalIndexIllustration.Illustrate(
         new DialSettings(Stops[Math.Clamp(stopIndex, 0, Stops.Count - 1)], risk, accountValue, cashAmount, targetPercent / 100.0));
@@ -140,7 +163,7 @@
     {
         if (lossYouCouldLiveWith is { } loss)
         {
-            targetPercent = (int)Math.Round(PersonalIndexIllustration.TargetForLoss(loss, accountValue) * 100, MidpointRounding.AwayFromZero);
+            targetPercent = Math.Round(PersonalIndexIllustration.TargetForLoss(loss, accountValue) * 100, 1, MidpointRounding.AwayFromZero);
         }
     }
 
