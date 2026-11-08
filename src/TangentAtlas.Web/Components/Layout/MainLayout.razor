@@ -3,29 +3,35 @@
 <div class="ta-layout">
     <nav class="ta-nav" aria-label="Main">
         <div class="ta-container ta-nav-inner">
-            <a href="/" class="ta-logo">
-                <img src="images/logo-mark.png" alt="" class="ta-logo-mark" />
-                <span>Tangent <span class="ta-logo-accent">Atlas</span></span>
-            </a>
-            <div class="ta-nav-links">
-                <NavLink href="your-net-worth" class="ta-nav-link" Match="NavLinkMatch.All">Your net worth</NavLink>
-                <NavLink href="your-plan" class="ta-nav-link" Match="NavLinkMatch.All">Your plan</NavLink>
-                <NavLink href="when-the-storm-hits" class="ta-nav-link" Match="NavLinkMatch.All">When the storm hits</NavLink>
-                <NavLink href="you-hold-the-keys" class="ta-nav-link" Match="NavLinkMatch.All">You hold the keys</NavLink>
-                <AuthorizeView>
-                    <Authorized>
-                        <a href="/accounts" class="ta-btn ta-btn-outline">My accounts</a>
+            @* Signed in, the logo leads home to the dashboard; the pitch menu was there to bring visitors to Sign up, so it goes. *@
+            <AuthorizeView>
+                <Authorized>
+                    <a href="/accounts" class="ta-logo">
+                        <img src="images/logo-mark.png" alt="" class="ta-logo-mark" />
+                        <span>Tangent <span class="ta-logo-accent">Atlas</span></span>
+                    </a>
+                    <div class="ta-nav-links">
                         <form method="post" action="/account/signout" class="ta-inline-form">
                             <AntiforgeryToken />
                             <button type="submit" class="ta-btn ta-btn-outline">Sign out</button>
                         </form>
-                    </Authorized>
-                    <NotAuthorized>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/" class="ta-logo">
+                        <img src="images/logo-mark.png" alt="" class="ta-logo-mark" />
+                        <span>Tangent <span class="ta-logo-accent">Atlas</span></span>
+                    </a>
+                    <div class="ta-nav-links">
+                        <NavLink href="your-net-worth" class="ta-nav-link" Match="NavLinkMatch.All">Your net worth</NavLink>
+                        <NavLink href="your-plan" class="ta-nav-link" Match="NavLinkMatch.All">Your plan</NavLink>
+                        <NavLink href="when-the-storm-hits" class="ta-nav-link" Match="NavLinkMatch.All">When the storm hits</NavLink>
+                        <NavLink href="you-hold-the-keys" class="ta-nav-link" Match="NavLinkMatch.All">You hold the keys</NavLink>
                         <a href="/account/signin" class="ta-btn ta-btn-outline" data-enhance-nav="false">Sign in</a>
                         <a href="/signup" class="ta-btn ta-btn-primary">Sign up</a>
-                    </NotAuthorized>
-                </AuthorizeView>
-            </div>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
     </nav>
 

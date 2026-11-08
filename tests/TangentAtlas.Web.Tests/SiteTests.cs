@@ -290,12 +290,17 @@ public class SignedInTests(SignedInSiteFactory factory) : IClassFixture<SignedIn
     }
 
     [Fact]
-    public async Task TheLandingPageOffersTheSignedInPageInsteadOfSignUp()
+    public async Task SignedInTheMenuIsTheDashboardAndSignOut()
     {
-        var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
+        foreach (var path in new[] { "/accounts", "/" })
+        {
+            var html = await client.GetStringAsync(path, TestContext.Current.CancellationToken);
 
-        Assert.Contains("My accounts", html);
-        Assert.DoesNotContain("href=\"/signup\"", html);
+            Assert.Contains("href=\"/accounts\" class=\"ta-logo\"", html);   // the logo leads home to the dashboard
+            Assert.Contains("action=\"/account/signout\"", html);
+            Assert.DoesNotContain("href=\"your-plan\"", html);            // the pitch menu is for visitors
+            Assert.DoesNotContain("href=\"/signup\"", html);
+        }
     }
 }
 
