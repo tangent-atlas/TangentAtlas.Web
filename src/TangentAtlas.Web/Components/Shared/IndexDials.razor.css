@@ -1,0 +1,169 @@
+/* The home page's dashboard: two dials, then what they produce. */
+.ta-dials {
+    border: 1px solid var(--ta-border);
+    border-radius: 16px;
+    background: var(--ta-bg-secondary);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.ta-dials-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ta-dials-title {
+    margin: 0;
+    font-family: var(--ta-serif);
+    font-weight: 400;
+    font-size: clamp(26px, 3vw, 34px);
+    line-height: 1.2;
+    color: var(--ta-green-dark);
+}
+
+.ta-dials-sub {
+    margin: 0;
+    font-size: 16px;
+    color: var(--ta-text-body);
+}
+
+.ta-dials-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    gap: 24px;
+}
+
+.ta-dial {
+    margin: 0;
+    min-width: 0;
+    border: 1px solid var(--ta-border);
+    border-radius: 14px;
+    background: var(--ta-bg);
+    padding: 20px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ta-dial-name {
+    padding: 0 6px;
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.ta-dial-gauge {
+    width: 160px;
+    height: auto;
+    align-self: center;
+}
+
+.ta-dial-reading {
+    font-family: var(--ta-serif);
+    font-size: 30px;
+    fill: var(--ta-text);
+}
+
+.ta-dial-unit {
+    font-family: var(--ta-sans);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    fill: var(--ta-text-muted);
+}
+
+.ta-dial-slider {
+    width: 100%;
+    accent-color: var(--ta-green-dark);
+}
+
+    .ta-dial-slider:focus-visible,
+    .ta-dial-option input:focus-visible,
+    .ta-dial-field input:focus-visible {
+        outline: 2px solid var(--ta-green-dark);
+        outline-offset: 2px;
+    }
+
+.ta-dial-scale {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -6px;
+    font-size: 12px;
+    color: var(--ta-text-muted);
+}
+
+.ta-dial-note {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ta-text-muted);
+}
+
+.ta-dial-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ta-dial-option {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ta-text-body);
+    cursor: pointer;
+}
+
+    .ta-dial-option input {
+        margin-top: 4px;
+        accent-color: var(--ta-green-dark);
+    }
+
+    .ta-dial-option b {
+        font-weight: 500;
+        color: var(--ta-text);
+    }
+
+.ta-dial-field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 14px;
+    color: var(--ta-text-body);
+}
+
+    .ta-dial-field input {
+        width: 9em;
+        padding: 6px 8px;
+        border: 1px solid var(--ta-border-strong);
+        border-radius: 8px;
+        font: inherit;
+        font-size: 15px;
+        color: var(--ta-text);
+        background: var(--ta-bg);
+    }
+
+.ta-dials-result {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ta-dials-amount {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ta-text);
+}
+
+@media (max-width: 520px) {
+    .ta-dials {
+        padding: 20px 16px;
+    }
+
+    .ta-dial {
+        padding: 16px;
+    }
+}

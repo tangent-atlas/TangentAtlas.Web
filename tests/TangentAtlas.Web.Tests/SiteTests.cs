@@ -14,7 +14,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
-        Assert.Contains("A thermostat for <em>all</em> your money.", html);
+        Assert.Contains("Your own index, set to <em>your</em> risk.", html);
         Assert.Contains("Set your rules, and every dollar coming in or going out follows them", html);
         Assert.Contains("What do you sell first? What do you sell last?", html);
         Assert.Contains("Pay every credit card in full", html);
@@ -27,6 +27,22 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
         Assert.Contains("href=\"/account/signin\"", html);
         Assert.DoesNotContain("founding", html, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("read-only", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task TheDialsStartWhereAnIndexFundStartsAndSayTheyAreAnIllustration()
+    {
+        var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
+
+        Assert.Contains("Turn the dials", html);
+        Assert.Contains("How many companies?", html);
+        Assert.Contains("How much risk?", html);
+        Assert.Contains("aria-valuetext=\"500 companies\"", html);   // all 500, fully invested: no setting is marked as ours
+        Assert.DoesNotContain("recommended", html, StringComparison.OrdinalIgnoreCase);
+        var dials = html.IndexOf("Turn the dials", StringComparison.Ordinal);
+        var label = html.IndexOf("An illustration, not a backtest.", StringComparison.Ordinal);
+        Assert.True(label > dials);
+        Assert.Contains("id=\"about-the-dials\"", html);
     }
 
     [Theory]
@@ -64,7 +80,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     }
 
     [Theory]
-    [InlineData("/", "Keep your bank and your broker. Lose the chaos.")]
+    [InlineData("/", "Your risk. Your values. Your broker.")]
     [InlineData("/your-net-worth", "You can’t tell if you’re winning when you don’t know the score.")]
     [InlineData("/your-plan", "Your index. Your shares. Your plan.")]
     [InlineData("/when-the-storm-hits", "Respond with discipline, not panic.")]

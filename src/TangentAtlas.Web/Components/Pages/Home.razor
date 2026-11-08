@@ -1,25 +1,30 @@
 @page "/"
 <PageTitle>Tangent Atlas</PageTitle>
 
-@* The home page is the first section only; the menu leads to a page for each of the others. *@
+@* The home page leads with the product sold first: the personal index on two dials (decisions, November 7, draft).
+   The rest of the vision follows, each paragraph linking to the page that shows it. *@
 <section class="ta-hero">
     <div class="ta-container ta-hero-inner">
         <div class="ta-hero-head">
-            <h1 class="ta-hero-title">A thermostat for <em>all</em> your money.</h1>
+            <h1 class="ta-hero-title">Your own index, set to <em>your</em> risk.</h1>
         </div>
+
+        <div class="ta-hero-point">
+            <p class="ta-hero-lead">Everyone who owns an index fund of the 500 largest US companies buys the same risk. But the risk appetite of someone in their 30s isn’t the same as someone in their 60s. So build your own personal index, with two dials: how many companies you own, and how much risk you take. Leave out the companies you’d rather not own.</p>
+            <p class="ta-hero-lead">Your index is weighted by company size and rebalanced every quarter, like the big index funds, in whole shares, in your own account at your own broker. Then, as markets get calmer or bumpier, your cash is reset so your risk stays near your setting.</p>
+            <a href="/your-plan" class="ta-more-link">See what a plan would have done for Ken →</a>
+        </div>
+
+        <IndexDials @rendermode="InteractiveServer" />
 
         <div class="ta-hero-grid">
             <div class="ta-hero-copy">
                 <div class="ta-hero-point">
-                    <p class="ta-hero-lead">Connect your accounts and see everything you own and owe on one dashboard. Keep score the way professionals do, by risk as well as return. Set your rules, and every dollar coming in or going out follows them, so your money never runs too hot or too cold.</p>
+                    <p class="ta-hero-lead">Your index is one part of your money. Connect your accounts and see everything you own and owe on one dashboard. Set your rules, and every dollar coming in or going out follows them, so new money reaches your index in the order you choose.</p>
                     <a href="/your-net-worth" class="ta-more-link">See Ken’s dashboard →</a>
                 </div>
                 <div class="ta-hero-point">
-                    <p class="ta-hero-lead">Most portfolios aren’t plans. They’re accidents: a stock from a tip, a fund from an old job, cash wherever it landed. Turn yours into a plan: your own personal index. Choose how many companies you want to own and leave out the ones you’d rather not. Decide how much risk you want to take, then run it the way the big index funds run theirs: weighted by company size and rebalanced every quarter.</p>
-                    <a href="/your-plan" class="ta-more-link">See what a plan would have done for Ken →</a>
-                </div>
-                <div class="ta-hero-point">
-                    <p class="ta-hero-lead">A plan that only works when the sun is shining is half a plan. What happens when you lose your job, or get a margin call? You need cash, and you want to raise it as carefully as you built your portfolio. What do you sell first? What do you sell last? Make raising cash part of your plan.</p>
+                    <p class="ta-hero-lead">A plan that only works when the sun is shining is half a plan. What happens when you lose your job, or get a margin call? You need cash, and you want to raise it as carefully as you built your index. What do you sell first? What do you sell last? Make raising cash part of your plan.</p>
                     <a href="/when-the-storm-hits" class="ta-more-link">See how Ken raises cash →</a>
                 </div>
             </div>
@@ -28,12 +33,18 @@
         </div>
 
         <div class="ta-page-final ta-home-final">
-            <p class="ta-page-close">Keep your bank and your broker. Lose the chaos.</p>
+            <p class="ta-page-close">Your risk. Your values. Your broker.</p>
             <AuthorizeView>
                 <NotAuthorized>
                     <a href="/signup" class="ta-btn ta-btn-primary ta-btn-large">Sign up</a>
                 </NotAuthorized>
             </AuthorizeView>
         </div>
+    </div>
+</section>
+
+<section class="ta-band ta-fineprint" id="about-the-dials">
+    <div class="ta-container">
+        <p class="ta-figures"><strong>About the dials.</strong> The dials show an illustration, not a backtest, a prediction or a recommendation. Company weights follow a smooth curve shaped like the US market’s (the largest company about 8%, the ten largest about 40% of the 500). Volatility comes from a standard model in which every company moves partly with the market and partly on its own, so owning more companies smooths out the part that is their own. “Cash today” assumes an average market; holding your risk steady means more cash when markets are bumpy and less when they are calm, and never borrowing. The drop in a bad year is two to three times the volatility, the range of worst drops in past bad years; a single year can be worse. Your own figures come from your own accounts once you link them.</p>
     </div>
 </section>
