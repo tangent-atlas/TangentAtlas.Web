@@ -158,6 +158,22 @@
     color: var(--ta-text);
 }
 
+.ta-dials-about {
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+    .ta-dials-about summary {
+        cursor: pointer;
+        color: var(--ta-green-dark);
+    }
+
+    .ta-dials-about p {
+        margin: 8px 0 0;
+        max-width: 900px;
+        line-height: 1.7;
+    }
+
 @media (max-width: 520px) {
     .ta-dials {
         padding: 20px 16px;

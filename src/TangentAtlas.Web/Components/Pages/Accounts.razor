@@ -32,6 +32,12 @@
         </div>
     </section>
 
+    @* The dashboard's centrepiece (prototype, November 7): the personal index on its two dials. Until accounts are
+       linked it starts from an index fund and runs on illustrative figures; then it starts from the customer's own. *@
+    <div class="ta-app-section">
+        <IndexDials @rendermode="InteractiveServer" />
+    </div>
+
     <section class="ta-app-section" aria-labelledby="accounts-heading">
         <h2 id="accounts-heading" class="ta-section-title">Your accounts</h2>
         <div class="ta-kinds">

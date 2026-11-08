@@ -1,13 +1,13 @@
 @using System.Globalization
 @using TangentAtlas.Web.Illustration
 
-@* The home page's dashboard: the personal index on two dials, how many companies and how much risk.
+@* The signed-in dashboard's prototype: the personal index on two dials, how many companies and how much risk.
    It starts where an index fund starts (all 500, fully invested) and marks no setting as recommended: the visitor turns
    the dials and sees what each setting means for his own money (Path A). The figures are an approximation, labelled as one. *@
 <section class="ta-dials" aria-labelledby="ta-dials-title">
     <div class="ta-dials-head">
-        <h2 id="ta-dials-title" class="ta-dials-title">Turn the dials</h2>
-        <p class="ta-dials-sub">Start where an index fund starts: all 500 companies, fully invested. Then make it yours.</p>
+        <h2 id="ta-dials-title" class="ta-dials-title">Your personal index</h2>
+        <p class="ta-dials-sub">Start where an index fund starts: all 500 companies, fully invested. Then turn the dials to make it yours.</p>
     </div>
 
     <div class="ta-dials-controls">
@@ -77,7 +77,7 @@
 
     <div class="ta-dials-result">
         <label class="ta-dial-field ta-dials-amount">
-            <span>Your index, on $</span>
+            <span>Money for your index: $</span>
             <input type="number" min="0" step="10000" @bind="accountValue" @bind:event="oninput" />
         </label>
 
@@ -103,7 +103,11 @@
             <div class="ta-plan-stat"><span>Volatility</span><span class="ta-plan-value">@Percent(Result.Volatility)</span></div>
             <div class="ta-plan-stat"><span>Drop in a bad year</span><span class="ta-plan-value">@Dollars(Result.BadYearLow)–@Dollars(Result.BadYearHigh)</span></div>
         </div>
-        <p class="ta-caption">An illustration, not a backtest. In past bad years, worst drops ran about two to three times the volatility. <a href="#about-the-dials">How these figures are made</a></p>
+        <p class="ta-caption">An illustration, not a backtest. In past bad years, worst drops ran about two to three times the volatility.</p>
+        <details class="ta-dials-about">
+            <summary>How these figures are made</summary>
+            <p>Until your accounts are linked, the dials show an illustration, not a backtest, a prediction or a recommendation. Company weights follow a smooth curve shaped like the US market’s (the largest company about 8%, the ten largest about 40% of the 500). Volatility comes from a standard model in which every company moves partly with the market and partly on its own, so owning more companies smooths out the part that is their own. “Cash today” assumes an average market; holding your risk steady means more cash when markets are bumpy and less when they are calm, and never borrowing. The drop in a bad year is two to three times the volatility, the range of worst drops in past bad years; a single year can be worse.</p>
+        </details>
     </div>
 </section>
 
