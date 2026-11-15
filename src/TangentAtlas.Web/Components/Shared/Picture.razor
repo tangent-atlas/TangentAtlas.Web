@@ -1,0 +1,19 @@
+@using TangentAtlas.Web.Pictures
+@inject PictureLibrary Library
+@* A holding's picture: its logo if the library has one, else its letters. *@
+<span class="ta-picture" title="@Code">
+    @if (Library.Address(Kind, Code) is { } address)
+    {
+        <img src="@address" alt="" loading="lazy" />
+    }
+    else
+    {
+        <span class="ta-picture-letters" aria-hidden="true">@PictureLibrary.Letters(Code)</span>
+    }
+</span>
+
+@code {
+    [Parameter, EditorRequired] public PictureKind Kind { get; set; }
+
+    [Parameter, EditorRequired] public string Code { get; set; } = "";
+}

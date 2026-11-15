@@ -185,7 +185,8 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     }
 
     [Theory]
-    [InlineData("/accounts")]
+    [InlineData("/dashboard")]
+    [InlineData("/pictures/ticker/AAPL.png")]
     [InlineData("/account/signin")]
     [InlineData("/account/signup?understood=yes")]
     public async Task WithoutAnIdentityProviderNobodyGetsIn(string path)
@@ -213,7 +214,7 @@ public class SignInTests(ConfiguredSiteFactory factory) : IClassFixture<Configur
     [Fact]
     public async Task TheSignedInPageSendsAStrangerToTheExternalTenant()
     {
-        var response = await client.GetAsync("/accounts", TestContext.Current.CancellationToken);
+        var response = await client.GetAsync("/dashboard", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         var location = response.Headers.Location!.ToString();
@@ -260,11 +261,20 @@ public class SignedInTests(SignedInSiteFactory factory) : IClassFixture<SignedIn
     [Fact]
     public async Task TheSignedInPageGreetsThePersonAndSaysWhereTheBetaStands()
     {
-        var html = await client.GetStringAsync("/accounts", TestContext.Current.CancellationToken);
+        var html = await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken);
 
-        Assert.Contains("Welcome, pat@example.com", html);   // Entra's placeholder name "unknown" is not shown
+        Assert.Contains("Hello, pat!", html);   // Entra's placeholder name "unknown" is not shown
         Assert.Contains("Linking accounts is the next step to open.", html);
         Assert.Contains("action=\"/account/signout\"", html);
+    }
+
+    [Fact]
+    public async Task TheOldAddressOfTheSignedInPageGoesToTheDashboard()
+    {
+        var response = await client.GetAsync("/accounts", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.EndsWith("/dashboard", response.Headers.Location!.ToString());
     }
 
     [Fact]
@@ -272,7 +282,7 @@ public class SignedInTests(SignedInSiteFactory factory) : IClassFixture<SignedIn
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
-        Assert.Contains("My accounts", html);
+        Assert.Contains("href=\"/dashboard\"", html);
         Assert.DoesNotContain("href=\"/signup\"", html);
     }
 }
@@ -280,12 +290,12 @@ public class SignedInTests(SignedInSiteFactory factory) : IClassFixture<SignedIn
 public class AccountRulesTests
 {
     [Theory]
-    [InlineData(null, "/accounts")]
-    [InlineData("", "/accounts")]
-    [InlineData("/accounts", "/accounts")]
-    [InlineData("https://evil.example/", "/accounts")]
-    [InlineData("//evil.example/", "/accounts")]
-    [InlineData("/\\evil.example/", "/accounts")]
+    [InlineData(null, "/dashboard")]
+    [InlineData("", "/dashboard")]
+    [InlineData("/investments", "/investments")]
+    [InlineData("https://evil.example/", "/dashboard")]
+    [InlineData("//evil.example/", "/dashboard")]
+    [InlineData("/\\evil.example/", "/dashboard")]
     public void SignInReturnsOnlyToThisSite(string? returnUrl, string expected) =>
         Assert.Equal(expected, AccountEndpoints.LocalOrHome(returnUrl));
 

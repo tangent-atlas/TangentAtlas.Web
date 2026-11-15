@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using TangentAtlas.Web.Ledger;
 
 namespace TangentAtlas.Web.Identity;
 
@@ -24,9 +27,11 @@ public sealed class IdentityProviderOptions
 
 /// <summary>
 /// Sign-in for the website: OpenID Connect against the external tenant's sign-up-and-sign-in user flow, kept in a cookie.
-/// The website only identifies people; it asks for no access tokens and holds no secret (the ID token comes back by form
-/// post).  Without the identity provider's settings nobody can sign in and every signed-in page is refused: it fails closed,
-/// while the public pages keep working.
+/// Without the ledger's settings the website only identifies people: it asks for no access tokens and holds no credential
+/// (the ID token comes back by form post).  With them (<see cref="LedgerOptions"/>), it also reads the ledger as the
+/// person: the sign-in returns a code, redeemed with the site's credential (a certificate whose key never leaves the
+/// computer's store) for the person's access token, Ledger.Read only.  Without the identity provider's settings nobody can
+/// sign in and every signed-in page is refused: it fails closed, while the public pages keep working.
 /// </summary>
 public static class SiteSignIn
 {
@@ -43,7 +48,9 @@ public static class SiteSignIn
     public static IServiceCollection AddSiteSignIn(this IServiceCollection services, IConfiguration configuration)
     {
         var provider = configuration.GetSection(IdentityProviderOptions.SectionName).Get<IdentityProviderOptions>() ?? new();
+        var ledger = configuration.GetSection(LedgerOptions.SectionName).Get<LedgerOptions>() ?? new();
         services.AddSingleton(provider);
+        services.AddSingleton(ledger);
 
         var authentication = services.AddAuthentication(options =>
         {
@@ -53,60 +60,108 @@ public static class SiteSignIn
                 : CookieAuthenticationDefaults.AuthenticationScheme;
         });
 
-        authentication.AddCookie(options =>
+        if (provider.IsConfigured && ledger.IsConfigured)
         {
-            options.Cookie.Name = "TangentAtlas.SignIn";
-            options.Cookie.HttpOnly = true;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            options.Cookie.SameSite = SameSiteMode.Lax;
-            options.ExpireTimeSpan = TimeSpan.FromHours(8);
-            options.SlidingExpiration = true;
-            // Reached only when sign-in is not configured: the challenge falls back to the cookie scheme.
-            options.LoginPath = "/account/unavailable";
-            options.AccessDeniedPath = "/account/unavailable";
-        });
-
-        if (provider.IsConfigured)
-        {
-            authentication.AddOpenIdConnect(options =>
+            // With the ledger: the sign-in returns a code, which the site redeems with its credential for the person's
+            // access token to the ledger (delegated Ledger.Read) and keeps in its token cache (in memory: after a restart
+            // the person signs in again, silently while their session at the identity provider lasts).
+            authentication.AddMicrosoftIdentityWebApp(
+                    identity =>
+                    {
+                        // Microsoft.Identity.Web takes the authority as its instance and tenant: from
+                        // https://<tenant>.ciamlogin.com/<tenant>/v2.0, https://<tenant>.ciamlogin.com/ and <tenant>.
+                        var authority = new Uri(provider.Authority!);
+                        identity.Instance = authority.GetLeftPart(UriPartial.Authority) + "/";
+                        identity.TenantId = authority.Segments.Length > 1 ? authority.Segments[1].TrimEnd('/') : null;
+                        identity.ClientId = provider.ClientId;
+                        identity.ClientCredentials = [ledger.Credential()];
+                    },
+                    ConfigureCookie,
+                    OpenIdConnectDefaults.AuthenticationScheme,
+                    CookieAuthenticationDefaults.AuthenticationScheme)
+                .EnableTokenAcquisitionToCallDownstreamApi([ledger.Scope!])
+                .AddInMemoryTokenCaches();
+            services.PostConfigure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
-                options.Authority = provider.Authority;
-                options.ClientId = provider.ClientId;
-                options.ResponseType = OpenIdConnectResponseType.IdToken;
-                options.ResponseMode = OpenIdConnectResponseMode.FormPost;
-                options.UsePkce = false;                  // no authorization code is redeemed
-                options.SaveTokens = false;
-                options.GetClaimsFromUserInfoEndpoint = false;
-                options.MapInboundClaims = false;         // keep oid, name and email as Entra names them
-                options.Scope.Clear();
-                options.Scope.Add("openid");
-                options.Scope.Add("profile");
+                ConfigureOpenIdConnect(options);
                 options.Scope.Add("email");
-                options.TokenValidationParameters.NameClaimType = "name";
-                options.CallbackPath = "/signin-oidc";
-                options.SignedOutCallbackPath = "/signout-callback-oidc";
-
-                options.Events.OnRedirectToIdentityProvider = context =>
-                {
-                    if (context.Properties.Items.TryGetValue(SignUpProperty, out var signUp) && signUp == "true")
-                    {
-                        context.ProtocolMessage.Prompt = "create";   // open the user flow on its sign-up page
-                    }
-                    return Task.CompletedTask;
-                };
-                options.Events.OnTokenValidated = context =>
-                {
-                    if (string.IsNullOrEmpty(context.Principal?.FindFirst(ObjectIdClaim)?.Value))
-                    {
-                        context.Fail("The ID token has no oid claim.");
-                    }
-                    return Task.CompletedTask;
-                };
             });
+            services.AddHttpClient<LedgerReader>(client =>
+            {
+                client.BaseAddress = new Uri(ledger.Server!);
+                client.Timeout = TimeSpan.FromSeconds(20);
+            });
+        }
+        else
+        {
+            authentication.AddCookie(ConfigureCookie);
+            if (provider.IsConfigured)
+            {
+                authentication.AddOpenIdConnect(options =>
+                {
+                    options.Authority = provider.Authority;
+                    options.ClientId = provider.ClientId;
+                    options.ResponseType = OpenIdConnectResponseType.IdToken;
+                    options.ResponseMode = OpenIdConnectResponseMode.FormPost;
+                    options.UsePkce = false;                  // no authorization code is redeemed
+                    options.SaveTokens = false;
+                    options.Scope.Clear();
+                    options.Scope.Add("openid");
+                    options.Scope.Add("profile");
+                    options.Scope.Add("email");
+                    ConfigureOpenIdConnect(options);
+                });
+            }
         }
 
         services.AddAuthorization();
         services.AddCascadingAuthenticationState();
         return services;
+    }
+
+    private static void ConfigureCookie(CookieAuthenticationOptions options)
+    {
+        options.Cookie.Name = "TangentAtlas.SignIn";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        // Reached only when sign-in is not configured: the challenge falls back to the cookie scheme.
+        options.LoginPath = "/account/unavailable";
+        options.AccessDeniedPath = "/account/unavailable";
+    }
+
+    /// <summary>What both ways of signing in share: the callbacks, the claims as Entra names them, sign-up, and oid.</summary>
+    private static void ConfigureOpenIdConnect(OpenIdConnectOptions options)
+    {
+        options.GetClaimsFromUserInfoEndpoint = false;
+        options.MapInboundClaims = false;         // keep oid, name and email as Entra names them
+        if (options.TokenHandler is JsonWebTokenHandler handler)
+        {
+            handler.MapInboundClaims = false;     // Microsoft.Identity.Web puts in a handler of its own, which maps them
+        }
+        options.TokenValidationParameters.NameClaimType = "name";
+        options.CallbackPath = "/signin-oidc";
+        options.SignedOutCallbackPath = "/signout-callback-oidc";
+
+        var redirect = options.Events.OnRedirectToIdentityProvider;
+        options.Events.OnRedirectToIdentityProvider = async context =>
+        {
+            if (context.Properties.Items.TryGetValue(SignUpProperty, out var signUp) && signUp == "true")
+            {
+                context.ProtocolMessage.Prompt = "create";   // open the user flow on its sign-up page
+            }
+            await redirect(context);
+        };
+        var validated = options.Events.OnTokenValidated;
+        options.Events.OnTokenValidated = async context =>
+        {
+            await validated(context);
+            if (string.IsNullOrEmpty(context.Principal?.FindFirst(ObjectIdClaim)?.Value))
+            {
+                context.Fail("The ID token has no oid claim.");
+            }
+        };
     }
 }

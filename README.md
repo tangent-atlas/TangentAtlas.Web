@@ -13,6 +13,18 @@ dotnet run --project src/TangentAtlas.Web --launch-profile https
 
 Sign-in needs the external tenant's two identifiers (`IdentityProvider:Authority`, `IdentityProvider:ClientId`); without them the public pages work and nobody can sign in.
 
+### Reading the ledger as the signed-in person
+
+With the `Ledger` settings as well (`Server`, `Scope`, `CertificateThumbprint`), the signed-in page shows the person's own tenant, live: each account's worth, return, volatility and Sharpe ratio, its value at each close, and its holdings. The site signs people in with a code instead of an ID token alone, redeems it with its certificate (in the current user's store, private key not exportable: nothing secret is stored) for the person's access token, delegated `Ledger.Read` only, and reads the ledger with it. The ledger decides what the person may see; a person with no tenant sees the page as before. Without the `Ledger` settings the site signs people in exactly as before.
+
+On a developer's computer:
+
+1. TangentAtlas.Platform's `Deploy-EntraApplications.ps1 -SkipWebApp` gives the Website registration `Ledger.Read` and a development certificate, and writes all the settings to `%APPDATA%\TangentAtlas\website.json`.
+2. TangentAtlas.LedgerService's `tools\Start-LocalLedger.ps1 -MarketHistory` runs the ledger at http://127.0.0.1:5180 with real sign-in; `tools\Set-LocalJoe10.ps1` loads the Joe 10 paper account and makes the test person its user.
+3. `dotnet run --project src/TangentAtlas.Web --launch-profile https`, then sign in at https://localhost:7062 as the test person.
+
+The token cache is in memory: after the site restarts, the next visit signs the person in again (silently while their session at the identity provider lasts).
+
 ## License
 
 Apache License 2.0; see `LICENSE`. Security reports: see `SECURITY.md`.

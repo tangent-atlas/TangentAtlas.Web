@@ -1,0 +1,28 @@
+@using System.Globalization
+@* A holding's weight against its target: the bar is the weight, the mark the target, on a scale to the larger of the two
+   (with some room). *@
+@if (Weight is { } weight)
+{
+    var scale = Math.Max(0.0001m, Math.Max(weight, Target ?? 0m) * 1.15m);
+    <div class="ta-drift" role="img" aria-label="@Label">
+        <span class="ta-drift-weight" style="@($"width: {Pct(weight / scale)}")"></span>
+        @if (Target is { } target)
+        {
+            <span class="ta-drift-target" style="@($"left: {Pct(target / scale)}")"></span>
+        }
+    </div>
+}
+
+@code {
+    private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
+
+    [Parameter] public decimal? Weight { get; set; }
+
+    [Parameter] public decimal? Target { get; set; }
+
+    private string Label => Target is { } target
+        ? $"{Weight?.ToString("P1", English)} of {target.ToString("P1", English)} target"
+        : $"{Weight?.ToString("P1", English)}";
+
+    private static string Pct(decimal fraction) => (Math.Clamp(fraction, 0m, 1m) * 100m).ToString("0.##", CultureInfo.InvariantCulture) + "%";
+}

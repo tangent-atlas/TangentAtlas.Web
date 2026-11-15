@@ -52,6 +52,15 @@ jobs:
       - name: Publish
         run: dotnet publish ./src/TangentAtlas.Web/TangentAtlas.Web.csproj --configuration Release --no-restore --output ./publish
 
+      # The logos (github.com/nvstly/icons) are third-party pictures, not part of this repository: the release copies them
+      # into the site's pictures folder, which the site finds by itself (TangentAtlas.Web's PictureLibrary).
+      - name: Logos
+        run: |
+          git clone --depth 1 --quiet https://github.com/nvstly/icons.git "$RUNNER_TEMP/icons"
+          echo "Icon set at $(git -C "$RUNNER_TEMP/icons" rev-parse --short HEAD)"
+          mkdir -p ./publish/pictures
+          cp -r "$RUNNER_TEMP/icons/ticker_icons" "$RUNNER_TEMP/icons/forex_icons" "$RUNNER_TEMP/icons/crypto_icons" ./publish/pictures/
+
       - name: Azure login (OIDC)
         uses: azure/login@v3
         with:
