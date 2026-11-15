@@ -1,105 +1,69 @@
 @page "/accounts"
 @attribute [Authorize]
-@using System.Globalization
-@using Microsoft.Identity.Web
+@inherits TangentAtlas.Web.Ledger.LedgerPage
 @using TangentAtlas.Web.Ledger
-@inject IServiceProvider Services
-@inject NavigationManager Navigation
 <PageTitle>My accounts · Tangent Atlas</PageTitle>
 
 <div class="ta-container ta-page">
     <div class="ta-eyebrow">Your money</div>
-    <h1 class="ta-page-title">Welcome, @person?.DisplayName</h1>
+    <h1 class="ta-page-title">Welcome, @Person?.DisplayName</h1>
 
     <div class="ta-status" role="status">
         <span class="ta-chip">Beta</span>
-        <span>Linking accounts is the next step to open. We'll let you know when it does@(person?.Email is { } email ? $", at {email}" : "").</span>
+        @if (LedgerAccounts.Any(account => account.IsPaper))
+        {
+            <span>Your paper brokerage account is live: paper money, invested by your model at each day's close. Linking your own accounts is the next step to open.</span>
+        }
+        else
+        {
+            <span>Linking accounts is the next step to open. We'll let you know when it does@(Person?.Email is { } email ? $", at {email}" : "").</span>
+        }
     </div>
 
-    @if (ledgerProblem is not null)
+    @if (LedgerProblem is not null)
     {
-        <div class="ta-status" role="status"><span class="ta-chip ta-chip-warning">Ledger</span><span>@ledgerProblem</span></div>
-    }
-
-    @foreach (var account in ledger?.Accounts ?? [])
-    {
-        <section class="ta-app-section ta-paper" aria-labelledby="@($"account-{account.AccountId:N}")">
-            <h2 id="@($"account-{account.AccountId:N}")" class="ta-section-title">
-                @account.Name @if (account.IsPaper) { <span class="ta-chip">Paper money</span> }
-            </h2>
-            <div class="ta-net">
-                <div class="ta-net-group">
-                    <div><div class="ta-net-label">Worth</div><div class="ta-net-value ta-net-value-accent">@Money(account.MarketValue)</div></div>
-                    <div><div class="ta-net-label">Put in</div><div class="ta-net-value">@Money(account.NetContributions)</div></div>
-                    <div><div class="ta-net-label">Gain</div><div class="ta-net-value">@Money(account.Gain)</div></div>
-                </div>
-                <div class="ta-net-group ta-net-group-end">
-                    <div><div class="ta-net-label">Return</div><div class="ta-net-value">@Percent(account.Performance?.TotalReturn)</div></div>
-                    <div><div class="ta-net-label">Volatility</div><div class="ta-net-value">@Percent(account.Performance?.Volatility)</div></div>
-                    <div><div class="ta-net-label">Sharpe ratio</div><div class="ta-net-value">@Number(account.Performance?.SharpeRatio)</div></div>
-                </div>
-            </div>
-            <p class="ta-paper-note">
-                @if (account.Performance is { From: { } from, Through: { } through } performance)
-                {
-                    <span>Measured at each close from @from.ToString("MMMM d", English) to @through.ToString("MMMM d, yyyy", English): @performance.Returns daily returns, worst drop @Percent(performance.MaximumDrawdown)@(performance.IsRanked ? "." : "; ranked after 20.")</span>
-                }
-                else
-                {
-                    <span>No closes measured yet.</span>
-                }
-                @if (ledger?.AsOf is { } asOf)
-                {
-                    <span> Updated @TimeZoneInfo.ConvertTime(asOf, NewYork).ToString("MMMM d, h:mm tt", English) New York time.</span>
-                }
-            </p>
-
-            @if (Chart(account.Days) is { } chart)
-            {
-                <svg class="ta-paper-chart" viewBox="0 0 600 120" preserveAspectRatio="none" role="img" aria-label="@chart.Label">
-                    <polyline points="@chart.Points" fill="none" stroke="var(--ta-green-dark)" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
-                </svg>
-            }
-
-            <table class="ta-paper-holdings">
-                <thead>
-                    <tr><th scope="col">Holding</th><th scope="col">Shares</th><th scope="col">Price</th><th scope="col">Value</th><th scope="col">Weight</th><th scope="col">Target</th></tr>
-                </thead>
-                <tbody>
-                    @foreach (var holding in account.Holdings)
-                    {
-                        <tr>
-                            <th scope="row">@holding.Name</th>
-                            <td>@(holding.IsCash ? "" : holding.Quantity.ToString("N0", English))</td>
-                            <td>@(holding.IsCash ? "" : Money(holding.Price, 2))</td>
-                            <td>@Money(holding.MarketValue, 2)</td>
-                            <td>@Percent(holding.Weight)</td>
-                            <td>@Percent(holding.TargetWeight)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
+        <div class="ta-status" role="status"><span class="ta-chip ta-chip-warning">Ledger</span><span>@LedgerProblem</span></div>
     }
 
     <section class="ta-app-section" aria-labelledby="summary-heading">
         <h2 id="summary-heading" class="ta-visually-hidden">Summary</h2>
         <div class="ta-tiles">
-            <div class="ta-tile">
-                <div class="ta-tile-label">What you own</div>
-                <div class="ta-tile-value">—</div>
-                <div class="ta-tile-sub">Link an account to see this</div>
-            </div>
-            <div class="ta-tile">
-                <div class="ta-tile-label">What you owe</div>
-                <div class="ta-tile-value">—</div>
-                <div class="ta-tile-sub">Link an account to see this</div>
-            </div>
-            <div class="ta-tile">
-                <div class="ta-tile-label">Net</div>
-                <div class="ta-tile-value">—</div>
-                <div class="ta-tile-sub">Link an account to see this</div>
-            </div>
+            @if (LedgerAccounts.Count > 0)
+            {
+                <div class="ta-tile">
+                    <div class="ta-tile-label">What you own</div>
+                    <div class="ta-tile-value">@Money(Owned)</div>
+                    <div class="ta-tile-sub">@Counted(LedgerAccounts.Where(account => !IsDebt(account)))</div>
+                </div>
+                <div class="ta-tile">
+                    <div class="ta-tile-label">What you owe</div>
+                    <div class="ta-tile-value">@Money(Owed)</div>
+                    <div class="ta-tile-sub">@(LedgerAccounts.Any(IsDebt) ? Counted(LedgerAccounts.Where(IsDebt)) : "No cards or loans linked")</div>
+                </div>
+                <div class="ta-tile">
+                    <div class="ta-tile-label">Net</div>
+                    <div class="ta-tile-value">@Money(Owned - Owed)</div>
+                    <div class="ta-tile-sub">@Updated</div>
+                </div>
+            }
+            else
+            {
+                <div class="ta-tile">
+                    <div class="ta-tile-label">What you own</div>
+                    <div class="ta-tile-value">—</div>
+                    <div class="ta-tile-sub">Link an account to see this</div>
+                </div>
+                <div class="ta-tile">
+                    <div class="ta-tile-label">What you owe</div>
+                    <div class="ta-tile-value">—</div>
+                    <div class="ta-tile-sub">Link an account to see this</div>
+                </div>
+                <div class="ta-tile">
+                    <div class="ta-tile-label">Net</div>
+                    <div class="ta-tile-value">—</div>
+                    <div class="ta-tile-sub">Link an account to see this</div>
+                </div>
+            }
         </div>
     </section>
 
@@ -110,102 +74,50 @@
             {
                 <div class="ta-kind">
                     <div class="ta-kind-title">@kind.Title</div>
-                    <div class="ta-kind-body">@kind.Body</div>
+                    @{ var accounts = LedgerAccounts.Where(account => account.Type == kind.Type).ToArray(); }
+                    @if (accounts.Length == 0)
+                    {
+                        <div class="ta-kind-body">@kind.Body</div>
+                    }
+                    else
+                    {
+                        <div class="ta-kind-body">
+                            @foreach (var account in accounts)
+                            {
+                                <a class="ta-kind-account" href="@($"accounts/{account.AccountId}")">
+                                    <span class="ta-kind-account-name">@account.Name</span>
+                                    <span class="ta-kind-account-value">@Money(account.MarketValue)</span>
+                                    <span class="ta-kind-account-where">@account.Institution@(account.Number is { } number ? $" · {number}" : "")@(account.IsPaper ? " · paper money" : "")</span>
+                                </a>
+                            }
+                        </div>
+                    }
                     <button type="button" class="ta-btn ta-btn-outline" disabled>Link: coming soon</button>
                 </div>
             }
         </div>
     </section>
-
-    <section class="ta-app-section" aria-labelledby="rules-heading">
-        <h2 id="rules-heading" class="ta-section-title">Your rules</h2>
-        <div class="ta-rules-empty">
-            <p class="ta-lead">Once your accounts are linked, you'll set your rules here, like these.</p>
-            <RulesPanel Heading="Example rules" />
-        </div>
-    </section>
 </div>
 
 @code {
-    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
-
-    private SignedInPerson? person;
-
-    private static readonly (string Title, string Body)[] AccountKinds =
+    private static readonly (string Title, string Type, string Body)[] AccountKinds =
     [
-        ("Bank accounts", "Checking and savings, from your own bank."),
-        ("Brokerage", "Your investment accounts, with the stocks you already own."),
-        ("Credit cards", "Balances, statement amounts and due dates."),
-        ("401(k)", "Shown and counted in your picture. Your plan controls its trades and contributions."),
+        ("Bank accounts", "Deposit", "Checking and savings, from your own bank."),
+        ("Brokerage", "Brokerage", "Your investment accounts, with the stocks you already own."),
+        ("Credit cards", "CreditCard", "Balances, statement amounts and due dates."),
+        ("401(k)", "RetirementPlan", "Shown and counted in your picture. Your plan controls its trades and contributions."),
     ];
 
-    private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
+    private static bool IsDebt(AccountView account) => account.Type is "CreditCard" or "Loan";
 
-    private static readonly TimeZoneInfo NewYork = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+    private decimal Owned => LedgerAccounts.Where(account => !IsDebt(account)).Sum(account => account.MarketValue ?? 0m);
 
-    [SupplyParameterFromQuery(Name = "signedIn")] private string? SignedIn { get; set; }
+    private decimal Owed => LedgerAccounts.Where(IsDebt).Sum(account => Math.Abs(account.MarketValue ?? 0m));
 
-    private LedgerView? ledger;
-
-    private string? ledgerProblem;
-
-    protected override async Task OnInitializedAsync()
+    private static string Counted(IEnumerable<AccountView> accounts)
     {
-        if (AuthenticationState is null)
-        {
-            return;
-        }
-
-        var user = (await AuthenticationState).User;
-        person = SignedInPerson.From(user);
-        if (Services.GetService<LedgerReader>() is not { } reader)
-        {
-            return;   // the site isn't connected to a ledger
-        }
-
-        try
-        {
-            ledger = await reader.ReadAsync(user, CancellationToken.None);
-        }
-        catch (Exception exception) when (exception is MicrosoftIdentityWebChallengeUserException or Microsoft.Identity.Client.MsalUiRequiredException)
-        {
-            // The site no longer holds the person's ledger token (it restarted): sign in again, silently while their session
-            // at the identity provider lasts.  Once only, so a lasting failure is shown rather than looping.
-            if (SignedIn is null)
-            {
-                Navigation.NavigateTo("/account/signin?returnUrl=%2Faccounts%3FsignedIn%3D1", forceLoad: true);
-                return;
-            }
-
-            ledgerProblem = "Your sign-in couldn't be used to read your accounts. Sign out and in again.";
-        }
-        catch (LedgerUnavailableException exception)
-        {
-            ledgerProblem = exception.Message;
-        }
-    }
-
-    private static string Money(decimal? value, int places = 0) => value is { } number ? number.ToString(places == 0 ? "C0" : "C2", English) : "—";
-
-    private static string Percent(decimal? value) => value is { } number ? number.ToString("P2", English) : "—";
-
-    private static string Number(decimal? value) => value is { } number ? number.ToString("0.00", English) : "—";
-
-    /// <summary>The account's value at each close, as a line scaled to the chart.</summary>
-    private static (string Points, string Label)? Chart(IReadOnlyList<DayView> days)
-    {
-        var valued = days.Where(day => day.Value is not null).ToArray();
-        if (valued.Length < 2)
-        {
-            return null;
-        }
-
-        var low = valued.Min(day => day.Value!.Value);
-        var high = valued.Max(day => day.Value!.Value);
-        var span = high == low ? 1m : high - low;
-        var points = string.Join(' ', valued.Select((day, index) =>
-            string.Create(CultureInfo.InvariantCulture, $"{index * 600m / (valued.Length - 1):0.#},{110m - ((day.Value!.Value - low) / span * 100m):0.#}")));
-        var label = $"Value at each close, {valued[0].Date.ToString("MMMM d", English)} to {valued[^1].Date.ToString("MMMM d", English)}: from {Money(valued[0].Value)} to {Money(valued[^1].Value)}.";
-        return (points, label);
+        var list = accounts.ToArray();
+        var paper = list.Count(account => account.IsPaper);
+        return $"Across {list.Length} account{(list.Length == 1 ? "" : "s")}{(paper == list.Length && paper > 0 ? ", paper money" : paper > 0 ? $", {paper} of paper money" : "")}";
     }
 }

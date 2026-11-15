@@ -1096,3 +1096,54 @@ h1:focus {
         display: none;
     }
 }
+
+/* An account listed in its kind's card, linking to its page. */
+.ta-kind-account {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--ta-border);
+    color: inherit;
+    text-decoration: none;
+    width: 100%;
+}
+
+.ta-kind-account:hover .ta-kind-account-name,
+.ta-kind-account:focus-visible .ta-kind-account-name {
+    text-decoration: underline;
+}
+
+.ta-kind-account-name {
+    font-weight: 500;
+}
+
+.ta-kind-account-where {
+    grid-column: 1 / span 2;
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+.ta-kind-account-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+}
+
+.ta-back {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: var(--ta-text-muted);
+    text-decoration: none;
+    font-size: 15px;
+}
+
+.ta-back:hover {
+    text-decoration: underline;
+}
+
+.ta-page-title .ta-chip {
+    font-family: var(--ta-sans);
+    font-size: 13px;
+    vertical-align: middle;
+    margin-left: 8px;
+}

@@ -111,7 +111,7 @@ public class SignedInLedgerSiteFactory : LedgerSiteFactory
 public sealed class StandInLedger : HttpMessageHandler
 {
     public const string Tenant = "4a6f6531-3020-7061-7065-720000000001";
-    private const string Account = "1f6ff65f-711f-8986-a0c0-e238561bf4b6";
+    public const string Account = "1f6ff65f-711f-8986-a0c0-e238561bf4b6";
     private const string Aapl = "a392f7e0-339b-83d7-b1ff-bf8b60012fb7";
     private const string Msft = "b392f7e0-339b-83d7-b1ff-bf8b60012fb7";
     private const string Dollar = "c392f7e0-339b-83d7-b1ff-bf8b60012fb7";
@@ -135,13 +135,13 @@ public sealed class StandInLedger : HttpMessageHandler
             "/v1/me/tenants" => IsMember ? $"[\"{Tenant}\"]" : "[]",
             $"/v1/tenants/{Tenant}/symbol" => $"[{{\"nodeId\":\"{Aapl}\",\"scheme\":\"Ticker\",\"code\":\"AAPL\"}},{{\"nodeId\":\"{Msft}\",\"scheme\":\"Ticker\",\"code\":\"MSFT\"}},{{\"nodeId\":\"{Dollar}\",\"scheme\":\"Currency\",\"code\":\"USD\"}}]",
             $"/v1/tenants/{Tenant}/node" => $"[{{\"nodeId\":\"{Account}\",\"displayName\":\"Joe 10\"}}]",
-            $"/v1/tenants/{Tenant}/institution" => $"[{{\"institutionId\":\"{Broker}\",\"source\":\"Simulator\"}}]",
-            $"/v1/tenants/{Tenant}/account" => $"[{{\"accountId\":\"{Account}\",\"institutionId\":\"{Broker}\"}}]",
+            $"/v1/tenants/{Tenant}/institution" => $"[{{\"institutionId\":\"{Broker}\",\"name\":\"Tangent Atlas Paper Brokerage\",\"source\":\"Simulator\"}}]",
+            $"/v1/tenants/{Tenant}/account" => $"[{{\"accountId\":\"{Account}\",\"institutionId\":\"{Broker}\",\"accountType\":\"Brokerage\",\"externalAccountId\":\"PAPER-100010\"}}]",
             $"/v1/tenants/{Tenant}/holdings" => $$"""
                 {"asOf":"2026-11-13T21:35:00Z","holdings":[
                   {"accountId":"{{Account}}","assetId":"{{Aapl}}","assetType":"Equity","quantity":1052,"price":342.10,"marketValue":359889.20,"weight":0.343,"targetWeight":0.36},
                   {"accountId":"{{Account}}","assetId":"{{Msft}}","assetType":"Equity","quantity":1100,"price":510.00,"marketValue":561000.00,"weight":0.535,"targetWeight":0.54},
-                  {"accountId":"{{Account}}","assetId":"{{Dollar}}","assetType":"Cash","quantity":127656.12,"price":1,"marketValue":127656.12,"weight":0.122,"targetWeight":0.10}],
+                  {"accountId":"{{Account}}","assetId":"{{Dollar}}","assetType":"Cash","quantity":127656.12,"price":1,"marketValue":127656.12,"weight":0.122,"targetWeight":null}],
                  "accounts":[{"accountId":"{{Account}}","marketValue":1048545.32,"cash":127656.12,"netContributions":1000000,"gain":48545.32,"modelName":"Joe 10"}],
                  "prices":[],"rates":[],"problems":[]}
                 """,
@@ -220,13 +220,31 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
     private readonly HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     [Fact]
-    public async Task TheSignedInPageShowsThePersonsPaperAccountFromTheLedger()
+    public async Task MyAccountsListsTheBrokerageAccountAndTotalsWhatThePersonOwns()
     {
         factory.Ledger.IsMember = true;
-        var html = await client.GetStringAsync("/accounts", TestContext.Current.CancellationToken);
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/accounts", TestContext.Current.CancellationToken));
+
+        Assert.Contains("Your paper brokerage account is live", html);
+        Assert.Contains("$1,048,545", html);                         // what you own, and net
+        Assert.Contains("Across 1 account, paper money", html);
+        Assert.Contains("$0", html);                                 // what you owe
+        Assert.Contains("No cards or loans linked", html);
+        Assert.Contains($"href=\"accounts/{StandInLedger.Account}\"", html);   // the account, in the Brokerage card
+        Assert.Contains("Tangent Atlas Paper Brokerage · ••0010", html);
+        Assert.DoesNotContain("Your rules", html);
+        Assert.DoesNotContain("Link an account to see this", html);
+    }
+
+    [Fact]
+    public async Task TheAccountsPageShowsItsHoldingsAndPerformance()
+    {
+        factory.Ledger.IsMember = true;
+        var html = await client.GetStringAsync($"/accounts/{StandInLedger.Account}", TestContext.Current.CancellationToken);
 
         Assert.Contains("Joe 10", html);
         Assert.Contains("Paper money", html);
+        Assert.Contains("Invested by the Joe 10 model", html);
         Assert.Contains("$1,048,545", html);       // worth
         Assert.Contains("4.86%", html);            // total return
         Assert.Contains("25.58%", html);           // volatility
@@ -235,8 +253,19 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.Contains("AAPL", html);
         Assert.Contains("$359,889.20", html);
         Assert.Contains("USD cash", html);
+        Assert.Contains("10.00%", html);           // cash's target: what the model's weights leave (36% + 54% invested)
         Assert.Contains("<polyline", html);        // the value at each close
         Assert.Contains("Updated November 13, 4:35 PM New York time.", html);
+    }
+
+    [Fact]
+    public async Task AnotherAccountIsNotShown()
+    {
+        factory.Ledger.IsMember = true;
+        var html = await client.GetStringAsync($"/accounts/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
+
+        Assert.Contains("Not one of your accounts", html);
+        Assert.DoesNotContain("AAPL", html);
     }
 
     [Fact]
@@ -247,6 +276,7 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
 
         Assert.DoesNotContain("Paper money", html);
         Assert.Contains("Linking accounts is the next step to open.", html);
+        Assert.Contains("Link an account to see this", html);
         factory.Ledger.IsMember = true;
     }
 }

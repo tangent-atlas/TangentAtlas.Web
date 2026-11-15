@@ -56,10 +56,16 @@ public sealed record PerformanceView(
     decimal? MaximumDrawdown,
     bool IsRanked);
 
-/// <summary>One account: what it holds, what it's worth, how it has done.</summary>
+/// <summary>One account: where it is held, what it holds, what it's worth, how it has done.</summary>
+/// <param name="Type">The ledger's kind of account: Brokerage, RetirementPlan, Deposit, CreditCard or Loan.</param>
+/// <param name="Institution">Where it is held.</param>
+/// <param name="Number">Its number there, shortened to its last four characters.</param>
 public sealed record AccountView(
     Guid AccountId,
     string Name,
+    string Type,
+    string Institution,
+    string? Number,
     bool IsPaper,
     decimal? MarketValue,
     decimal Cash,
@@ -123,10 +129,15 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
         {
             var account = accounts.FirstOrDefault(item => item.AccountId == summary.AccountId);
             var performance = statistics?.Accounts.FirstOrDefault(item => item.Statistics.AccountId == summary.AccountId);
+            var institution = institutions.FirstOrDefault(item => item.InstitutionId == account?.InstitutionId);
+            var number = account?.ExternalAccountId is { Length: > 0 } external ? "••" + external[Math.Max(0, external.Length - 4)..] : null;
             views.Add(new AccountView(
                 summary.AccountId,
                 nodes.FirstOrDefault(node => node.NodeId == summary.AccountId)?.DisplayName ?? "Account",
-                account?.InstitutionId is { } institutionId && paperInstitutions.Contains(institutionId),
+                account?.AccountType ?? "Brokerage",
+                institution?.Name ?? "",
+                number,
+                institution is not null && paperInstitutions.Contains(institution.InstitutionId),
                 summary.MarketValue,
                 summary.Cash,
                 summary.NetContributions,
@@ -137,7 +148,7 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
                     .OrderBy(holding => holding.AssetType == "Cash")
                     .ThenByDescending(holding => holding.MarketValue ?? 0m)
                     .Select(holding => new HoldingView(NameOf(holding.AssetId), holding.Quantity, holding.Price, holding.MarketValue, holding.Weight, holding.TargetWeight, holding.AssetType == "Cash"))
-                    .ToArray(),
+                    .ToArray() is var held ? WithCashTarget(held) : [],
                 performance?.Statistics is { } item
                     ? new PerformanceView(item.From, item.Through, item.Returns, item.TotalReturn, item.AnnualizedReturn, item.Volatility, item.SharpeRatio, item.MaximumDrawdown, item.IsRanked)
                     : null,
@@ -145,6 +156,22 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
         }
 
         return new LedgerView(tenantId, holdings?.AsOf, views);
+    }
+
+    /// <summary>
+    /// A model's weights cover what it invests in; the cash it keeps is the rest.  Shown as cash's target when the ledger
+    /// gives none and the other holdings have targets.
+    /// </summary>
+    private static HoldingView[] WithCashTarget(HoldingView[] holdings)
+    {
+        var targeted = holdings.Where(holding => !holding.IsCash && holding.TargetWeight is not null).ToArray();
+        if (targeted.Length == 0)
+        {
+            return holdings;
+        }
+
+        var rest = Math.Max(0m, 1m - targeted.Sum(holding => holding.TargetWeight!.Value));
+        return holdings.Select(holding => holding.IsCash && holding.TargetWeight is null ? holding with { TargetWeight = rest } : holding).ToArray();
     }
 
     private async Task<T?> GetAsync<T>(string token, string path, CancellationToken cancellationToken, bool conflictIsEmpty = false)
@@ -182,9 +209,9 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
 
     private sealed record NodeRow(Guid NodeId, string? DisplayName);
 
-    private sealed record InstitutionRow(Guid InstitutionId, string? Source);
+    private sealed record InstitutionRow(Guid InstitutionId, string? Name, string? Source);
 
-    private sealed record AccountRow(Guid AccountId, Guid? InstitutionId);
+    private sealed record AccountRow(Guid AccountId, Guid? InstitutionId, string? AccountType, string? ExternalAccountId);
 
     private sealed record HoldingRow(Guid AccountId, Guid AssetId, string AssetType, decimal Quantity, decimal? Price, decimal? MarketValue, decimal? Weight, decimal? TargetWeight);
 
