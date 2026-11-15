@@ -90,3 +90,27 @@ public class LedgerCredentialTests
     public void WithoutACertificateTheLedgerIsNotConfigured() =>
         Assert.False(new TangentAtlas.Web.Ledger.LedgerOptions { Server = "https://ledger.example", Scope = "api://x/Ledger.Read" }.IsConfigured);
 }
+
+public class LogoSizeTests
+{
+    [Fact]
+    public void ALargeLogoIsServedAtTwiceItsLargestShowing()
+    {
+        var pixels = Enumerable.Range(0, 250 * 250).SelectMany(_ => new byte[] { 200, 30, 30, 255 }).ToArray();
+        var png = LightLogos.Encode(new LightLogos.Image(250, 250, pixels));
+
+        var shown = LightLogos.Decode(LightLogos.ForLightPage(png))!;
+
+        Assert.Equal((112, 112), (shown.Width, shown.Height));
+        Assert.Equal(new byte[] { 200, 30, 30, 255 }, shown.Rgba[..4]);
+    }
+
+    [Fact]
+    public void ShrinkingKeepsATransparentEdgeFromDarkening()
+    {
+        // A red pixel beside a transparent black one: the average is red, half transparent, not dark red.
+        var image = new LightLogos.Image(2, 1, [255, 0, 0, 255, 0, 0, 0, 0]);
+
+        Assert.Equal(new byte[] { 255, 0, 0, 128 }, LightLogos.Shrink(image, 1).Rgba);
+    }
+}
