@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using TangentAtlas.Web.Ledger;
 
@@ -132,6 +133,10 @@ public static class SiteSignIn
     {
         options.GetClaimsFromUserInfoEndpoint = false;
         options.MapInboundClaims = false;         // keep oid, name and email as Entra names them
+        if (options.TokenHandler is JsonWebTokenHandler handler)
+        {
+            handler.MapInboundClaims = false;     // Microsoft.Identity.Web puts in a handler of its own, which maps them
+        }
         options.TokenValidationParameters.NameClaimType = "name";
         options.CallbackPath = "/signin-oidc";
         options.SignedOutCallbackPath = "/signout-callback-oidc";

@@ -138,6 +138,32 @@ public class LedgerSignInTests(LedgerSiteFactory factory) : IClassFixture<Ledger
         Assert.DoesNotContain("Ledger.Write", location);
     }
 
+    /// <summary>
+    /// The ID token's claims keep Entra's names (oid, name, email): Microsoft.Identity.Web brings a token handler of its
+    /// own, which would otherwise rename oid, and sign-in would fail for want of it (found signing in, November 15).
+    /// </summary>
+    [Fact]
+    public async Task TheIdTokensClaimsKeepEntrasNames()
+    {
+        var options = factory.Services.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectOptions>>()
+            .Get(Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectDefaults.AuthenticationScheme);
+        var token = new Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler().CreateToken(
+            """{"oid":"00000000-0000-0000-0000-0000000000aa","name":"Pat","email":"pat@example.com"}""");
+        var parameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = false,
+            SignatureValidator = (text, _) => new Microsoft.IdentityModel.JsonWebTokens.JsonWebToken(text),
+        };
+
+        var result = await options.TokenHandler.ValidateTokenAsync(token, parameters);
+
+        Assert.True(result.IsValid, result.Exception?.Message);
+        Assert.Equal("00000000-0000-0000-0000-0000000000aa", result.ClaimsIdentity.FindFirst("oid")?.Value);
+        Assert.Equal("pat@example.com", result.ClaimsIdentity.FindFirst("email")?.Value);
+    }
+
     [Fact]
     public async Task SignUpStillOpensTheUserFlowOnItsSignUpPage()
     {
