@@ -259,6 +259,17 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
     }
 
     [Fact]
+    public async Task SignedInPagesShowOnlyTheSignedInButtons()
+    {
+        var html = await client.GetStringAsync("/accounts", TestContext.Current.CancellationToken);
+
+        Assert.DoesNotContain("Your net worth", html);
+        Assert.DoesNotContain("When the storm hits", html);
+        Assert.Contains("My accounts", html);
+        Assert.Contains("Sign out", html);
+    }
+
+    [Fact]
     public async Task AnotherAccountIsNotShown()
     {
         factory.Ledger.IsMember = true;

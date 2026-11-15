@@ -8,12 +8,9 @@
                 <span>Tangent <span class="ta-logo-accent">Atlas</span></span>
             </a>
             <div class="ta-nav-links">
-                <NavLink href="your-net-worth" class="ta-nav-link" Match="NavLinkMatch.All">Your net worth</NavLink>
-                <NavLink href="your-plan" class="ta-nav-link" Match="NavLinkMatch.All">Your plan</NavLink>
-                <NavLink href="when-the-storm-hits" class="ta-nav-link" Match="NavLinkMatch.All">When the storm hits</NavLink>
-                <NavLink href="you-hold-the-keys" class="ta-nav-link" Match="NavLinkMatch.All">You hold the keys</NavLink>
                 <AuthorizeView>
                     <Authorized>
+                        @* The signed-in pages' own links go here, as they are added. *@
                         <a href="/accounts" class="ta-btn ta-btn-outline">My accounts</a>
                         <form method="post" action="/account/signout" class="ta-inline-form">
                             <AntiforgeryToken />
@@ -21,6 +18,11 @@
                         </form>
                     </Authorized>
                     <NotAuthorized>
+                        @* The pages that explain the product, for people who haven't signed in. *@
+                        <NavLink href="your-net-worth" class="ta-nav-link" Match="NavLinkMatch.All">Your net worth</NavLink>
+                        <NavLink href="your-plan" class="ta-nav-link" Match="NavLinkMatch.All">Your plan</NavLink>
+                        <NavLink href="when-the-storm-hits" class="ta-nav-link" Match="NavLinkMatch.All">When the storm hits</NavLink>
+                        <NavLink href="you-hold-the-keys" class="ta-nav-link" Match="NavLinkMatch.All">You hold the keys</NavLink>
                         <a href="/account/signin" class="ta-btn ta-btn-outline" data-enhance-nav="false">Sign in</a>
                         <a href="/signup" class="ta-btn ta-btn-primary">Sign up</a>
                     </NotAuthorized>
