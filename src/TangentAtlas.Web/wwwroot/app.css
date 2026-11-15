@@ -1040,3 +1040,59 @@ h1:focus {
 .ta-btn-small { font-size: 13px; padding: 6px 14px; }
 @media (max-width: 520px) { .ta-status-approval { margin-left: 0; width: 100%; justify-content: space-between; } }
 
+
+/* The signed-in page's live accounts (read from the ledger). */
+.ta-paper .ta-chip {
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.ta-paper-note {
+    margin: 12px 0 16px;
+    color: var(--ta-text-muted);
+    font-size: 14px;
+}
+
+.ta-paper-chart {
+    display: block;
+    width: 100%;
+    max-width: var(--ta-measure);
+    height: 120px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--ta-border);
+}
+
+.ta-paper-holdings {
+    width: 100%;
+    max-width: var(--ta-measure);
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+.ta-paper-holdings th,
+.ta-paper-holdings td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--ta-border);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.ta-paper-holdings th[scope="row"],
+.ta-paper-holdings th:first-child {
+    text-align: left;
+    font-weight: 500;
+}
+
+.ta-paper-holdings thead th {
+    color: var(--ta-text-muted);
+    font-weight: 400;
+}
+
+@media (max-width: 640px) {
+    .ta-paper-holdings th:nth-child(6),
+    .ta-paper-holdings td:nth-child(6),
+    .ta-paper-holdings th:nth-child(3),
+    .ta-paper-holdings td:nth-child(3) {
+        display: none;
+    }
+}

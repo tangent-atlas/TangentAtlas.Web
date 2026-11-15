@@ -63,14 +63,17 @@ public class SignedInSiteFactory : ConfiguredSiteFactory
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
-        builder.ConfigureServices(services =>
+        builder.ConfigureServices(SignIn);
+    }
+
+    /// <summary>Signs every request in as the person of <see cref="Claims"/>.</summary>
+    public static void SignIn(IServiceCollection services)
+    {
+        services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, SignedInHandler>(SignedInHandler.SchemeName, _ => { });
+        services.PostConfigure<AuthenticationOptions>(options =>
         {
-            services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, SignedInHandler>(SignedInHandler.SchemeName, _ => { });
-            services.PostConfigure<AuthenticationOptions>(options =>
-            {
-                options.DefaultScheme = SignedInHandler.SchemeName;
-                options.DefaultAuthenticateScheme = SignedInHandler.SchemeName;
-            });
+            options.DefaultScheme = SignedInHandler.SchemeName;
+            options.DefaultAuthenticateScheme = SignedInHandler.SchemeName;
         });
     }
 
