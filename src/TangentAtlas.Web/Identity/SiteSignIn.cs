@@ -68,7 +68,11 @@ public static class SiteSignIn
             authentication.AddMicrosoftIdentityWebApp(
                     identity =>
                     {
-                        identity.Authority = provider.Authority;
+                        // Microsoft.Identity.Web takes the authority as its instance and tenant: from
+                        // https://<tenant>.ciamlogin.com/<tenant>/v2.0, https://<tenant>.ciamlogin.com/ and <tenant>.
+                        var authority = new Uri(provider.Authority!);
+                        identity.Instance = authority.GetLeftPart(UriPartial.Authority) + "/";
+                        identity.TenantId = authority.Segments.Length > 1 ? authority.Segments[1].TrimEnd('/') : null;
                         identity.ClientId = provider.ClientId;
                         identity.ClientCredentials = [ledger.Credential()];
                     },

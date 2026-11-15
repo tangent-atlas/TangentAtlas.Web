@@ -25,6 +25,47 @@ public class LedgerSiteFactory : ConfiguredSiteFactory
     }
 }
 
+/// <summary>
+/// The ledger-connected site with a credential it can load: a throwaway certificate, put in the current user's store for
+/// the test and taken out after it.
+/// </summary>
+public class CredentialedLedgerSiteFactory : ConfiguredSiteFactory
+{
+    private readonly System.Security.Cryptography.X509Certificates.X509Certificate2 certificate;
+
+    public CredentialedLedgerSiteFactory()
+    {
+        using var key = System.Security.Cryptography.RSA.Create(2048);
+        var request = new System.Security.Cryptography.X509Certificates.CertificateRequest("CN=Tangent Atlas Website (test)", key, System.Security.Cryptography.HashAlgorithmName.SHA256, System.Security.Cryptography.RSASignaturePadding.Pkcs1);
+        using var created = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
+        certificate = System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12(created.Export(System.Security.Cryptography.X509Certificates.X509ContentType.Pfx), null, System.Security.Cryptography.X509Certificates.X509KeyStorageFlags.PersistKeySet);
+        using var store = new System.Security.Cryptography.X509Certificates.X509Store(System.Security.Cryptography.X509Certificates.StoreName.My, System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser);
+        store.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadWrite);
+        store.Add(certificate);
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseSetting("Ledger:Server", "http://ledger.test/");
+        builder.UseSetting("Ledger:Scope", LedgerSiteFactory.Scope);
+        builder.UseSetting("Ledger:CertificateThumbprint", certificate.Thumbprint);
+        base.ConfigureWebHost(builder);
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        using (var store = new System.Security.Cryptography.X509Certificates.X509Store(System.Security.Cryptography.X509Certificates.StoreName.My, System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser))
+        {
+            store.Open(System.Security.Cryptography.X509Certificates.OpenFlags.ReadWrite);
+            store.Remove(certificate);
+        }
+
+        certificate.Dispose();
+        await base.DisposeAsync();
+        GC.SuppressFinalize(this);
+    }
+}
+
 /// <summary>A person signed in to the ledger-connected site; the ledger and the identity provider are stand-ins.</summary>
 public class SignedInLedgerSiteFactory : LedgerSiteFactory
 {
@@ -45,7 +86,7 @@ public class SignedInLedgerSiteFactory : LedgerSiteFactory
     private sealed class StandInTokens : ITokenAcquisition
     {
         public Task<string> GetAccessTokenForUserAsync(IEnumerable<string> scopes, string? authenticationScheme, string? tenantId = null, string? userFlow = null, ClaimsPrincipal? user = null, TokenAcquisitionOptions? tokenAcquisitionOptions = null) =>
-            Task.FromResult(scopes.SequenceEqual([Scope]) ? "the-persons-token" : "wrong-scope");
+            Task.FromResult(scopes.SequenceEqual([Scope]) && authenticationScheme == "OpenIdConnect" ? "the-persons-token" : "wrong-scope-or-scheme");
 
         public Task<Microsoft.Identity.Client.AuthenticationResult> GetAuthenticationResultForUserAsync(IEnumerable<string> scopes, string? authenticationScheme, string? tenantId = null, string? userFlow = null, ClaimsPrincipal? user = null, TokenAcquisitionOptions? tokenAcquisitionOptions = null) =>
             throw new NotSupportedException();
@@ -207,5 +248,34 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.DoesNotContain("Paper money", html);
         Assert.Contains("Linking accounts is the next step to open.", html);
         factory.Ledger.IsMember = true;
+    }
+}
+
+public class LedgerTokenTests(CredentialedLedgerSiteFactory factory) : IClassFixture<CredentialedLedgerSiteFactory>
+{
+    /// <summary>
+    /// The site's real token acquisition, for a person whose token it doesn't hold (as after a restart): it asks them to
+    /// sign in again, rather than failing for want of its settings (found signing in, November 15: the default scheme is
+    /// the cookie, which has none).
+    /// </summary>
+    [Fact]
+    public async Task APersonWhoseTokenTheSiteLacksIsAskedToSignInAgain()
+    {
+        using var scope = factory.Services.CreateScope();
+        var context = new Microsoft.AspNetCore.Http.DefaultHttpContext { RequestServices = scope.ServiceProvider };
+        context.Request.Scheme = "https";
+        context.Request.Host = new HostString("localhost", 7062);
+        context.Request.Path = "/accounts";
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("oid", "00000000-0000-0000-0000-0000000000aa"), new Claim("tid", "d400d921-89c1-4c47-8d91-16c7c2ed76cb")],
+            "Test"));
+        scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext = context;
+        var reader = scope.ServiceProvider.GetRequiredService<LedgerReader>();
+
+        var exception = await Record.ExceptionAsync(() => reader.ReadAsync(context.User, TestContext.Current.CancellationToken));
+
+        Assert.True(
+            exception is MicrosoftIdentityWebChallengeUserException or Microsoft.Identity.Client.MsalUiRequiredException,
+            exception?.ToString());
     }
 }

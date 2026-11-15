@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
 
@@ -93,7 +94,9 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
     /// <exception cref="LedgerUnavailableException">The ledger couldn't be read.</exception>
     public async Task<LedgerView?> ReadAsync(ClaimsPrincipal user, CancellationToken cancellationToken)
     {
-        var token = await tokens.GetAccessTokenForUserAsync([options.Scope!], user: user);
+        // The scheme that signed the person in and holds their token: the site's default scheme is the cookie, which
+        // Microsoft.Identity.Web can't take its settings from.
+        var token = await tokens.GetAccessTokenForUserAsync([options.Scope!], authenticationScheme: OpenIdConnectDefaults.AuthenticationScheme, user: user);
         var tenants = await GetAsync<Guid[]>(token, "v1/me/tenants", cancellationToken) ?? [];
         if (tenants.Length == 0)
         {
