@@ -39,7 +39,10 @@ public sealed class LedgerOptions
 }
 
 /// <summary>A holding, named and valued.</summary>
-public sealed record HoldingView(string Name, decimal Quantity, decimal? Price, decimal? MarketValue, decimal? Weight, decimal? TargetWeight, bool IsCash);
+/// <param name="Name">What the page calls it: its ticker, or its currency's cash ("USD cash").</param>
+/// <param name="Symbol">Its ticker or currency code, which also names its picture.</param>
+/// <param name="FullName">Its full name, when the ledger has one.</param>
+public sealed record HoldingView(string Name, string Symbol, string? FullName, decimal Quantity, decimal? Price, decimal? MarketValue, decimal? Weight, decimal? TargetWeight, bool IsCash);
 
 /// <summary>An account at one close.</summary>
 public sealed record DayView(DateOnly Date, decimal? Value, decimal Flow, decimal? Return);
@@ -123,6 +126,10 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
             ?? nodes.FirstOrDefault(node => node.NodeId == nodeId)?.DisplayName
             ?? nodeId.ToString()[..8];
 
+        string SymbolOf(Guid nodeId) =>
+            symbols.Where(symbol => symbol.NodeId == nodeId && symbol.Scheme is "Ticker" or "Currency").Select(symbol => symbol.Code).FirstOrDefault()
+            ?? NameOf(nodeId);
+
         var paperInstitutions = institutions.Where(institution => institution.Source == "Simulator").Select(institution => institution.InstitutionId).ToHashSet();
         var views = new List<AccountView>();
         foreach (var summary in holdings?.Accounts ?? [])
@@ -147,7 +154,11 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
                     .Where(holding => holding.AccountId == summary.AccountId && holding.Quantity != 0m)
                     .OrderBy(holding => holding.AssetType == "Cash")
                     .ThenByDescending(holding => holding.MarketValue ?? 0m)
-                    .Select(holding => new HoldingView(NameOf(holding.AssetId), holding.Quantity, holding.Price, holding.MarketValue, holding.Weight, holding.TargetWeight, holding.AssetType == "Cash"))
+                    .Select(holding => new HoldingView(
+                        NameOf(holding.AssetId),
+                        SymbolOf(holding.AssetId),
+                        nodes.FirstOrDefault(node => node.NodeId == holding.AssetId)?.FullName,
+                        holding.Quantity, holding.Price, holding.MarketValue, holding.Weight, holding.TargetWeight, holding.AssetType == "Cash"))
                     .ToArray() is var held ? WithCashTarget(held) : [],
                 performance?.Statistics is { } item
                     ? new PerformanceView(item.From, item.Through, item.Returns, item.TotalReturn, item.AnnualizedReturn, item.Volatility, item.SharpeRatio, item.MaximumDrawdown, item.IsRanked)
@@ -207,7 +218,7 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
     // The ledger's JSON, read leniently: only the fields the pages show; enums arrive as their names.
     private sealed record SymbolRow(Guid NodeId, string Scheme, string Code);
 
-    private sealed record NodeRow(Guid NodeId, string? DisplayName);
+    private sealed record NodeRow(Guid NodeId, string? DisplayName, string? FullName);
 
     private sealed record InstitutionRow(Guid InstitutionId, string? Name, string? Source);
 

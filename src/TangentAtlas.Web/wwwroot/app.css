@@ -1147,3 +1147,679 @@ h1:focus {
     vertical-align: middle;
     margin-left: 8px;
 }
+
+/* =====================
+   The signed-in frame (AppLayout): a rail of functions that expands, a top bar, and the page.
+   ===================== */
+
+.ta-app {
+    --ta-rail: 64px;
+    --ta-rail-open: 232px;
+    --ta-app-bg: #f4f5f3;
+    display: flex;
+    min-height: 100vh;
+    background: var(--ta-app-bg);
+}
+
+.ta-rail-toggle {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ta-rail {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: var(--ta-rail);
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 10px;
+    box-sizing: border-box;
+    background: var(--ta-bg);
+    border-right: 1px solid var(--ta-border);
+    overflow: hidden;
+    transition: width 0.15s ease;
+    z-index: 20;
+}
+
+.ta-app:has(.ta-rail-toggle:checked) .ta-rail {
+    width: var(--ta-rail-open);
+}
+
+.ta-rail-brand,
+.ta-rail-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 44px;
+    padding: 0 10px;
+    border-radius: 10px;
+    color: var(--ta-text-body);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.ta-rail-brand {
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.ta-rail-mark {
+    width: 36px;
+    height: 36px;
+    flex: none;
+}
+
+.ta-rail-wordmark {
+    font-family: var(--ta-serif);
+    font-size: 19px;
+    color: var(--ta-text);
+}
+
+.ta-rail-link svg,
+.ta-app-menu svg {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.ta-rail-link:hover {
+    background: var(--ta-bg-secondary);
+    color: var(--ta-text);
+}
+
+.ta-rail-link.active {
+    background: var(--ta-green-light);
+    color: var(--ta-green-dark);
+    font-weight: 500;
+}
+
+.ta-rail-text {
+    opacity: 0;
+    transition: opacity 0.1s ease;
+}
+
+.ta-app:has(.ta-rail-toggle:checked) .ta-rail-text {
+    opacity: 1;
+}
+
+.ta-rail-toggle:focus-visible ~ .ta-rail .ta-rail-brand {
+    outline: 2px solid var(--ta-green-dark);
+}
+
+.ta-rail-scrim {
+    display: none;
+}
+
+.ta-app-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.ta-app-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 64px;
+    padding: 0 28px;
+    background: var(--ta-bg);
+    border-bottom: 1px solid var(--ta-border);
+}
+
+.ta-app-menu {
+    display: none;
+    cursor: pointer;
+    color: var(--ta-text-body);
+}
+
+.ta-app-title {
+    flex: 1;
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.ta-app-person {
+    position: relative;
+}
+
+.ta-app-person summary {
+    list-style: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--ta-green-light);
+    color: var(--ta-green-dark);
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.ta-app-person summary::-webkit-details-marker {
+    display: none;
+}
+
+.ta-app-person-menu {
+    position: absolute;
+    right: 0;
+    top: 46px;
+    min-width: 220px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--ta-bg);
+    border: 1px solid var(--ta-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.ta-app-person-name {
+    font-weight: 500;
+}
+
+.ta-app-person-email {
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+.ta-app-person-menu a,
+.ta-app-person-menu button {
+    font: inherit;
+    font-size: 15px;
+    text-align: left;
+    padding: 6px 0;
+    background: none;
+    border: none;
+    color: var(--ta-green-dark);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.ta-app-main {
+    flex: 1;
+    padding: 24px 28px 48px;
+}
+
+@media (max-width: 760px) {
+    .ta-rail {
+        position: fixed;
+        left: 0;
+        width: var(--ta-rail-open);
+        transform: translateX(-100%);
+        transition: transform 0.15s ease;
+    }
+
+    .ta-rail-text {
+        opacity: 1;
+    }
+
+    .ta-app:has(.ta-rail-toggle:checked) .ta-rail {
+        transform: none;
+    }
+
+    .ta-app:has(.ta-rail-toggle:checked) .ta-rail-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.25);
+        z-index: 15;
+    }
+
+    .ta-app-menu {
+        display: block;
+    }
+
+    .ta-app-bar,
+    .ta-app-main {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+/* Cards on the dashboard and the account pages. */
+.ta-card {
+    background: var(--ta-bg);
+    border: 1px solid var(--ta-border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.ta-card-title {
+    margin: 0 0 2px;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.ta-card-sub {
+    margin: 0 0 16px;
+    font-size: 14px;
+    color: var(--ta-text-muted);
+}
+
+.ta-card-figure {
+    font-family: var(--ta-serif);
+    font-size: 30px;
+}
+
+.ta-up { color: var(--ta-green-dark); }
+.ta-down { color: #b42318; }
+
+.ta-dashboard {
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.ta-dashboard-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.ta-greeting {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+@media (max-width: 900px) {
+    .ta-dashboard {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* The accounts panel: all accounts, then each group, opening to its accounts. */
+.ta-groups-total,
+.ta-group summary,
+.ta-group-account {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ta-groups-total {
+    padding: 4px 0 14px;
+    border-bottom: 1px solid var(--ta-border);
+    font-weight: 500;
+}
+
+.ta-group {
+    border: 1px solid var(--ta-border);
+    border-radius: 12px;
+    margin-top: 10px;
+}
+
+.ta-group summary {
+    padding: 12px 14px;
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+}
+
+.ta-group summary::-webkit-details-marker {
+    display: none;
+}
+
+.ta-group-name {
+    font-weight: 500;
+}
+
+.ta-group-kinds {
+    display: block;
+    font-size: 12.5px;
+    color: var(--ta-text-muted);
+}
+
+.ta-group-accounts {
+    padding: 0 14px 10px;
+}
+
+.ta-group-account {
+    padding: 8px 0;
+    border-top: 1px solid var(--ta-border);
+    color: var(--ta-text-body);
+    text-decoration: none;
+    font-size: 15px;
+}
+
+.ta-group-account:hover {
+    color: var(--ta-green-dark);
+}
+
+.ta-group-empty {
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--ta-text-muted);
+    border-top: 1px solid var(--ta-border);
+}
+
+.ta-group-all {
+    display: block;
+    padding-top: 8px;
+    font-size: 14px;
+}
+
+/* A chart of value over time. */
+.ta-chart {
+    position: relative;
+    height: 240px;
+    --ta-chart-scale: 52px;
+    font-size: 11px;
+    color: var(--ta-text-muted);
+}
+
+.ta-chart svg {
+    display: block;
+    margin-left: var(--ta-chart-scale);
+    width: calc(100% - var(--ta-chart-scale));
+    height: 220px;
+}
+
+.ta-chart-value {
+    position: absolute;
+    left: 0;
+    transform: translateY(-50%);
+    line-height: 1;
+}
+
+.ta-chart-date {
+    position: absolute;
+    bottom: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.ta-chart-date.ta-chart-first {
+    transform: none;
+}
+
+.ta-chart-date.ta-chart-last {
+    transform: translateX(-100%);
+}
+
+.ta-chart .ta-chart-grid {
+    stroke: var(--ta-border);
+    stroke-width: 1;
+}
+
+.ta-chart .ta-chart-area {
+    fill: var(--ta-green-light);
+}
+
+.ta-chart .ta-chart-line {
+    fill: none;
+    stroke: var(--ta-green-dark);
+    stroke-width: 2;
+}
+
+/* Figures in a row: a label over a value. */
+.ta-figures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 32px;
+}
+
+.ta-figure-label {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ta-text-muted);
+}
+
+.ta-figure-value {
+    font-family: var(--ta-serif);
+    font-size: 24px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Lists of accounts (the Investments page). */
+.ta-account-rows {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+}
+
+.ta-account-rows th,
+.ta-account-rows td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--ta-border);
+    text-align: right;
+}
+
+.ta-account-rows th:first-child,
+.ta-account-rows td:first-child {
+    text-align: left;
+}
+
+.ta-account-rows thead th {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ta-text-muted);
+}
+
+.ta-account-rows a {
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.ta-account-where {
+    display: block;
+    font-size: 13px;
+    color: var(--ta-text-muted);
+}
+
+@media (max-width: 640px) {
+    .ta-account-rows .ta-optional {
+        display: none;
+    }
+}
+
+/* The contents pane: an account's holdings, as tiles or as details (File Explorer's views). */
+.ta-contents-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.ta-views {
+    display: inline-flex;
+    border: 1px solid var(--ta-border-strong);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.ta-views a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: var(--ta-text-body);
+    text-decoration: none;
+}
+
+.ta-views a + a {
+    border-left: 1px solid var(--ta-border-strong);
+}
+
+.ta-views a[aria-current="true"] {
+    background: var(--ta-green-light);
+    color: var(--ta-green-dark);
+    font-weight: 500;
+}
+
+.ta-views svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+}
+
+.ta-tiles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 14px;
+}
+
+.ta-holding-tile {
+    border: 1px solid var(--ta-border);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--ta-bg);
+}
+
+.ta-holding-tile .ta-picture {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 4px;
+}
+
+.ta-holding-symbol {
+    font-weight: 500;
+}
+
+.ta-holding-shares,
+.ta-holding-name {
+    font-size: 13px;
+    color: var(--ta-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ta-holding-value {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Weight against target: the bar is the holding's weight; the mark, its target. */
+.ta-drift {
+    position: relative;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--ta-bg-secondary);
+    border: 1px solid var(--ta-border);
+    margin-top: 4px;
+}
+
+.ta-drift-weight {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: 3px;
+    background: var(--ta-green);
+}
+
+.ta-drift-target {
+    position: absolute;
+    top: -3px;
+    width: 2px;
+    height: 12px;
+    background: var(--ta-text);
+}
+
+.ta-drift-label {
+    font-size: 12px;
+    color: var(--ta-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* A picture that identifies a holding: the logo on a dark square (the icon set is made for dark backgrounds), or its
+   letters when there is no logo. */
+.ta-picture {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #1f2a2a;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    flex: none;
+}
+
+.ta-picture img {
+    width: 78%;
+    height: 78%;
+    object-fit: contain;
+}
+
+.ta-picture-letters {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.ta-holding-tile .ta-picture-letters {
+    font-size: 16px;
+}
+
+.ta-details-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ta-app-title .ta-back {
+    margin: 0;
+    font-size: 22px;
+    color: var(--ta-text-muted);
+}
+
+.ta-crumb {
+    color: var(--ta-text-muted);
+    margin: 0 6px;
+}
+
+.ta-card .ta-chip {
+    font-size: 12px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Blazor's error bar, for the signed-in frame too (MainLayout's copy is scoped to it). */
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem 1.25rem 0.7rem;
+    background: lightyellow;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}

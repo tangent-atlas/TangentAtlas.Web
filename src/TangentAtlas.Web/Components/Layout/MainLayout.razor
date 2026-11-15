@@ -11,7 +11,7 @@
                 <AuthorizeView>
                     <Authorized>
                         @* The signed-in pages' own links go here, as they are added. *@
-                        <a href="/accounts" class="ta-btn ta-btn-outline">My accounts</a>
+                        <a href="/dashboard" class="ta-btn ta-btn-outline">Dashboard</a>
                         <form method="post" action="/account/signout" class="ta-inline-form">
                             <AntiforgeryToken />
                             <button type="submit" class="ta-btn ta-btn-outline">Sign out</button>

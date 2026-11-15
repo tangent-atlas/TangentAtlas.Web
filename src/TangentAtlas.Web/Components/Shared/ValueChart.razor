@@ -1,0 +1,110 @@
+@using System.Globalization
+@* Value over time: an area under a line, with the value scale on the left and the first, middle and last dates below.
+   Plain SVG, drawn on the server. *@
+@if (points.Length >= 2)
+{
+    @* The lines stretch to the card's width; the labels are text over them, so they keep their shape. *@
+    <div class="ta-chart" role="img" aria-label="@Label">
+        <svg viewBox="0 0 @Width @Height" preserveAspectRatio="none" aria-hidden="true">
+            @foreach (var (y, _) in gridlines)
+            {
+                <line class="ta-chart-grid" x1="@Left" x2="@Width" y1="@F(y)" y2="@F(y)" vector-effect="non-scaling-stroke"></line>
+            }
+            <polygon class="ta-chart-area" points="@($"{F(X(0))},{F(Bottom)} {Line} {F(X(points.Length - 1))},{F(Bottom)}")"></polygon>
+            <polyline class="ta-chart-line" points="@Line" vector-effect="non-scaling-stroke"></polyline>
+        </svg>
+        @foreach (var (y, text) in gridlines)
+        {
+            <span class="ta-chart-value" style="@($"top: {Pct(y / Height)}")" aria-hidden="true">@text</span>
+        }
+        @{ var dates = new[] { 0, points.Length / 2, points.Length - 1 }.Distinct().ToArray(); }
+        @foreach (var index in dates)
+        {
+            <span class="ta-chart-date @(index == 0 ? "ta-chart-first" : index == points.Length - 1 ? "ta-chart-last" : "")" style="@($"left: calc(var(--ta-chart-scale) + (100% - var(--ta-chart-scale)) * {(X(index) / Width).ToString("0.####", CultureInfo.InvariantCulture)})")" aria-hidden="true">@points[index].Date.ToString("MMM d", English)</span>
+        }
+    </div>
+}
+else
+{
+    <p class="ta-card-sub">@Empty</p>
+}
+
+@code {
+    private static string Pct(double fraction) => (fraction * 100).ToString("0.##", CultureInfo.InvariantCulture) + "%";
+
+    private const double Width = 640, Height = 220, Left = 0, Top = 8, Bottom = 196;
+
+    private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
+
+    /// <summary>The values, one a day, in date order.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<(DateOnly Date, decimal Value)> Points { get; set; } = [];
+
+    /// <summary>What to say when there are fewer than two.</summary>
+    [Parameter] public string Empty { get; set; } = "The chart starts with the next close.";
+
+    private (DateOnly Date, decimal Value)[] points = [];
+
+    private (double Y, string Text)[] gridlines = [];
+
+    private decimal low, high;
+
+    private string Line => string.Join(' ', points.Select((point, index) => $"{F(X(index))},{F(Y(point.Value))}"));
+
+    private string Label => points.Length >= 2
+        ? $"Value at each close from {points[0].Date.ToString("MMMM d", English)} to {points[^1].Date.ToString("MMMM d", English)}: {points[0].Value.ToString("C0", English)} to {points[^1].Value.ToString("C0", English)}."
+        : Empty;
+
+    protected override void OnParametersSet()
+    {
+        points = Points.ToArray();
+        if (points.Length < 2)
+        {
+            return;
+        }
+
+        // A scale of round steps around the values, with some room above and below.
+        var min = points.Min(point => point.Value);
+        var max = points.Max(point => point.Value);
+        var spread = max - min;
+        if (spread == 0m)
+        {
+            spread = Math.Max(1m, Math.Abs(max) * 0.02m);
+        }
+
+        var step = Step(spread / 3m);
+        low = Math.Floor(min / step) * step;
+        high = Math.Ceiling(max / step) * step;
+        if (high == low)
+        {
+            high = low + step;
+        }
+
+        var lines = new List<(double, string)>();
+        for (var value = low; value <= high; value += step)
+        {
+            lines.Add((Y(value), Short(value)));
+        }
+
+        gridlines = lines.ToArray();
+    }
+
+    private double X(int index) => Left + ((Width - Left) * index / (points.Length - 1));
+
+    private double Y(decimal value) => Bottom - ((double)((value - low) / (high - low)) * (Bottom - Top));
+
+    private static string F(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+
+    private static decimal Step(decimal rough)
+    {
+        var power = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)rough)));
+        var fraction = rough / power;
+        return (fraction <= 1m ? 1m : fraction <= 2m ? 2m : fraction <= 5m ? 5m : 10m) * power;
+    }
+
+    private static string Short(decimal value) => Math.Abs(value) switch
+    {
+        >= 1_000_000m => (value / 1_000_000m).ToString("$0.##M", English),
+        >= 1_000m => (value / 1_000m).ToString("$0.#K", English),
+        _ => value.ToString("$0", English),
+    };
+}

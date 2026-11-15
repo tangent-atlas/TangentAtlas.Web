@@ -1,5 +1,7 @@
 using TangentAtlas.Web.Components;
 using TangentAtlas.Web.Identity;
+using TangentAtlas.Web.Ledger;
+using TangentAtlas.Web.Pictures;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,7 @@ if (builder.Environment.IsDevelopment())
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddSiteSignIn(builder.Configuration);
+builder.Services.AddPictures(builder.Configuration);
 
 var app = builder.Build();
 
@@ -42,6 +45,8 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapAccountEndpoints();
+app.MapPictures();
+app.MapContentsView();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

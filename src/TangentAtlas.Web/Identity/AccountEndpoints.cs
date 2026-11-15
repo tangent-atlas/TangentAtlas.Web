@@ -12,7 +12,7 @@ namespace TangentAtlas.Web.Identity;
 public static class AccountEndpoints
 {
     /// <summary>Where a person lands after signing in or signing up.</summary>
-    public const string SignedInHome = "/accounts";
+    public const string SignedInHome = "/dashboard";
 
     public static IEndpointRouteBuilder MapAccountEndpoints(this IEndpointRouteBuilder endpoints)
     {

@@ -220,20 +220,63 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
     private readonly HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     [Fact]
-    public async Task MyAccountsListsTheBrokerageAccountAndTotalsWhatThePersonOwns()
+    public async Task TheDashboardGroupsTheAccountsAndTotalsWhatThePersonOwns()
     {
         factory.Ledger.IsMember = true;
-        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/accounts", TestContext.Current.CancellationToken));
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken));
 
-        Assert.Contains("Your paper brokerage account is live", html);
-        Assert.Contains("$1,048,545", html);                         // what you own, and net
-        Assert.Contains("Across 1 account, paper money", html);
-        Assert.Contains("$0", html);                                 // what you owe
-        Assert.Contains("No cards or loans linked", html);
-        Assert.Contains($"href=\"accounts/{StandInLedger.Account}\"", html);   // the account, in the Brokerage card
-        Assert.Contains("Tangent Atlas Paper Brokerage · ••0010", html);
+        Assert.Contains("All accounts", html);
+        Assert.Contains("$1,048,545.32", html);                       // the investments group, and all accounts
+        Assert.Contains("Linking: coming soon", html);                // banking, assets, liabilities
+        Assert.Contains($"href=\"accounts/{StandInLedger.Account}\"", html);
+        Assert.Contains("href=\"investments\"", html);
+        Assert.Contains("Net worth", html);
+        Assert.Contains("deposits included", html);
+        Assert.Contains("<polyline", html);
+        Assert.Contains("2.19", html);                                // the Sharpe ratio, in the investments card
         Assert.DoesNotContain("Your rules", html);
-        Assert.DoesNotContain("Link an account to see this", html);
+    }
+
+    [Fact]
+    public async Task InvestmentsListsTheBrokerageAccount()
+    {
+        factory.Ledger.IsMember = true;
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/investments", TestContext.Current.CancellationToken));
+
+        Assert.Contains($"href=\"accounts/{StandInLedger.Account}\"", html);
+        Assert.Contains("Tangent Atlas Paper Brokerage · ••0010", html);
+        Assert.Contains("$1,048,545", html);
+        Assert.Contains("4.86%", html);
+    }
+
+    [Fact]
+    public async Task TheContentsShowAsTilesUntilThePersonChoosesDetails()
+    {
+        factory.Ledger.IsMember = true;
+        var page = $"/accounts/{StandInLedger.Account}";
+
+        var tiles = WebUtility.HtmlDecode(await client.GetStringAsync(page, TestContext.Current.CancellationToken));
+        Assert.Contains("ta-tiles-grid", tiles);
+        Assert.Contains("10.0% target", tiles);                       // the drift bar's label: weight against target
+
+        var choose = await client.GetAsync(ContentsViews.Link(ContentsView.Details, page), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.Redirect, choose.StatusCode);
+        Assert.Equal(page, choose.Headers.Location!.OriginalString);
+        var cookie = choose.Headers.GetValues("Set-Cookie").Single(value => value.StartsWith(ContentsViews.Cookie));
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, page);
+        request.Headers.Add("Cookie", cookie.Split(';')[0]);
+        var details = WebUtility.HtmlDecode(await (await client.SendAsync(request, TestContext.Current.CancellationToken)).Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.Contains("ta-details-name", details);
+        Assert.DoesNotContain("ta-tiles-grid", details);
+    }
+
+    [Fact]
+    public async Task ChoosingAViewReturnsOnlyToThisSite()
+    {
+        var response = await client.GetAsync("/contents-view/details?returnUrl=" + Uri.EscapeDataString("//evil.example/"), TestContext.Current.CancellationToken);
+
+        Assert.Equal("/dashboard", response.Headers.Location!.OriginalString);
     }
 
     [Fact]
@@ -253,7 +296,7 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.Contains("AAPL", html);
         Assert.Contains("$359,889.20", html);
         Assert.Contains("USD cash", html);
-        Assert.Contains("10.00%", html);           // cash's target: what the model's weights leave (36% + 54% invested)
+        Assert.Contains("10.0% target", html);     // cash's target: what the model's weights leave (36% + 54% invested)
         Assert.Contains("<polyline", html);        // the value at each close
         Assert.Contains("Updated November 13, 4:35 PM New York time.", html);
     }
@@ -261,11 +304,11 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
     [Fact]
     public async Task SignedInPagesShowOnlyTheSignedInButtons()
     {
-        var html = await client.GetStringAsync("/accounts", TestContext.Current.CancellationToken);
+        var html = await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain("Your net worth", html);
         Assert.DoesNotContain("When the storm hits", html);
-        Assert.Contains("My accounts", html);
+        Assert.Contains("href=\"investments\"", html);
         Assert.Contains("Sign out", html);
     }
 
@@ -283,11 +326,10 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
     public async Task APersonWithNoTenantSeesThePageAsBefore()
     {
         factory.Ledger.IsMember = false;
-        var html = await client.GetStringAsync("/accounts", TestContext.Current.CancellationToken);
+        var html = await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain("Paper money", html);
         Assert.Contains("Linking accounts is the next step to open.", html);
-        Assert.Contains("Link an account to see this", html);
         factory.Ledger.IsMember = true;
     }
 }
