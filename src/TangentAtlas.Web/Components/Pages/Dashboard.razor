@@ -44,25 +44,6 @@
             <div class="ta-status" role="status"><span class="ta-chip ta-chip-warning">Ledger</span><span>@LedgerProblem</span></div>
         }
 
-        <section class="ta-card" aria-labelledby="net-worth-heading">
-            <h2 id="net-worth-heading" class="ta-card-title">Net worth</h2>
-            @{ var series = AccountGroups.NetWorth(LedgerAccounts); }
-            <div class="ta-card-figure">@Money(LedgerAccounts.Sum(AccountGroups.Contribution))</div>
-            <p class="ta-card-sub">
-                @if (series.Count >= 2)
-                {
-                    var change = series[^1].Value - series[0].Value;
-                    <span class="@(change >= 0 ? "ta-up" : "ta-down")">@(change >= 0 ? "+" : "−")@Money(Math.Abs(change))</span>
-                    <span> since @series[0].Date.ToString("MMMM d", English), deposits included</span>
-                }
-                else if (LedgerAccounts.Count > 0)
-                {
-                    <span>Its history starts with the next close.</span>
-                }
-            </p>
-            <ValueChart Points="series" />
-        </section>
-
         @if (LedgerAccounts.In(AccountGroups.All[1]) is { Count: > 0 } investments)
         {
             <section class="ta-card" aria-labelledby="investments-heading">
@@ -85,6 +66,25 @@
                 </table>
             </section>
         }
+
+        <section class="ta-card" aria-labelledby="net-worth-heading">
+            <h2 id="net-worth-heading" class="ta-card-title">Net worth</h2>
+            @{ var series = AccountGroups.NetWorth(LedgerAccounts); }
+            <div class="ta-card-figure">@Money(LedgerAccounts.Sum(AccountGroups.Contribution))</div>
+            <p class="ta-card-sub">
+                @if (series.Count >= 2)
+                {
+                    var change = series[^1].Value - series[0].Value;
+                    <span class="@(change >= 0 ? "ta-up" : "ta-down")">@(change >= 0 ? "+" : "−")@Money(Math.Abs(change))</span>
+                    <span> since @series[0].Date.ToString("MMMM d", English), deposits included</span>
+                }
+                else if (LedgerAccounts.Count > 0)
+                {
+                    <span>Its history starts with the next close.</span>
+                }
+            </p>
+            <ValueChart Points="series" />
+        </section>
     </div>
 </div>
 

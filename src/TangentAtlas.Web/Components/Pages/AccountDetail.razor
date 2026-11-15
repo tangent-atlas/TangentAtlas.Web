@@ -73,6 +73,7 @@
                             <div class="ta-holding-symbol">@holding.Name</div>
                             <div class="ta-holding-shares">@(holding.IsCash ? "Cash" : $"{holding.Quantity.ToString("N0", English)} shares")</div>
                             <div class="ta-holding-value">@Money(holding.MarketValue, 2)</div>
+                            <div class="ta-holding-shares">@(holding.IsCash ? "\u00a0" : $"{Money(holding.Price, 2)} a share")</div>
                             <Drift Weight="holding.Weight" Target="holding.TargetWeight" />
                         </div>
                     }

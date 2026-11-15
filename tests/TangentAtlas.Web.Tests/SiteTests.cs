@@ -186,6 +186,7 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
 
     [Theory]
     [InlineData("/dashboard")]
+    [InlineData("/pictures/ticker/AAPL.png")]
     [InlineData("/account/signin")]
     [InlineData("/account/signup?understood=yes")]
     public async Task WithoutAnIdentityProviderNobodyGetsIn(string path)

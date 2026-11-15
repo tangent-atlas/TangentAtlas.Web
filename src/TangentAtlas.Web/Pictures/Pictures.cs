@@ -11,7 +11,10 @@ public sealed class PictureOptions
 {
     public const string SectionName = "Pictures";
 
-    /// <summary>The folder (default: the icon set's clone under the developer's repos, nvstly\icons or icons).</summary>
+    /// <summary>
+    /// The folder (default: the site's own pictures folder, where the release copies the icon set; else the set's clone
+    /// under the developer's repos, nvstly\icons or icons).
+    /// </summary>
     public string? Path { get; set; }
 }
 
@@ -44,12 +47,15 @@ public sealed partial class PictureLibrary
 
     private readonly string? root;
 
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte[]> prepared = new();
+
     public PictureLibrary(PictureOptions options)
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         root = new[]
             {
                 options.Path,
+                System.IO.Path.Combine(AppContext.BaseDirectory, "pictures"),
                 System.IO.Path.Combine(home, "source", "repos", "nvstly", "icons"),
                 System.IO.Path.Combine(home, "source", "repos", "icons"),
             }
@@ -89,6 +95,9 @@ public sealed partial class PictureLibrary
         return null;
     }
 
+    /// <summary>A picture's bytes, made ready for the site's light pages (see <see cref="LightLogos"/>), and kept.</summary>
+    public byte[] Bytes(string path) => prepared.GetOrAdd(path, file => LightLogos.ForLightPage(System.IO.File.ReadAllBytes(file)));
+
     /// <summary>The letters that stand in for a picture: up to four of the code's.</summary>
     public static string Letters(string code) => Punctuation().Replace(code.ToUpperInvariant(), "") is { Length: > 0 } letters ? letters[..Math.Min(4, letters.Length)] : "?";
 
@@ -99,7 +108,7 @@ public sealed partial class PictureLibrary
     private static partial Regex SafeName();
 }
 
-/// <summary>Serves the pictures: /pictures/{kind}/{name}.png, cached for a day.</summary>
+/// <summary>Serves the pictures to people signed in: /pictures/{kind}/{name}.png, cached for a day.</summary>
 public static class PictureEndpoints
 {
     public static IServiceCollection AddPictures(this IServiceCollection services, IConfiguration configuration)
@@ -119,9 +128,9 @@ public static class PictureEndpoints
                 return Results.NotFound();
             }
 
-            context.Response.Headers.CacheControl = "public, max-age=86400";
-            return Results.File(file.Path, "image/png");
-        });
+            context.Response.Headers.CacheControl = "private, max-age=86400";
+            return Results.File(library.Bytes(file.Path), "image/png");
+        }).RequireAuthorization();   // third-party logos, shown to the people signed in only
         return endpoints;
     }
 }

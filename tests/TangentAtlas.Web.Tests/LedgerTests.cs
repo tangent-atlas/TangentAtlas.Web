@@ -257,7 +257,7 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
 
         var tiles = WebUtility.HtmlDecode(await client.GetStringAsync(page, TestContext.Current.CancellationToken));
         Assert.Contains("ta-tiles-grid", tiles);
-        Assert.Contains("10.0% target", tiles);                       // the drift bar's label: weight against target
+        Assert.Contains("$342.10 a share", tiles);                    // the latest price, under the value
 
         var choose = await client.GetAsync(ContentsViews.Link(ContentsView.Details, page), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Redirect, choose.StatusCode);

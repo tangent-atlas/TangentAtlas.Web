@@ -36,3 +36,57 @@ public sealed class PictureTests : IDisposable
 
     public void Dispose() => Directory.Delete(folder, recursive: true);
 }
+
+public class LightLogoTests
+{
+    private static byte[] Logo(params (byte R, byte G, byte B, byte A)[] pixels) =>
+        LightLogos.Encode(new LightLogos.Image(pixels.Length, 1, pixels.SelectMany(p => new[] { p.R, p.G, p.B, p.A }).ToArray()));
+
+    [Fact]
+    public void AWhiteLogoIsDrawnInDarkInkAndKeepsItsTransparency()
+    {
+        var shown = LightLogos.Decode(LightLogos.ForLightPage(Logo((255, 255, 255, 255), (250, 250, 250, 90), (0, 0, 0, 0))))!;
+
+        Assert.Equal(new byte[] { 31, 42, 42, 255, 31, 42, 42, 90, 0, 0, 0, 0 }, shown.Rgba);
+    }
+
+    [Fact]
+    public void ALogoInColourIsLeftAsItIs()
+    {
+        var png = Logo((244, 78, 36, 255), (255, 255, 255, 255), (0, 120, 212, 255));
+
+        Assert.Same(png, LightLogos.ForLightPage(png));
+    }
+
+    [Fact]
+    public void WhatIsNotAPngIsServedUnchanged()
+    {
+        byte[] bytes = [1, 2, 3];
+
+        Assert.Same(bytes, LightLogos.ForLightPage(bytes));
+    }
+}
+
+public class LedgerCredentialTests
+{
+    [Fact]
+    public void InAzureTheSiteProvesItselfWithTheVaultsCertificate()
+    {
+        var options = new TangentAtlas.Web.Ledger.LedgerOptions
+        {
+            Server = "https://app-tangentatlas-ledger-prod.azurewebsites.net",
+            Scope = "api://e82d5369-e139-4fd8-8c2f-8b3b3faa0ee6/Ledger.Read",
+            KeyVaultUrl = "https://kv-tangentatlas-prod.vault.azure.net/",
+            KeyVaultCertificateName = "website-ledger-client",
+        };
+
+        Assert.True(options.IsConfigured);
+        var credential = options.Credential();
+        Assert.Equal(Microsoft.Identity.Abstractions.CredentialSource.KeyVault, credential.SourceType);
+        Assert.Equal("website-ledger-client", credential.KeyVaultCertificateName);
+    }
+
+    [Fact]
+    public void WithoutACertificateTheLedgerIsNotConfigured() =>
+        Assert.False(new TangentAtlas.Web.Ledger.LedgerOptions { Server = "https://ledger.example", Scope = "api://x/Ledger.Read" }.IsConfigured);
+}

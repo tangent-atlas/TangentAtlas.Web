@@ -26,16 +26,29 @@ public sealed class LedgerOptions
 
     /// <summary>
     /// The thumbprint of the website's development certificate, in the current user's personal store with a private key
-    /// that cannot be exported: how the site proves itself when it redeems a sign-in's code.  Nothing secret is stored.
+    /// that cannot be exported: how the site proves itself on a developer's computer when it redeems a sign-in's code.
     /// </summary>
     public string? CertificateThumbprint { get; set; }
 
-    public bool IsConfigured =>
-        Uri.TryCreate(Server, UriKind.Absolute, out _) && !string.IsNullOrWhiteSpace(Scope) && !string.IsNullOrWhiteSpace(CertificateThumbprint);
+    /// <summary>
+    /// In Azure, the vault that holds the website's certificate (https://kv-tangentatlas-prod.vault.azure.net/).  The site
+    /// reads it as its managed identity (AZURE_CLIENT_ID names it); nothing secret is in its settings.
+    /// </summary>
+    public string? KeyVaultUrl { get; set; }
 
-    /// <summary>The website's credential, as Microsoft.Identity.Web describes it.</summary>
-    public CredentialDescription Credential() =>
-        CertificateDescription.FromStoreWithThumbprint(CertificateThumbprint!, System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser, System.Security.Cryptography.X509Certificates.StoreName.My);
+    /// <summary>The certificate's name in that vault.</summary>
+    public string? KeyVaultCertificateName { get; set; }
+
+    private bool HasVaultCertificate => Uri.TryCreate(KeyVaultUrl, UriKind.Absolute, out _) && !string.IsNullOrWhiteSpace(KeyVaultCertificateName);
+
+    public bool IsConfigured =>
+        Uri.TryCreate(Server, UriKind.Absolute, out _) && !string.IsNullOrWhiteSpace(Scope)
+        && (HasVaultCertificate || !string.IsNullOrWhiteSpace(CertificateThumbprint));
+
+    /// <summary>The website's credential, as Microsoft.Identity.Web describes it: the vault's certificate, or the store's.</summary>
+    public CredentialDescription Credential() => HasVaultCertificate
+        ? CertificateDescription.FromKeyVault(KeyVaultUrl!, KeyVaultCertificateName!)
+        : CertificateDescription.FromStoreWithThumbprint(CertificateThumbprint!, System.Security.Cryptography.X509Certificates.StoreLocation.CurrentUser, System.Security.Cryptography.X509Certificates.StoreName.My);
 }
 
 /// <summary>A holding, named and valued.</summary>
