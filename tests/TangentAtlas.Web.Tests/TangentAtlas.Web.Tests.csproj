@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.15" />
     <PackageReference Include="xunit.v3.mtp-v2" Version="4.0.2" />
     <!-- Microsoft.Identity.Web (through the site) brings 10.0.10, which has advisories. -->
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.14" />
