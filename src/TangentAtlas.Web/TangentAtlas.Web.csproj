@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <!-- The generator, at build time only: nothing of it ships, and projects that reference this one (the tests) do not run it. -->
-    <PackageReference Include="Bellerophon" Version="0.5.0-preview.4" PrivateAssets="all" />
+    <PackageReference Include="Bellerophon" Version="0.5.0" PrivateAssets="all" />
     <PackageReference Include="AtlasLedger.Model" Version="1.1.0-preview.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.14" />
     <PackageReference Include="Microsoft.Identity.Web" Version="4.16.1" />
