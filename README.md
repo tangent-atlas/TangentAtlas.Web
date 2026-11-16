@@ -25,6 +25,25 @@ On a developer's computer:
 
 The token cache is in memory: after the site restarts, the next visit signs the person in again (silently while their session at the identity provider lasts).
 
+### Live pages
+
+The dashboard, investments and account pages follow the ledger as it changes, without reloading. Each page is a static
+frame (its title) around a live part that runs in Blazor's interactive server mode: prerendered, then connected to the
+site, which re-renders it when the person's data changes.
+
+- **A Replica per person.** The site keeps a Replica of the person's tenants (`Ledger/LiveLedgers.cs`), generated here
+  exactly as the ledger generates its own Primary: the `Bellerophon` package, the ledger's model (the `AtlasLedger.Model`
+  package, which carries its `bellerophon.json` and the types it names) and `<BellerophonRole>Replica</BellerophonRole>`.
+  So the website and the ledger move to a new model together; a mismatch is refused (426).
+- **Kept current by the generated sync client.** One per tenant: a snapshot of the tables the pages read
+  (`LiveLedgers.Tables`, plus their parents), then long polls for the rows changed since, each request with the person's
+  own token. No controller per page and no view model on the server.
+- **Shared, then let go.** Every page the person has open uses the same Replica; it keeps running for
+  `Ledger:KeepAlive` (five minutes) after the last one closes, so moving between pages starts from what is here.
+- **View models are queries** (`Ledger/LedgerProjection.cs`): accounts, holdings and values, with market value multiplied
+  here by the ledger's own formula (`Valuation.MarketValue`) from the quantities and prices it sends.
+- **Deployment.** WebSockets on (TangentAtlas.Platform's `Deploy-CorporateWebsite.ps1`); one instance.
+
 ## License
 
 Apache License 2.0; see `LICENSE`. Security reports: see `SECURITY.md`.
