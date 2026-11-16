@@ -56,7 +56,7 @@ public sealed class LiveLedgers(
         {
             if (!ledgers.TryGetValue(key, out var found) || found.IsStopped)
             {
-                found = new LiveLedger(key, user, options.Scope!, httpClients.CreateClient(HttpClientName), scopes.CreateScope(), logger, Fail);
+                found = new LiveLedger(key, user, options.Scope!, options.TenantRefresh, httpClients.CreateClient(HttpClientName), scopes.CreateScope(), logger, Fail);
                 ledgers[key] = found;
             }
 
@@ -158,7 +158,11 @@ public sealed class LiveLedgers(
         ledger.Stop();
     }
 
-    /// <summary>One person's Replica of their tenants, kept current.</summary>
+    /// <summary>
+    /// One person's Replica of their tenants, kept current: a follower per tenant (the generated sync client), and the
+    /// list of tenants read again every <see cref="LedgerOptions.TenantRefresh"/>, so a tenant the person joins appears on
+    /// their pages, and one they leave goes, without a reload.
+    /// </summary>
     internal sealed class LiveLedger
     {
         private readonly AtlasLedger.Model.Ledger replica = new();
@@ -167,19 +171,22 @@ public sealed class LiveLedgers(
         private readonly IServiceScope scope;
         private readonly ClaimsPrincipal user;
         private readonly string ledgerScope;
+        private readonly TimeSpan tenantRefresh;
         private readonly ILogger logger;
         private readonly Action<LiveLedger> fail;
         private readonly Lock viewGate = new();
-        private readonly List<Task> following = [];
+        private readonly Dictionary<Guid, Follower> followers = [];
+        private readonly List<Task> running = [];
         private IReadOnlyList<Guid> tenantIds = [];
         private volatile LedgerView? view;
         private volatile string? problem;
 
-        public LiveLedger(string key, ClaimsPrincipal user, string ledgerScope, HttpClient http, IServiceScope scope, ILogger logger, Action<LiveLedger> fail)
+        public LiveLedger(string key, ClaimsPrincipal user, string ledgerScope, TimeSpan tenantRefresh, HttpClient http, IServiceScope scope, ILogger logger, Action<LiveLedger> fail)
         {
             Key = key;
             this.user = user;
             this.ledgerScope = ledgerScope;
+            this.tenantRefresh = tenantRefresh;
             this.http = http;
             this.scope = scope;
             this.logger = logger;
@@ -224,7 +231,7 @@ public sealed class LiveLedgers(
             Task[] tasks;
             lock (viewGate)
             {
-                tasks = [.. following];
+                tasks = [.. running];
             }
 
             _ = Task.WhenAll(tasks).ContinueWith(_ => scope.Dispose(), TaskScheduler.Default);
@@ -232,22 +239,9 @@ public sealed class LiveLedgers(
 
         private async Task StartAsync()
         {
-            var cancellationToken = stopping.Token;
             try
             {
-                var tenants = await GetTenantsAsync(cancellationToken);
-                var clients = tenants.Select(tenantId => new LedgerSyncClient(http, replica, tenantId, Tables, AuthorizeAsync, Json)).ToArray();
-                await Task.WhenAll(clients.Select(client => client.SyncAsync(TimeSpan.Zero, cancellationToken)));
-                lock (viewGate)
-                {
-                    tenantIds = tenants;
-                    view = tenants.Count == 0 ? null : LedgerProjection.Project(tenants, replica);
-                    foreach (var client in clients)
-                    {
-                        client.Synced += (_, _) => Refresh();
-                        following.Add(FollowAsync(client));
-                    }
-                }
+                await ReconcileTenantsAsync(stopping.Token);
             }
             catch (LedgerSyncException exception)
             {
@@ -256,6 +250,102 @@ public sealed class LiveLedgers(
             catch (HttpRequestException exception)
             {
                 throw new LedgerUnavailableException($"The ledger at {http.BaseAddress} can't be reached.", exception);
+            }
+
+            lock (viewGate)
+            {
+                running.Add(WatchTenantsAsync());
+            }
+        }
+
+        /// <summary>
+        /// Makes the followed tenants the ones the ledger lists for the person: a snapshot of each new one (all at once),
+        /// then follows it; a tenant no longer listed is dropped.  The view changes once, after.
+        /// </summary>
+        private async Task ReconcileTenantsAsync(CancellationToken cancellationToken)
+        {
+            var listed = await GetTenantsAsync(cancellationToken);
+            Guid[] gone;
+            lock (viewGate)
+            {
+                gone = [.. followers.Keys.Where(tenantId => !listed.Contains(tenantId))];
+            }
+
+            var joined = listed.Where(tenantId => !IsFollowed(tenantId)).Select(tenantId => new LedgerSyncClient(http, replica, tenantId, Tables, AuthorizeAsync, Json)).ToArray();
+            await Task.WhenAll(joined.Select(client => client.SyncAsync(TimeSpan.Zero, cancellationToken)));
+            if (joined.Length == 0 && gone.Length == 0 && tenantIds.Count > 0)
+            {
+                return;
+            }
+
+            lock (viewGate)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                foreach (var tenantId in gone)
+                {
+                    Drop(tenantId);
+                }
+
+                foreach (var client in joined)
+                {
+                    var follower = new Follower(client, CancellationTokenSource.CreateLinkedTokenSource(stopping.Token));
+                    followers[client.TenantId] = follower;
+                    client.Synced += (_, _) => Refresh();
+                    running.Add(FollowAsync(follower));
+                }
+
+                tenantIds = listed;
+                view = listed.Count == 0 ? null : LedgerProjection.Project(listed, replica);
+            }
+
+            if (joined.Length > 0 || gone.Length > 0)
+            {
+                Changed?.Invoke();
+            }
+        }
+
+        private bool IsFollowed(Guid tenantId)
+        {
+            lock (viewGate)
+            {
+                return followers.ContainsKey(tenantId);
+            }
+        }
+
+        /// <summary>Stops following a tenant and forgets its rows (under the view's lock).</summary>
+        private void Drop(Guid tenantId)
+        {
+            if (followers.Remove(tenantId, out var follower))
+            {
+                follower.Stopping.Cancel();
+            }
+
+            replica.DiscardPartition(tenantId);
+        }
+
+        /// <summary>Reads the person's tenants again from time to time, until stopped.  A failed read is tried again next time.</summary>
+        private async Task WatchTenantsAsync()
+        {
+            while (!stopping.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(tenantRefresh, stopping.Token);
+                    await ReconcileTenantsAsync(stopping.Token);
+                }
+                catch (Exception) when (stopping.IsCancellationRequested)
+                {
+                    return;
+                }
+                catch (Exception exception) when (exception is MicrosoftIdentityWebChallengeUserException or Microsoft.Identity.Client.MsalUiRequiredException)
+                {
+                    StopWith(exception, "Your sign-in has expired: reload the page to see your accounts as they are now.");
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    logger.LogInformation(exception, "Couldn't read a person's tenants; trying again in {Interval}.", tenantRefresh);
+                }
             }
         }
 
@@ -283,37 +373,60 @@ public sealed class LiveLedgers(
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        /// <summary>Follows one tenant until stopped.  Network failures are retried by the client; a refusal ends it.</summary>
-        private async Task FollowAsync(LedgerSyncClient client)
+        /// <summary>
+        /// Follows one tenant until stopped.  Network failures are retried by the client.  A tenant that no longer admits
+        /// the person (404) is dropped, as if they had left it; any other refusal stops the whole ledger.
+        /// </summary>
+        private async Task FollowAsync(Follower follower)
         {
             try
             {
-                await client.RunAsync(stopping.Token);
+                await follower.Client.RunAsync(follower.Stopping.Token);
             }
-            catch (Exception) when (stopping.IsCancellationRequested)
+            catch (Exception) when (follower.Stopping.IsCancellationRequested)
             {
-                // Stopped: the person's pages have all closed.
+                // Stopped: the person's pages have all closed, or they left the tenant.
+            }
+            catch (LedgerSyncException exception) when (exception.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                lock (viewGate)
+                {
+                    Drop(follower.Client.TenantId);
+                    tenantIds = [.. tenantIds.Where(tenantId => tenantId != follower.Client.TenantId)];
+                    view = tenantIds.Count == 0 ? null : LedgerProjection.Project(tenantIds, replica);
+                }
+
+                Changed?.Invoke();
             }
             catch (Exception exception)
             {
-                logger.LogWarning(exception, "Stopped following tenant {TenantId} for a person.", client.TenantId);
-                problem = exception is MicrosoftIdentityWebChallengeUserException or Microsoft.Identity.Client.MsalUiRequiredException
+                logger.LogWarning(exception, "Stopped following tenant {TenantId} for a person.", follower.Client.TenantId);
+                StopWith(exception, exception is MicrosoftIdentityWebChallengeUserException or Microsoft.Identity.Client.MsalUiRequiredException
                     ? "Your sign-in has expired: reload the page to see your accounts as they are now."
-                    : "Your accounts stopped updating: reload the page to see them as they are now.";
-                fail(this);
-                Changed?.Invoke();
+                    : "Your accounts stopped updating: reload the page to see them as they are now.");
             }
+        }
+
+        private void StopWith(Exception exception, string message)
+        {
+            logger.LogDebug(exception, "A person's live ledger stopped.");
+            problem = message;
+            fail(this);
+            Changed?.Invoke();
         }
 
         private void Refresh()
         {
             lock (viewGate)
             {
-                view = LedgerProjection.Project(tenantIds, replica);
+                view = tenantIds.Count == 0 ? null : LedgerProjection.Project(tenantIds, replica);
             }
 
             Changed?.Invoke();
         }
+
+        /// <summary>A tenant being followed: its sync client, and what stops it alone.</summary>
+        private sealed record Follower(LedgerSyncClient Client, CancellationTokenSource Stopping);
     }
 }
 

@@ -39,6 +39,12 @@ public sealed class LedgerOptions
     /// </summary>
     public TimeSpan KeepAlive { get; set; } = TimeSpan.FromMinutes(5);
 
+    /// <summary>
+    /// How often a person's live ledger reads their list of tenants again, so a tenant they join (an account being
+    /// linked) appears on their pages without a reload.  Changes inside a tenant arrive at once; only joining waits.
+    /// </summary>
+    public TimeSpan TenantRefresh { get; set; } = TimeSpan.FromSeconds(10);
+
     private bool HasVaultCertificate => Uri.TryCreate(KeyVaultUrl, UriKind.Absolute, out _) && !string.IsNullOrWhiteSpace(KeyVaultCertificateName);
 
     public bool IsConfigured =>

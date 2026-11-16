@@ -79,6 +79,7 @@ public class SignedInLedgerSiteFactory : LedgerSiteFactory
 
         // Each request starts the person's live ledger afresh, so a test sees the stand-in as that test set it.
         builder.UseSetting("Ledger:KeepAlive", "00:00:00");
+        builder.UseSetting("Ledger:TenantRefresh", "00:00:00.200");
         builder.ConfigureServices(services =>
         {
             SignedInSiteFactory.SignIn(services);
@@ -142,10 +143,26 @@ public sealed class StandInLedger : HttpMessageHandler
 
     public bool IsMember { get; set; } = true;
 
+    /// <summary>The Joe 10's tenant no longer admits the person: its feed answers 404 (as the ledger does to a non-member).</summary>
+    public bool IsRevoked { get; set; }
+
     /// <summary>The person also belongs to another tenant, listed first (as the walkthrough's sample firm is in production).</summary>
     public bool AlsoInAnotherTenant { get; set; }
 
     public List<string> Requests { get; } = [];
+
+    /// <summary>Wakes the waiting long polls, as a commit would (they answer with whatever is now true).</summary>
+    public void Wake()
+    {
+        TaskCompletionSource answered;
+        lock (gate)
+        {
+            answered = next;
+            next = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        answered.TrySetResult();
+    }
 
     /// <summary>Commits a change to a tenant: the next sync after it brings it, and a waiting long poll answers.</summary>
     public void Publish(Guid tenantId, LedgerSyncChanges changes)
@@ -186,6 +203,11 @@ public sealed class StandInLedger : HttpMessageHandler
         }
 
         var tenantId = Guid.Parse(match.Groups[1].Value);
+        if (IsRevoked && tenantId == Guid.Parse(Tenant))
+        {
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }
+
         var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri.Query);
         var since = long.Parse(query["since"] ?? "0", System.Globalization.CultureInfo.InvariantCulture);
         if (since == 0 || query["epoch"] != Epoch.ToString())
@@ -197,6 +219,11 @@ public sealed class StandInLedger : HttpMessageHandler
         while (true)
         {
             Task changed;
+            if (IsRevoked && tenantId == Guid.Parse(Tenant))
+            {
+                return new HttpResponseMessage(HttpStatusCode.NotFound);
+            }
+
             lock (gate)
             {
                 var latest = published.LastOrDefault(item => item.Sequence > since && item.TenantId == tenantId);
@@ -593,6 +620,52 @@ public class LiveLedgerTests(SignedInLedgerSiteFactory factory) : IClassFixture<
 
         Assert.Equal(before, Snapshots());
         Assert.Same(first!.View, second!.View);
+    }
+
+    [Fact]
+    public async Task ATenantThePersonJoinsAppearsWithoutAReload()
+    {
+        factory.Ledger.IsMember = false;
+        try
+        {
+            using var lease = await factory.Services.GetRequiredService<LiveLedgers>().AcquireAsync(Person, TestContext.Current.CancellationToken);
+            Assert.Null(lease!.View);   // the dashboard says linking accounts is the next step
+            var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            lease.Changed += () => changed.TrySetResult();
+
+            factory.Ledger.IsMember = true;   // made a user of the Joe 10's tenant
+
+            await changed.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            Assert.Equal(3, lease.View!.Accounts.Single(account => account.AccountId == Guid.Parse(StandInLedger.Account)).Holdings.Count);
+            Assert.Null(lease.Problem);
+        }
+        finally
+        {
+            factory.Ledger.IsMember = true;
+        }
+    }
+
+    [Fact]
+    public async Task ATenantThePersonLeavesGoesWithoutAReload()
+    {
+        try
+        {
+            using var lease = await factory.Services.GetRequiredService<LiveLedgers>().AcquireAsync(Person, TestContext.Current.CancellationToken);
+            Assert.NotNull(lease!.View);
+            var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            lease.Changed += () => changed.TrySetResult();
+
+            factory.Ledger.IsRevoked = true;   // the tenant's feed refuses them before its list does
+            factory.Ledger.Wake();
+
+            await changed.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            Assert.Null(lease.View);
+            Assert.Null(lease.Problem);   // leaving a tenant isn't a failure
+        }
+        finally
+        {
+            factory.Ledger.IsRevoked = false;
+        }
     }
 
     private static HoldingView Aapl(LedgerView view) =>
