@@ -27,9 +27,12 @@ The token cache is in memory: after the site restarts, the next visit signs the 
 
 ### Live pages
 
-The dashboard, investments and account pages follow the ledger as it changes, without reloading. Each page is a static
-frame (its title) around a live part that runs in Blazor's interactive server mode: prerendered, then connected to the
-site, which re-renders it when the person's data changes.
+The dashboard, investments and account pages follow the ledger as it changes, without reloading. Every part of them
+that shows the ledger's data is part of the live view model, the frame included (an account's name in the title bar and
+the browser tab): the signed-in pages run in Blazor's interactive server mode, layout and all, prerendered and then
+connected to the site, which re-renders them when the person's data changes. Moving between them stays on the same
+connection. The public pages (`Components/Pages/Public`) are static: `[ExcludeFromInteractiveRouting]`, so an
+interactive page that links to one loads it in full.
 
 - **A Replica per person.** The site keeps a Replica of the person's tenants (`Ledger/LiveLedgers.cs`), generated here
   exactly as the ledger generates its own Primary: the `Bellerophon` package, the ledger's model (the `AtlasLedger.Model`

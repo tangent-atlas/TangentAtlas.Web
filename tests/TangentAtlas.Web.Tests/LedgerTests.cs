@@ -545,16 +545,32 @@ public class LiveLedgerTests(SignedInLedgerSiteFactory factory) : IClassFixture<
     private static readonly ClaimsPrincipal Person = new(new ClaimsIdentity(SignedInSiteFactory.Claims, "Test"));
 
     [Fact]
-    public async Task ThePagesLivePartsRunInteractively()
+    public async Task TheSignedInPagesRunInteractivelyAndThePublicPagesDoNot()
     {
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         foreach (var page in new[] { "/dashboard", "/investments", $"/accounts/{StandInLedger.Account}" })
         {
             var html = await client.GetStringAsync(page, TestContext.Current.CancellationToken);
 
-            Assert.Contains("<!--Blazor:{\"type\":\"server\"", html);   // prerendered, then live over the circuit
+            Assert.Contains("<!--Blazor:{\"type\":\"server\"", html);   // prerendered, then live over the circuit, frame and all
             Assert.Contains("Joe 10", html);
         }
+
+        foreach (var page in new[] { "/", "/privacy", "/your-plan" })
+        {
+            Assert.DoesNotContain("<!--Blazor:{\"type\":\"server\"", await client.GetStringAsync(page, TestContext.Current.CancellationToken));
+        }
+    }
+
+    [Fact]
+    public async Task AnAccountsTitleComesFromTheViewModel()
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        var html = await client.GetStringAsync($"/accounts/{StandInLedger.Account}", TestContext.Current.CancellationToken);
+
+        Assert.Contains("<title>Joe 10 · Tangent Atlas</title>", html);
+        Assert.Matches("<div class=\"ta-app-title\">.*Investments.*›</span> Joe 10", html.ReplaceLineEndings(" "));
     }
 
     [Fact]

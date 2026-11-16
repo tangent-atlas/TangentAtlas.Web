@@ -2,21 +2,123 @@
 @attribute [Authorize]
 @layout TangentAtlas.Web.Components.Layout.AppLayout
 @inherits LedgerPage
+@* One account: its figures, chart and holdings.  The title and the way back are the account's too, so they follow the
+   ledger like the rest (an account linked while its page is open gets its name). *@
 <PageTitle>@(Account?.Name ?? "Account") · Tangent Atlas</PageTitle>
 <SectionContent SectionName="app-title">
-    <a class="ta-back" href="@(Account is { } shown && AccountGroups.All.FirstOrDefault(group => group.Types.Contains(shown.Type))?.Page is { } page ? page : "dashboard")">@(Account is { } here ? AccountGroups.All.FirstOrDefault(group => group.Types.Contains(here.Type))?.Name ?? "Dashboard" : "Dashboard")</a>
+    <a class="ta-back" href="@(Group?.Page ?? "dashboard")">@(Group?.Name ?? "Dashboard")</a>
     <span class="ta-crumb">›</span> @(Account?.Name ?? "Account")
 </SectionContent>
 
-<LiveAccount @rendermode="InteractiveServer" AccountId="AccountId" View="View" />
+<div class="ta-dashboard-main">
+    @if (LedgerProblem is not null)
+    {
+        <div class="ta-status" role="status"><span class="ta-chip ta-chip-warning">Ledger</span><span>@LedgerProblem</span></div>
+    }
+
+    @if (Account is not { } account)
+    {
+        if (LedgerProblem is null)
+        {
+            <section class="ta-card">
+                <h1 class="ta-card-title">Not one of your accounts</h1>
+                <p class="ta-card-sub">This account isn't among the accounts you can see.</p>
+            </section>
+        }
+    }
+    else
+    {
+        <section class="ta-card" aria-labelledby="account-heading">
+            <div class="ta-eyebrow">@account.Institution@(account.Number is { } number ? $" · {number}" : "")</div>
+            <h1 id="account-heading" class="ta-card-title">@account.Name @if (account.IsPaper) { <span class="ta-chip">Paper money</span> }</h1>
+            @if (account.ModelName is { } model)
+            {
+                <p class="ta-card-sub">Invested by the @model model@(account.IsPaper ? ": it rebalances at 3:45 pm New York time on market days and fills at the close." : ".")</p>
+            }
+            <div class="ta-figures">
+                <div><div class="ta-figure-label">Worth</div><div class="ta-figure-value ta-up">@Money(account.MarketValue)</div></div>
+                <div><div class="ta-figure-label">Put in</div><div class="ta-figure-value">@Money(account.NetContributions)</div></div>
+                <div><div class="ta-figure-label">Gain</div><div class="ta-figure-value">@Money(account.Gain)</div></div>
+                <div><div class="ta-figure-label">Return</div><div class="ta-figure-value">@Percent(account.Performance?.TotalReturn)</div></div>
+                <div><div class="ta-figure-label">Volatility</div><div class="ta-figure-value">@Percent(account.Performance?.Volatility)</div></div>
+                <div><div class="ta-figure-label">Sharpe ratio</div><div class="ta-figure-value">@Number(account.Performance?.SharpeRatio)</div></div>
+            </div>
+            <p class="ta-card-sub" style="margin-top: 14px">
+                @if (account.Performance is { From: { } from, Through: { } through, Returns: > 0 } performance)
+                {
+                    @($"Measured at each close from {from.ToString("MMMM d", English)} to {through.ToString("MMMM d, yyyy", English)}: {performance.Returns} daily return{(performance.Returns == 1 ? "" : "s")}, worst drop {Percent(performance.MaximumDrawdown)}{(performance.IsRanked ? "." : "; ranked after 20.")} {Updated}")
+                }
+                else
+                {
+                    @($"Its returns start with the next close. {Updated}")
+                }
+            </p>
+            <ValueChart Points="AccountGroups.Values(account)" />
+        </section>
+
+        <section class="ta-card" aria-labelledby="contents-heading">
+            <div class="ta-contents-head">
+                <h2 id="contents-heading" class="ta-card-title">Holdings</h2>
+                <nav class="ta-views" aria-label="View">
+                    <a href="@ContentsViews.Link(ContentsView.Tiles, Here)" aria-current="@(View == ContentsView.Tiles ? "true" : "false")">
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="5" height="5" rx="1" /><rect x="9.5" y="1.5" width="5" height="5" rx="1" /><rect x="1.5" y="9.5" width="5" height="5" rx="1" /><rect x="9.5" y="9.5" width="5" height="5" rx="1" /></svg>Tiles
+                    </a>
+                    <a href="@ContentsViews.Link(ContentsView.Details, Here)" aria-current="@(View == ContentsView.Details ? "true" : "false")">
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3h13M1.5 8h13M1.5 13h13" /></svg>Details
+                    </a>
+                </nav>
+            </div>
+
+            @if (View == ContentsView.Tiles)
+            {
+                <div class="ta-tiles-grid">
+                    @foreach (var holding in account.Holdings)
+                    {
+                        <div @key="holding.Symbol" class="ta-holding-tile">
+                            <Picture Kind="@(holding.IsCash ? PictureKind.Currency : PictureKind.Ticker)" Code="@holding.Symbol" />
+                            <div class="ta-holding-symbol">@holding.Name</div>
+                            <div class="ta-holding-shares">@(holding.IsCash ? "Cash" : $"{holding.Quantity.ToString("N0", English)} shares")</div>
+                            <div class="ta-holding-value">@Money(holding.MarketValue, 2)</div>
+                            <div class="ta-holding-shares">@(holding.IsCash ? "\u00a0" : $"{Money(holding.Price, 2)} a share")</div>
+                            <Drift Weight="holding.Weight" Target="holding.TargetWeight" />
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <table class="ta-paper-holdings">
+                    <thead>
+                        <tr><th scope="col">Holding</th><th scope="col">Shares</th><th scope="col">Price</th><th scope="col">Value</th><th scope="col">Weight</th><th scope="col">Target</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var holding in account.Holdings)
+                        {
+                            <tr @key="holding.Symbol">
+                                <th scope="row"><span class="ta-details-name"><Picture Kind="@(holding.IsCash ? PictureKind.Currency : PictureKind.Ticker)" Code="@holding.Symbol" /><span>@holding.Name</span></span></th>
+                                <td>@(holding.IsCash ? "" : holding.Quantity.ToString("N0", English))</td>
+                                <td>@(holding.IsCash ? "" : Money(holding.Price, 2))</td>
+                                <td>@Money(holding.MarketValue, 2)</td>
+                                <td>@Percent(holding.Weight)</td>
+                                <td>@Percent(holding.TargetWeight)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    }
+</div>
 
 @code {
     [Parameter] public Guid AccountId { get; set; }
 
-    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    /// <summary>Tiles or details: the person's choice, which the site reads from its cookie when the page is opened.</summary>
+    [CascadingParameter] private ContentsView View { get; set; }
 
-    // The title and the way back: from the same live ledger, read once (the page around the live part is static).
     private AccountView? Account => LedgerAccounts.FirstOrDefault(account => account.AccountId == AccountId);
 
-    private ContentsView View => ContentsViews.From(HttpContext);
+    private AccountGroup? Group => Account is { } shown ? AccountGroups.All.FirstOrDefault(group => group.Types.Contains(shown.Type)) : null;
+
+    private string Here => $"/accounts/{AccountId}";
 }
