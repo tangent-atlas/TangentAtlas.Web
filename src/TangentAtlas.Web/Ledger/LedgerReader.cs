@@ -92,11 +92,11 @@ public sealed record AccountView(
     PerformanceView? Performance,
     IReadOnlyList<DayView> Days);
 
-/// <summary>What the person sees of their tenant.</summary>
-/// <param name="TenantId">The tenant.</param>
-/// <param name="AsOf">When the ledger's rules last derived it; null while they haven't.</param>
-/// <param name="Accounts">Its accounts.</param>
-public sealed record LedgerView(Guid TenantId, DateTimeOffset? AsOf, IReadOnlyList<AccountView> Accounts);
+/// <summary>What the person sees of their tenants: a person may belong to several (their household, an adviser's firm).</summary>
+/// <param name="TenantIds">Their tenants, as the ledger lists them.</param>
+/// <param name="AsOf">When the ledger's rules last derived them (the latest of the tenants'); null while they haven't.</param>
+/// <param name="Accounts">Every tenant's accounts, tenant by tenant.</param>
+public sealed record LedgerView(IReadOnlyList<Guid> TenantIds, DateTimeOffset? AsOf, IReadOnlyList<AccountView> Accounts);
 
 /// <summary>The ledger couldn't be read (down, or answering with an error); the page says so.</summary>
 public sealed class LedgerUnavailableException(string message, Exception? inner = null) : Exception(message, inner);
@@ -110,7 +110,7 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     /// <summary>
-    /// Reads the person's first tenant, or null if they belong to none.
+    /// Reads every tenant the person belongs to, or null if they belong to none.
     /// </summary>
     /// <exception cref="MicrosoftIdentityWebChallengeUserException">The person must sign in again (the site lost their token).</exception>
     /// <exception cref="LedgerUnavailableException">The ledger couldn't be read.</exception>
@@ -125,7 +125,20 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
             return null;
         }
 
-        var tenantId = tenants[0];
+        var accounts = new List<AccountView>();
+        DateTimeOffset? asOf = null;
+        foreach (var tenantId in tenants)
+        {
+            var (tenantAsOf, tenantAccounts) = await ReadTenantAsync(token, tenantId, cancellationToken);
+            accounts.AddRange(tenantAccounts);
+            asOf = tenantAsOf > asOf || asOf is null ? tenantAsOf : asOf;
+        }
+
+        return new LedgerView(tenants, asOf, accounts);
+    }
+
+    private async Task<(DateTimeOffset? AsOf, List<AccountView> Accounts)> ReadTenantAsync(string token, Guid tenantId, CancellationToken cancellationToken)
+    {
         var symbols = await GetAsync<SymbolRow[]>(token, $"v1/tenants/{tenantId}/symbol", cancellationToken) ?? [];
         var nodes = await GetAsync<NodeRow[]>(token, $"v1/tenants/{tenantId}/node", cancellationToken) ?? [];
         var institutions = await GetAsync<InstitutionRow[]>(token, $"v1/tenants/{tenantId}/institution", cancellationToken) ?? [];
@@ -179,7 +192,7 @@ public sealed class LedgerReader(HttpClient http, ITokenAcquisition tokens, Ledg
                 (performance?.Days ?? []).Select(day => new DayView(day.Date, day.Value, day.Flow, day.Return)).ToArray()));
         }
 
-        return new LedgerView(tenantId, holdings?.AsOf, views);
+        return (holdings?.AsOf, views);
     }
 
     /// <summary>

@@ -119,6 +119,13 @@ public sealed class StandInLedger : HttpMessageHandler
 
     public bool IsMember { get; set; } = true;
 
+    /// <summary>The person also belongs to another tenant, listed first (as the walkthrough's sample firm is in production).</summary>
+    public bool AlsoInAnotherTenant { get; set; }
+
+    public const string OtherTenant = "0f0f0f0f-0000-0000-0000-00000000000a";
+
+    public const string OtherAccount = "0f0f0f0f-0000-0000-0000-00000000000b";
+
     public List<string> Requests { get; } = [];
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -132,7 +139,12 @@ public sealed class StandInLedger : HttpMessageHandler
 
         var json = path switch
         {
-            "/v1/me/tenants" => IsMember ? $"[\"{Tenant}\"]" : "[]",
+            "/v1/me/tenants" => !IsMember ? "[]" : AlsoInAnotherTenant ? $"[\"{OtherTenant}\",\"{Tenant}\"]" : $"[\"{Tenant}\"]",
+            $"/v1/tenants/{OtherTenant}/node" => $"[{{\"nodeId\":\"{OtherAccount}\",\"displayName\":\"Smith Trust\"}}]",
+            $"/v1/tenants/{OtherTenant}/account" => $"[{{\"accountId\":\"{OtherAccount}\",\"accountType\":\"Brokerage\"}}]",
+            $"/v1/tenants/{OtherTenant}/symbol" or $"/v1/tenants/{OtherTenant}/institution" => "[]",
+            $"/v1/tenants/{OtherTenant}/holdings" => $$"""{"asOf":"2026-11-15T23:51:00Z","holdings":[],"accounts":[{"accountId":"{{OtherAccount}}","marketValue":0,"cash":0,"netContributions":0,"gain":0}],"prices":[],"rates":[],"problems":[]}""",
+            $"/v1/tenants/{OtherTenant}/statistics?days=true" => """{"asOf":"2026-11-15T23:51:00Z","accounts":[]}""",
             $"/v1/tenants/{Tenant}/symbol" => $"[{{\"nodeId\":\"{Aapl}\",\"scheme\":\"Ticker\",\"code\":\"AAPL\"}},{{\"nodeId\":\"{Msft}\",\"scheme\":\"Ticker\",\"code\":\"MSFT\"}},{{\"nodeId\":\"{Dollar}\",\"scheme\":\"Currency\",\"code\":\"USD\"}}]",
             $"/v1/tenants/{Tenant}/node" => $"[{{\"nodeId\":\"{Account}\",\"displayName\":\"Joe 10\"}}]",
             $"/v1/tenants/{Tenant}/institution" => $"[{{\"institutionId\":\"{Broker}\",\"name\":\"Tangent Atlas Paper Brokerage\",\"source\":\"Simulator\"}}]",
@@ -235,6 +247,25 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.Contains("<polyline", html);
         Assert.Contains("2.19", html);                                // the Sharpe ratio, in the investments card
         Assert.DoesNotContain("Your rules", html);
+    }
+
+    [Fact]
+    public async Task APersonInTwoTenantsSeesTheAccountsOfBoth()
+    {
+        factory.Ledger.IsMember = true;
+        factory.Ledger.AlsoInAnotherTenant = true;
+        try
+        {
+            var html = WebUtility.HtmlDecode(await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken));
+
+            Assert.Contains("Smith Trust", html);
+            Assert.Contains($"href=\"accounts/{StandInLedger.Account}\"", html);   // the Joe 10, in the second tenant
+            Assert.Contains("$1,048,545.32", html);
+        }
+        finally
+        {
+            factory.Ledger.AlsoInAnotherTenant = false;
+        }
     }
 
     [Fact]
