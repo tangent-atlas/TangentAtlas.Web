@@ -1,3 +1,4 @@
+using System.Reflection;
 using TangentAtlas.Web.Components;
 using TangentAtlas.Web.Identity;
 using TangentAtlas.Web.Ledger;
@@ -44,6 +45,14 @@ app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+
+// The commit the running site was built from, so a deployment can confirm the new build is the one answering.  Public: a
+// commit ID reveals nothing about anyone.
+var commit = typeof(Program).Assembly.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion is { } informational
+    && informational.IndexOf('+') is var plus and >= 0 && plus < informational.Length - 1
+        ? informational[(plus + 1)..]
+        : "development";
+app.MapGet("/version", () => commit);
 app.MapAccountEndpoints();
 app.MapPictures();
 app.MapContentsView();

@@ -10,6 +10,17 @@ public class PublicPagesTests(UnconfiguredSiteFactory factory) : IClassFixture<U
     private readonly HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     [Fact]
+    public async Task TheSiteSaysWhichBuildIsRunning()
+    {
+        // A deployment waits for /version to name its commit (the build stamps it as SourceRevisionId); a local build has none.
+        var response = await client.GetAsync("/version", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var version = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.False(string.IsNullOrWhiteSpace(version));
+        Assert.DoesNotContain("<", version);
+    }
+
+    [Fact]
     public async Task TheLandingPageCarriesTheHeadlineAndSignUp()
     {
         var html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
