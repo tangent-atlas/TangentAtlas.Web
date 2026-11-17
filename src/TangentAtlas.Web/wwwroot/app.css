@@ -9,7 +9,8 @@
     --ta-green-dark: #0F6E56;     /* text, links and buttons (6:1 on white) */
     --ta-green-darker: #0a4f3e;
     --ta-green-light: #E1F5EE;
-    --ta-red-dark: #B42318;       /* text: a fall (6:1 on white) */
+    --ta-moved-up: #00A800;       /* a rise, at its brightest: a primary green (pure #00FF00 can't be read on white) */
+    --ta-moved-down: #FF0000;     /* a fall, at its brightest: a primary red */
     --ta-text: #1a1a1a;
     --ta-text-body: #374151;
     --ta-text-muted: #4b5563;
@@ -1812,19 +1813,19 @@ h1:focus {
     top: 0.5rem;
 }
 
-/* A number that moved: green up, red down, held a moment and then faded back to its usual colour over two seconds. */
+/* A number that moved: a primary green up or red down, fading back to its usual colour (black or grey) over five seconds. */
 .ta-moved-up {
-    animation: ta-moved-up 2s linear;
+    animation: ta-moved-up 5s linear;
 }
 
 .ta-moved-down {
-    animation: ta-moved-down 2s linear;
+    animation: ta-moved-down 5s linear;
 }
 
 @keyframes ta-moved-up {
-    0%, 15% { color: var(--ta-green-dark); }
+    0%, 5% { color: var(--ta-moved-up); }
 }
 
 @keyframes ta-moved-down {
-    0%, 15% { color: var(--ta-red-dark); }
+    0%, 5% { color: var(--ta-moved-down); }
 }
