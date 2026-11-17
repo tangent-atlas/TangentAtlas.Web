@@ -100,10 +100,10 @@ public static class LedgerProjection
             ? Valuation.MarketValue(position.Quantity, position.QuantityFactor, price.Price, position.PriceFactor, rate.Rate)
             : null;
 
-    /// <summary>What the page calls a holding: its ticker, or its currency's cash ("USD cash").</summary>
+    /// <summary>What the page calls a holding: its ticker, or its currency's code (a currency is an asset like any other).</summary>
     private static string NameOf(Node node) =>
         node.Symbols.Where(symbol => symbol.Scheme == SymbolScheme.Ticker).Select(symbol => symbol.Code).Order(StringComparer.Ordinal).FirstOrDefault()
-        ?? node.Symbols.Where(symbol => symbol.Scheme == SymbolScheme.Currency).Select(symbol => symbol.Code + " cash").Order(StringComparer.Ordinal).FirstOrDefault()
+        ?? node.Symbols.Where(symbol => symbol.Scheme == SymbolScheme.Currency).Select(symbol => symbol.Code).Order(StringComparer.Ordinal).FirstOrDefault()
         ?? (string.IsNullOrWhiteSpace(node.DisplayName) ? node.NodeId.ToString()[..8] : node.DisplayName);
 
     /// <summary>Its ticker or currency code, which also names its picture.</summary>

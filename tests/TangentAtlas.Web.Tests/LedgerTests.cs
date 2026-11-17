@@ -434,7 +434,9 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         var tiles = WebUtility.HtmlDecode(await client.GetStringAsync(page, TestContext.Current.CancellationToken));
         Assert.Contains("ta-tiles-grid", tiles);
         // A tile: ticker, shares, price, value, in that order; no weight bar.
-        Assert.Matches(@"ta-holding-symbol"">AAPL</div>\s*<div class=""ta-holding-shares"">1,052 shares</div>\s*<div class=""ta-holding-price"">\$342\.10 per share</div>\s*<div class=""ta-holding-value"">359,889\.20</div>", tiles);
+        Assert.Matches(@"ta-holding-symbol"">AAPL</div>\s*<div class=""ta-holding-shares"">1,052 shares</div>\s*<div class=""ta-holding-price"">\$342\.10 per share</div>\s*<div class=""ta-holding-value"">\$359,889\.20</div>", tiles);
+        // Cash is an asset like any other: its code, its quantity, its price of $1.00, its value.
+        Assert.Matches(@"ta-holding-symbol"">USD</div>\s*<div class=""ta-holding-shares"">127,656 shares</div>\s*<div class=""ta-holding-price"">\$1\.00 per share</div>\s*<div class=""ta-holding-value"">\$127,656\.12</div>", tiles);
         Assert.DoesNotContain("ta-drift", tiles);
 
         var choose = await client.GetAsync(ContentsViews.Link(ContentsView.Details, page), TestContext.Current.CancellationToken);
@@ -499,8 +501,8 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.Contains("2.19", html);             // Sharpe ratio
         Assert.Contains("worst drop 4.15%", html);
         Assert.Contains("AAPL", html);
-        Assert.Contains("359,889.20", html);
-        Assert.Contains("USD cash", html);
+        Assert.Contains("$359,889.20", html);
+        Assert.Contains("USD", html);
         Assert.Contains("<polyline", html);        // the value at each close
         Assert.Contains("Updated November 13, 4:35 PM New York time.", html);
     }
