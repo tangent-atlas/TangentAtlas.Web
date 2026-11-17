@@ -15,6 +15,13 @@ permissions:
   id-token: write
   contents: read
 
+# One deploy at a time: App Service refuses a package while another is going in (409 Conflict), as when two pull
+# requests are merged a minute apart.  A later push waits for the one in progress rather than cancelling it; if several
+# are waiting, only the newest runs, since it carries everything before it.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-24.04
