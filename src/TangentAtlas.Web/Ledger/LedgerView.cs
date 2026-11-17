@@ -1,7 +1,7 @@
 namespace TangentAtlas.Web.Ledger;
 
 /// <summary>A holding, named and valued.</summary>
-/// <param name="Name">What the page calls it: its ticker, or its currency's cash ("USD cash").</param>
+/// <param name="Name">What the page calls it: its ticker, or its currency's code ("USD").</param>
 /// <param name="Symbol">Its ticker or currency code, which also names its picture.</param>
 /// <param name="FullName">Its full name, when the ledger has one.</param>
 public sealed record HoldingView(string Name, string Symbol, string? FullName, decimal Quantity, decimal? Price, decimal? MarketValue, decimal? Weight, decimal? TargetWeight, bool IsCash);
