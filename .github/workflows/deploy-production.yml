@@ -15,6 +15,13 @@ permissions:
   id-token: write
   contents: read
 
+# One deploy at a time: App Service refuses a package while another is going in (409 Conflict), as when two pull
+# requests are merged a minute apart.  A later push waits for the one in progress rather than cancelling it; if several
+# are waiting, only the newest runs, since it carries everything before it.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-24.04
@@ -50,7 +57,7 @@ jobs:
         run: dotnet test --configuration Release --no-build
 
       - name: Publish
-        run: dotnet publish ./src/TangentAtlas.Web/TangentAtlas.Web.csproj --configuration Release --no-restore --output ./publish
+        run: dotnet publish ./src/TangentAtlas.Web/TangentAtlas.Web.csproj --configuration Release --no-restore --output ./publish -p:SourceRevisionId=${{ github.sha }}
 
       # The logos (github.com/nvstly/icons) are third-party pictures, not part of this repository: the release copies them
       # into the site's pictures folder, which the site finds by itself (TangentAtlas.Web's PictureLibrary).
@@ -75,3 +82,28 @@ jobs:
         with:
           app-name: app-tangentatlas-website-prod
           package: ./publish
+
+      # The deploy is done when the new build is the one answering, with its pages and its stylesheet: App Service has been
+      # seen to keep the old process running on the new files, which fails every request for a file whose size changed.
+      # (The site runs from its package, WEBSITE_RUN_FROM_PACKAGE=1, set by Deploy-CorporateWebsite.ps1, so the files and
+      # the process change together.)
+      - name: Wait for the new site
+        run: |
+          SITE=https://app-tangentatlas-website-prod.azurewebsites.net
+          for attempt in $(seq 1 60); do
+            RUNNING=$(curl --silent --max-time 10 "$SITE/version" || true)
+            if [ "$RUNNING" = "${{ github.sha }}" ]; then
+              HOME_PAGE=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 "$SITE/")
+              STYLESHEET=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 "$SITE/app.css")
+              if [ "$HOME_PAGE" = 200 ] && [ "$STYLESHEET" = 200 ]; then
+                echo "$SITE is running ${{ github.sha }}, and its home page and stylesheet answer."
+                exit 0
+              fi
+              echo "::error::The new build is running but the home page answers $HOME_PAGE and the stylesheet $STYLESHEET."
+              exit 1
+            fi
+            echo "Waiting: $SITE/version answers '${RUNNING:-nothing}'..."
+            sleep 10
+          done
+          echo "::error::The new build did not start within ten minutes. Its logs: portal, app-tangentatlas-website-prod, Log stream."
+          exit 1
