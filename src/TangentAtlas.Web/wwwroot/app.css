@@ -1702,52 +1702,36 @@ h1:focus {
     margin-bottom: 4px;
 }
 
+/* A tile's lines step down in size: the ticker, its shares, then its price and value. */
 .ta-holding-symbol {
-    font-weight: 500;
+    font-size: 18px;
+    font-weight: 600;
 }
 
-.ta-holding-shares,
-.ta-holding-name {
+.ta-holding-shares {
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ta-holding-price,
+.ta-holding-value {
     font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ta-holding-price,
+.ta-holding-name {
     color: var(--ta-text-muted);
+}
+
+.ta-holding-symbol,
+.ta-holding-shares,
+.ta-holding-price,
+.ta-holding-value,
+.ta-holding-name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.ta-holding-value {
-    font-variant-numeric: tabular-nums;
-}
-
-/* Weight against target: the bar is the holding's weight; the mark, its target. */
-.ta-drift {
-    position: relative;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--ta-bg-secondary);
-    border: 1px solid var(--ta-border);
-    margin-top: 4px;
-}
-
-.ta-drift-weight {
-    position: absolute;
-    inset: 0 auto 0 0;
-    border-radius: 3px;
-    background: var(--ta-green);
-}
-
-.ta-drift-target {
-    position: absolute;
-    top: -3px;
-    width: 2px;
-    height: 12px;
-    background: var(--ta-text);
-}
-
-.ta-drift-label {
-    font-size: 12px;
-    color: var(--ta-text-muted);
-    font-variant-numeric: tabular-nums;
 }
 
 /* A picture that identifies a holding: the logo on a dark square (the icon set is made for dark backgrounds), or its

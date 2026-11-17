@@ -433,7 +433,9 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
 
         var tiles = WebUtility.HtmlDecode(await client.GetStringAsync(page, TestContext.Current.CancellationToken));
         Assert.Contains("ta-tiles-grid", tiles);
-        Assert.Contains("$342.10 a share", tiles);                    // the latest price, under the value
+        // A tile: ticker, shares, price, value, in that order; no weight bar.
+        Assert.Matches(@"ta-holding-symbol"">AAPL</div>\s*<div class=""ta-holding-shares"">1,052 shares</div>\s*<div class=""ta-holding-price"">\$342\.10 per share</div>\s*<div class=""ta-holding-value"">359,889\.20</div>", tiles);
+        Assert.DoesNotContain("ta-drift", tiles);
 
         var choose = await client.GetAsync(ContentsViews.Link(ContentsView.Details, page), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Redirect, choose.StatusCode);
@@ -497,9 +499,8 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.Contains("2.19", html);             // Sharpe ratio
         Assert.Contains("worst drop 4.15%", html);
         Assert.Contains("AAPL", html);
-        Assert.Contains("$359,889.20", html);
+        Assert.Contains("359,889.20", html);
         Assert.Contains("USD cash", html);
-        Assert.Contains("10.0% target", html);     // cash's target: what the model's weights leave (36% + 54% invested)
         Assert.Contains("<polyline", html);        // the value at each close
         Assert.Contains("Updated November 13, 4:35 PM New York time.", html);
     }

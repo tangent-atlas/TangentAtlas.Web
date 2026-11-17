@@ -70,10 +70,9 @@
                         <div @key="holding.Symbol" class="ta-holding-tile">
                             <Picture Kind="@(holding.IsCash ? PictureKind.Currency : PictureKind.Ticker)" Code="@holding.Symbol" />
                             <div class="ta-holding-symbol">@holding.Name</div>
-                            <div class="ta-holding-shares">@(holding.IsCash ? "Cash" : $"{holding.Quantity.ToString("N0", English)} shares")</div>
-                            <div class="ta-holding-value">@Money(holding.MarketValue, 2)</div>
-                            <div class="ta-holding-shares">@(holding.IsCash ? "\u00a0" : $"{Money(holding.Price, 2)} a share")</div>
-                            <Drift Weight="holding.Weight" Target="holding.TargetWeight" />
+                            <div class="ta-holding-shares">@(holding.IsCash ? "\u00a0" : Shares(holding.Quantity))</div>
+                            <div class="ta-holding-price">@(holding.IsCash ? "\u00a0" : $"{Money(holding.Price, 2)} per share")</div>
+                            <div class="ta-holding-value">@(holding.MarketValue is { } value ? value.ToString("#,##0.00", English) : "—")</div>
                         </div>
                     }
                 </div>
@@ -114,4 +113,7 @@
     private AccountGroup? Group => Account is { } shown ? AccountGroups.All.FirstOrDefault(group => group.Types.Contains(shown.Type)) : null;
 
     private string Here => $"/accounts/{AccountId}";
+
+    /// <summary>"1 share", "1,052 shares".</summary>
+    private static string Shares(decimal quantity) => $"{quantity.ToString("#,##0", English)} {(quantity == 1m ? "share" : "shares")}";
 }
