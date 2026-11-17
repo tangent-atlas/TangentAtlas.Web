@@ -9,6 +9,7 @@
     --ta-green-dark: #0F6E56;     /* text, links and buttons (6:1 on white) */
     --ta-green-darker: #0a4f3e;
     --ta-green-light: #E1F5EE;
+    --ta-red-dark: #B42318;       /* text: a fall (6:1 on white) */
     --ta-text: #1a1a1a;
     --ta-text-body: #374151;
     --ta-text-muted: #4b5563;
@@ -1809,4 +1810,21 @@ h1:focus {
     position: absolute;
     right: 0.75rem;
     top: 0.5rem;
+}
+
+/* A number that moved: green up, red down, held a moment and then faded back to its usual colour over two seconds. */
+.ta-moved-up {
+    animation: ta-moved-up 2s linear;
+}
+
+.ta-moved-down {
+    animation: ta-moved-down 2s linear;
+}
+
+@keyframes ta-moved-up {
+    0%, 15% { color: var(--ta-green-dark); }
+}
+
+@keyframes ta-moved-down {
+    0%, 15% { color: var(--ta-red-dark); }
 }

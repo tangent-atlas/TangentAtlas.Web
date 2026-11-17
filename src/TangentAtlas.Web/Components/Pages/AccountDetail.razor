@@ -71,8 +71,8 @@
                             <Picture Kind="@(holding.IsCash ? PictureKind.Currency : PictureKind.Ticker)" Code="@holding.Symbol" />
                             <div class="ta-holding-symbol">@holding.Name</div>
                             <div class="ta-holding-shares">@Shares(holding.Quantity)</div>
-                            <div class="ta-holding-price">@Money(holding.Price, 2) per share</div>
-                            <div class="ta-holding-value">@Money(holding.MarketValue, 2)</div>
+                            <div class="ta-holding-price"><MovingNumber Value="holding.Price" Text="@Money(holding.Price, 2)" /> per share</div>
+                            <div class="ta-holding-value"><MovingNumber Value="holding.MarketValue" Text="@Money(holding.MarketValue, 2)" /></div>
                         </div>
                     }
                 </div>
@@ -89,8 +89,8 @@
                             <tr @key="holding.Symbol">
                                 <th scope="row"><span class="ta-details-name"><Picture Kind="@(holding.IsCash ? PictureKind.Currency : PictureKind.Ticker)" Code="@holding.Symbol" /><span>@holding.Name</span></span></th>
                                 <td>@holding.Quantity.ToString("N0", English)</td>
-                                <td>@Money(holding.Price, 2)</td>
-                                <td>@Money(holding.MarketValue, 2)</td>
+                                <td><MovingNumber Value="holding.Price" Text="@Money(holding.Price, 2)" /></td>
+                                <td><MovingNumber Value="holding.MarketValue" Text="@Money(holding.MarketValue, 2)" /></td>
                                 <td>@Percent(holding.Weight)</td>
                                 <td>@Percent(holding.TargetWeight)</td>
                             </tr>
