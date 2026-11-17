@@ -1,0 +1,61 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@* Tiles or details.  On a live page the view changes in place (the page and its scroll position stay where they are) and
+   the choice is remembered in the background; before the page is live, each choice is a plain link that sets it and
+   comes back. *@
+<nav class="ta-views" aria-label="View">
+    <a href="@ContentsViews.Link(ContentsView.Tiles, ReturnUrl)" aria-current="@(View == ContentsView.Tiles ? "true" : "false")"
+       @onclick="() => ChooseAsync(ContentsView.Tiles)" @onclick:preventDefault>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="5" height="5" rx="1" /><rect x="9.5" y="1.5" width="5" height="5" rx="1" /><rect x="1.5" y="9.5" width="5" height="5" rx="1" /><rect x="9.5" y="9.5" width="5" height="5" rx="1" /></svg>Tiles
+    </a>
+    <a href="@ContentsViews.Link(ContentsView.Details, ReturnUrl)" aria-current="@(View == ContentsView.Details ? "true" : "false")"
+       @onclick="() => ChooseAsync(ContentsView.Details)" @onclick:preventDefault>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3h13M1.5 8h13M1.5 13h13" /></svg>Details
+    </a>
+</nav>
+
+@code {
+    private IJSObjectReference? module;
+
+    [Parameter] public ContentsView View { get; set; }
+
+    [Parameter] public EventCallback<ContentsView> ViewChanged { get; set; }
+
+    /// <summary>The page to come back to when a choice is a plain link (before the page is live).</summary>
+    [Parameter, EditorRequired] public string ReturnUrl { get; set; } = "/";
+
+    private async Task ChooseAsync(ContentsView view)
+    {
+        if (view == View)
+        {
+            return;
+        }
+
+        await ViewChanged.InvokeAsync(view);
+        try
+        {
+            // Remembered for the next time the site is opened: the cookie is the server's to set (it can't be read or
+            // written by script), so the browser posts the choice.  Losing it costs nothing but the choice next time.
+            module ??= await JS.InvokeAsync<IJSObjectReference>("import", Assets["./Components/Shared/ContentsViewSwitch.razor.js"]);
+            await module.InvokeVoidAsync("remember", view.ToString().ToLowerInvariant());
+        }
+        catch (Exception exception) when (exception is JSException or JSDisconnectedException or TaskCanceledException)
+        {
+            // The view has changed all the same; only the memory of it is lost.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            try
+            {
+                await module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

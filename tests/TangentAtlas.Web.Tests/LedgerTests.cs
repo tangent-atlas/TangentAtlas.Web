@@ -448,6 +448,33 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
     }
 
     [Fact]
+    public async Task ALivePageRemembersAViewWithoutLeaving()
+    {
+        // The live page changes the view in place and posts the choice; the next visit opens that way.
+        var choose = await client.PostAsync("/contents-view/details", null, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.NoContent, choose.StatusCode);
+        var cookie = choose.Headers.GetValues("Set-Cookie").Single(value => value.StartsWith(ContentsViews.Cookie));
+        Assert.StartsWith($"{ContentsViews.Cookie}=Details;", cookie);
+        Assert.Contains("httponly", cookie, StringComparison.OrdinalIgnoreCase);
+
+        var unknown = await client.PostAsync("/contents-view/sideways", null, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, unknown.StatusCode);
+        Assert.False(unknown.Headers.Contains("Set-Cookie"));
+    }
+
+    [Fact]
+    public async Task TheViewChoicesWorkBeforeThePageIsLive()
+    {
+        // Prerendered, each choice is still a link that sets the view and comes back, for the moment before the page is live.
+        factory.Ledger.IsMember = true;
+        var page = $"/accounts/{StandInLedger.Account}";
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync(page, TestContext.Current.CancellationToken));
+
+        Assert.Contains($"href=\"{ContentsViews.Link(ContentsView.Details, page)}\"", html);
+        Assert.Contains($"href=\"{ContentsViews.Link(ContentsView.Tiles, page)}\"", html);
+    }
+
+    [Fact]
     public async Task ChoosingAViewReturnsOnlyToThisSite()
     {
         var response = await client.GetAsync("/contents-view/details?returnUrl=" + Uri.EscapeDataString("//evil.example/"), TestContext.Current.CancellationToken);

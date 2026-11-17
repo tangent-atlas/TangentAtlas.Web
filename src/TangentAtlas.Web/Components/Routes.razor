@@ -1,4 +1,4 @@
-﻿<CascadingValue Value="ContentsView" IsFixed="true">
+﻿<CascadingValue Value="contents" IsFixed="true">
 <Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
@@ -23,9 +23,14 @@
 </CascadingValue>
 
 @code {
+    private ContentsViewChoice contents = new();
+
     /// <summary>
-    /// Tiles or details for an account's holdings: the person's choice, from its cookie, read when the page loads.  A new
-    /// choice goes through /contents-view, which sets the cookie and loads the page again, so the value never changes here.
+    /// Tiles or details for an account's holdings: the person's choice, from its cookie, read when the site is opened.  The
+    /// pages share one choice while the site is open (a page that changes it changes it for the next), so the cascaded
+    /// object is fixed and its value changes in place.
     /// </summary>
     [Parameter] public ContentsView ContentsView { get; set; }
+
+    protected override void OnInitialized() => contents = new() { View = ContentsView };
 }
