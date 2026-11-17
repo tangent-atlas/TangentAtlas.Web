@@ -9,7 +9,7 @@
     --ta-green-dark: #0F6E56;     /* text, links and buttons (6:1 on white) */
     --ta-green-darker: #0a4f3e;
     --ta-green-light: #E1F5EE;
-    --ta-moved-up: #00A800;       /* a rise, at its brightest: a primary green (pure #00FF00 can't be read on white) */
+    --ta-moved-up: #008000;       /* a rise, at its brightest: a deep primary green (5.1:1 on white; brighter greens read as lime) */
     --ta-moved-down: #FF0000;     /* a fall, at its brightest: a primary red */
     --ta-text: #1a1a1a;
     --ta-text-body: #374151;
