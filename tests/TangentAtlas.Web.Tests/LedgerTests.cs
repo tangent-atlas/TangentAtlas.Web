@@ -1,6 +1,8 @@
 using System.Net;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
+using AtlasLedger.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -74,11 +76,15 @@ public class SignedInLedgerSiteFactory : LedgerSiteFactory
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
+
+        // Each request starts the person's live ledger afresh, so a test sees the stand-in as that test set it.
+        builder.UseSetting("Ledger:KeepAlive", "00:00:00");
+        builder.UseSetting("Ledger:TenantRefresh", "00:00:00.200");
         builder.ConfigureServices(services =>
         {
             SignedInSiteFactory.SignIn(services);
             services.AddSingleton<ITokenAcquisition>(new StandInTokens());
-            services.AddHttpClient<LedgerReader>().ConfigurePrimaryHttpMessageHandler(() => Ledger);
+            services.AddHttpClient(LiveLedgers.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => Ledger);
         });
     }
 
@@ -107,67 +113,206 @@ public class SignedInLedgerSiteFactory : LedgerSiteFactory
     }
 }
 
-/// <summary>The ledger's answers for a tenant holding the Joe 10 paper account (two holdings and cash).</summary>
+/// <summary>
+/// A stand-in for the ledger's sync feed: a tenant holding the Joe 10 paper account (two holdings and cash), and
+/// optionally another tenant first.  It answers the generated sync client as the ledger does: a snapshot first, then
+/// what changed since (<see cref="Publish"/>), long polling while nothing has.
+/// </summary>
 public sealed class StandInLedger : HttpMessageHandler
 {
     public const string Tenant = "4a6f6531-3020-7061-7065-720000000001";
     public const string Account = "1f6ff65f-711f-8986-a0c0-e238561bf4b6";
-    private const string Aapl = "a392f7e0-339b-83d7-b1ff-bf8b60012fb7";
+    public const string Aapl = "a392f7e0-339b-83d7-b1ff-bf8b60012fb7";
     private const string Msft = "b392f7e0-339b-83d7-b1ff-bf8b60012fb7";
     private const string Dollar = "c392f7e0-339b-83d7-b1ff-bf8b60012fb7";
     private const string Broker = "d392f7e0-339b-83d7-b1ff-bf8b60012fb7";
-
-    public bool IsMember { get; set; } = true;
-
-    /// <summary>The person also belongs to another tenant, listed first (as the walkthrough's sample firm is in production).</summary>
-    public bool AlsoInAnotherTenant { get; set; }
+    private const string Model = "e392f7e0-339b-83d7-b1ff-bf8b60012fb7";
 
     public const string OtherTenant = "0f0f0f0f-0000-0000-0000-00000000000a";
 
     public const string OtherAccount = "0f0f0f0f-0000-0000-0000-00000000000b";
 
+    public static readonly Guid Epoch = Guid.Parse("00000000-0000-0000-0000-0000000e0c40");
+
+    public static readonly JsonSerializerOptions Json = CreateJson();
+
+    private readonly Lock gate = new();
+    private readonly List<(long Sequence, Guid TenantId, LedgerSyncChanges Changes)> published = [];
+    private TaskCompletionSource next = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private long sequence = 100;
+
+    public bool IsMember { get; set; } = true;
+
+    /// <summary>The Joe 10's tenant no longer admits the person: its feed answers 404 (as the ledger does to a non-member).</summary>
+    public bool IsRevoked { get; set; }
+
+    /// <summary>The person also belongs to another tenant, listed first (as the walkthrough's sample firm is in production).</summary>
+    public bool AlsoInAnotherTenant { get; set; }
+
     public List<string> Requests { get; } = [];
 
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    /// <summary>Wakes the waiting long polls, as a commit would (they answer with whatever is now true).</summary>
+    public void Wake()
     {
-        var path = request.RequestUri!.PathAndQuery;
-        Requests.Add(path);
-        if (request.Headers.Authorization?.ToString() != "Bearer the-persons-token")
+        TaskCompletionSource answered;
+        lock (gate)
         {
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized));
+            answered = next;
+            next = new(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
-        var json = path switch
-        {
-            "/v1/me/tenants" => !IsMember ? "[]" : AlsoInAnotherTenant ? $"[\"{OtherTenant}\",\"{Tenant}\"]" : $"[\"{Tenant}\"]",
-            $"/v1/tenants/{OtherTenant}/node" => $"[{{\"nodeId\":\"{OtherAccount}\",\"displayName\":\"Smith Trust\"}}]",
-            $"/v1/tenants/{OtherTenant}/account" => $"[{{\"accountId\":\"{OtherAccount}\",\"accountType\":\"Brokerage\"}}]",
-            $"/v1/tenants/{OtherTenant}/symbol" or $"/v1/tenants/{OtherTenant}/institution" => "[]",
-            $"/v1/tenants/{OtherTenant}/holdings" => $$"""{"asOf":"2026-11-15T23:51:00Z","holdings":[],"accounts":[{"accountId":"{{OtherAccount}}","marketValue":0,"cash":0,"netContributions":0,"gain":0}],"prices":[],"rates":[],"problems":[]}""",
-            $"/v1/tenants/{OtherTenant}/statistics?days=true" => """{"asOf":"2026-11-15T23:51:00Z","accounts":[]}""",
-            $"/v1/tenants/{Tenant}/symbol" => $"[{{\"nodeId\":\"{Aapl}\",\"scheme\":\"Ticker\",\"code\":\"AAPL\"}},{{\"nodeId\":\"{Msft}\",\"scheme\":\"Ticker\",\"code\":\"MSFT\"}},{{\"nodeId\":\"{Dollar}\",\"scheme\":\"Currency\",\"code\":\"USD\"}}]",
-            $"/v1/tenants/{Tenant}/node" => $"[{{\"nodeId\":\"{Account}\",\"displayName\":\"Joe 10\"}}]",
-            $"/v1/tenants/{Tenant}/institution" => $"[{{\"institutionId\":\"{Broker}\",\"name\":\"Tangent Atlas Paper Brokerage\",\"source\":\"Simulator\"}}]",
-            $"/v1/tenants/{Tenant}/account" => $"[{{\"accountId\":\"{Account}\",\"institutionId\":\"{Broker}\",\"accountType\":\"Brokerage\",\"externalAccountId\":\"PAPER-100010\"}}]",
-            $"/v1/tenants/{Tenant}/holdings" => $$"""
-                {"asOf":"2026-11-13T21:35:00Z","holdings":[
-                  {"accountId":"{{Account}}","assetId":"{{Aapl}}","assetType":"Equity","quantity":1052,"price":342.10,"marketValue":359889.20,"weight":0.343,"targetWeight":0.36},
-                  {"accountId":"{{Account}}","assetId":"{{Msft}}","assetType":"Equity","quantity":1100,"price":510.00,"marketValue":561000.00,"weight":0.535,"targetWeight":0.54},
-                  {"accountId":"{{Account}}","assetId":"{{Dollar}}","assetType":"Cash","quantity":127656.12,"price":1,"marketValue":127656.12,"weight":0.122,"targetWeight":null}],
-                 "accounts":[{"accountId":"{{Account}}","marketValue":1048545.32,"cash":127656.12,"netContributions":1000000,"gain":48545.32,"modelName":"Joe 10"}],
-                 "prices":[],"rates":[],"problems":[]}
-                """,
-            $"/v1/tenants/{Tenant}/statistics?days=true" => $$"""
-                {"asOf":"2026-11-13T21:35:00Z","accounts":[{"statistics":{"accountId":"{{Account}}","from":"2026-10-15","through":"2026-11-13","value":1048545.32,"netFlows":1000000,"returns":21,
-                  "totalReturn":0.048568,"annualizedReturn":0.766676,"volatility":0.255758,"sharpeRatio":2.187468,"maximumDrawdown":0.04146,"isRanked":true,"gaps":[]},
-                  "days":[{"date":"2026-10-15","value":999978.82,"flow":1000000,"return":null},{"date":"2026-10-16","value":990730.22,"flow":0,"return":-0.0092},{"date":"2026-11-13","value":1048545.32,"flow":0,"return":-0.0045}]}]}
-                """,
-            _ => null,
-        };
-        return Task.FromResult(json is null
-            ? new HttpResponseMessage(HttpStatusCode.NotFound)
-            : new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") });
+        answered.TrySetResult();
     }
+
+    /// <summary>Commits a change to a tenant: the next sync after it brings it, and a waiting long poll answers.</summary>
+    public void Publish(Guid tenantId, LedgerSyncChanges changes)
+    {
+        TaskCompletionSource answered;
+        lock (gate)
+        {
+            published.Add((++sequence, tenantId, changes));
+            answered = next;
+            next = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        answered.TrySetResult();
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var path = request.RequestUri!.PathAndQuery;
+        lock (Requests)
+        {
+            Requests.Add(path);
+        }
+
+        if (request.Headers.Authorization?.ToString() != "Bearer the-persons-token")
+        {
+            return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+        }
+
+        if (request.RequestUri.AbsolutePath == "/v1/me/tenants")
+        {
+            return Ok(!IsMember ? "[]" : AlsoInAnotherTenant ? $"[\"{OtherTenant}\",\"{Tenant}\"]" : $"[\"{Tenant}\"]");
+        }
+
+        var match = System.Text.RegularExpressions.Regex.Match(request.RequestUri.AbsolutePath, "^/v1/tenants/([0-9a-f-]{36})/changes$");
+        if (!match.Success || request.Headers.GetValues("Bellerophon-Model-Fingerprint").Single() != AtlasLedger.Model.Ledger.Fingerprint)
+        {
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }
+
+        var tenantId = Guid.Parse(match.Groups[1].Value);
+        if (IsRevoked && tenantId == Guid.Parse(Tenant))
+        {
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }
+
+        var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri.Query);
+        var since = long.Parse(query["since"] ?? "0", System.Globalization.CultureInfo.InvariantCulture);
+        if (since == 0 || query["epoch"] != Epoch.ToString())
+        {
+            return Ok(JsonSerializer.Serialize(new LedgerSyncResponse { Epoch = Epoch, Through = sequence, Reset = true, Tables = Snapshot(tenantId) }, Json));
+        }
+
+        var waitUntil = DateTimeOffset.UtcNow.AddSeconds(int.Parse(query["wait"] ?? "0", System.Globalization.CultureInfo.InvariantCulture));
+        while (true)
+        {
+            Task changed;
+            if (IsRevoked && tenantId == Guid.Parse(Tenant))
+            {
+                return new HttpResponseMessage(HttpStatusCode.NotFound);
+            }
+
+            lock (gate)
+            {
+                var latest = published.LastOrDefault(item => item.Sequence > since && item.TenantId == tenantId);
+                if (latest.Changes is not null || DateTimeOffset.UtcNow >= waitUntil)
+                {
+                    return Ok(JsonSerializer.Serialize(new LedgerSyncResponse { Epoch = Epoch, Through = sequence, Tables = latest.Changes ?? new() }, Json));
+                }
+
+                changed = next.Task;
+            }
+
+            await Task.WhenAny(changed, Task.Delay(waitUntil - DateTimeOffset.UtcNow, cancellationToken));
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+    }
+
+    private static HttpResponseMessage Ok(string json) =>
+        new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
+
+    private static JsonSerializerOptions CreateJson()
+    {
+        var json = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        json.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        return json;
+    }
+
+    private static LedgerSyncTable<T> Rows<T>(params T[] rows) => new() { Rows = rows };
+
+    private static LedgerSyncChanges Snapshot(Guid tenantId)
+    {
+        if (tenantId == Guid.Parse(OtherTenant))
+        {
+            return new LedgerSyncChanges
+            {
+                Node = Rows(new NodeDto { NodeId = Guid.Parse(OtherAccount), DisplayName = "Smith Trust", FullName = "Smith Trust", NodeType = NodeType.Account }),
+                Account = Rows(new AccountDto { AccountId = Guid.Parse(OtherAccount), AccountType = AccountType.Brokerage, AccountRole = AccountRole.ManagedAccount, Currency = "USD" }),
+            };
+        }
+
+        var close = DateTimeOffset.Parse("2026-11-13T21:35:00Z", System.Globalization.CultureInfo.InvariantCulture);
+        var (account, aapl, msft, dollar, broker, model) = (Guid.Parse(Account), Guid.Parse(Aapl), Guid.Parse(Msft), Guid.Parse(Dollar), Guid.Parse(Broker), Guid.Parse(Model));
+        return new LedgerSyncChanges
+        {
+            CurrencyRate = Rows(new CurrencyRateDto { FromCurrency = "USD", ToCurrency = "USD", Rate = 1m }),
+            Institution = Rows(new InstitutionDto { InstitutionId = broker, Name = "Tangent Atlas Paper Brokerage", Source = EventSource.Simulator }),
+            Model = Rows(new ModelDto { ModelId = model, Name = "Joe 10", Band = 0.05m }),
+            Node = Rows(
+                new NodeDto { NodeId = account, DisplayName = "Joe 10", FullName = "Joe 10 paper account", NodeType = NodeType.Account },
+                new NodeDto { NodeId = aapl, DisplayName = "Apple", FullName = "Apple Inc.", NodeType = NodeType.Asset },
+                new NodeDto { NodeId = msft, DisplayName = "Microsoft", FullName = "Microsoft Corporation", NodeType = NodeType.Asset },
+                new NodeDto { NodeId = dollar, DisplayName = "US dollar", FullName = "United States dollar", NodeType = NodeType.Asset }),
+            Account = Rows(new AccountDto { AccountId = account, AccountType = AccountType.Brokerage, AccountRole = AccountRole.ManagedAccount, Currency = "USD", ExternalAccountId = "PAPER-100010", InstitutionId = broker, ModelId = model }),
+            AccountDay = Rows(
+                new AccountDayDto { AccountId = account, Date = new DateOnly(2026, 10, 15), Value = 999_978.82m, Flow = 1_000_000m },
+                new AccountDayDto { AccountId = account, Date = new DateOnly(2026, 10, 16), Value = 990_730.22m, Flow = 0m, Return = -0.0092m },
+                new AccountDayDto { AccountId = account, Date = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, Flow = 0m, Return = -0.0045m }),
+            AccountFlow = Rows(new AccountFlowDto { AccountId = account, NetContributions = 1_000_000m }),
+            AccountStatistic = Rows(new AccountStatisticDto
+            {
+                AccountId = account, From = new DateOnly(2026, 10, 15), Through = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, NetFlows = 1_000_000m, Returns = 21,
+                TotalReturn = 0.048568m, AnnualizedReturn = 0.766676m, Volatility = 0.255758m, SharpeRatio = 2.187468m, MaximumDrawdown = 0.04146m, IsRanked = true,
+            }),
+            Asset = Rows(
+                new AssetDto { AssetId = aapl, AssetType = AssetType.Equity, QuantityFactor = 1m, PriceFactor = 1m, QuoteCurrency = "USD" },
+                new AssetDto { AssetId = msft, AssetType = AssetType.Equity, QuantityFactor = 1m, PriceFactor = 1m, QuoteCurrency = "USD" },
+                new AssetDto { AssetId = dollar, AssetType = AssetType.Cash, QuantityFactor = 1m, PriceFactor = 1m, QuoteCurrency = "USD" }),
+            EffectivePrice = Rows(
+                new EffectivePriceDto { AssetId = aapl, Price = 342.10m, Currency = "USD", AsOf = close, Source = PriceSource.Market },
+                new EffectivePriceDto { AssetId = msft, Price = 510.00m, Currency = "USD", AsOf = close, Source = PriceSource.Market },
+                new EffectivePriceDto { AssetId = dollar, Price = 1m, Currency = "USD", AsOf = close.AddDays(-30), Source = PriceSource.Market }),
+            Position = Rows(
+                Holding(account, aapl, AssetType.Equity, 1052m),
+                Holding(account, msft, AssetType.Equity, 1100m),
+                Holding(account, dollar, AssetType.Cash, 127_656.12m)),
+            Symbol = Rows(
+                new SymbolDto { Scheme = "Ticker", Code = "AAPL", NodeId = aapl },
+                new SymbolDto { Scheme = "Ticker", Code = "MSFT", NodeId = msft },
+                new SymbolDto { Scheme = "Currency", Code = "USD", NodeId = dollar }),
+            Weight = Rows(
+                new WeightDto { ModelId = model, AssetId = aapl, Fraction = 0.36m },
+                new WeightDto { ModelId = model, AssetId = msft, Fraction = 0.54m }),
+        };
+    }
+
+    public static PositionDto Holding(Guid account, Guid asset, AssetType type, decimal quantity) => new()
+    {
+        AccountId = account, AssetId = asset, AssetType = type, Quantity = quantity, QuantityFactor = 1m, PriceFactor = 1m,
+        AccountCurrency = "USD", QuoteCurrency = "USD", LastEffectiveTime = DateTimeOffset.Parse("2026-11-13T21:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+    };
 }
 
 public class LedgerSignInTests(LedgerSiteFactory factory) : IClassFixture<LedgerSiteFactory>
@@ -384,9 +529,180 @@ public class LedgerTokenTests(CredentialedLedgerSiteFactory factory) : IClassFix
             [new Claim("oid", "00000000-0000-0000-0000-0000000000aa"), new Claim("tid", "d400d921-89c1-4c47-8d91-16c7c2ed76cb")],
             "Test"));
         scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext = context;
-        var reader = scope.ServiceProvider.GetRequiredService<LedgerReader>();
+        var ledgers = scope.ServiceProvider.GetRequiredService<LiveLedgers>();
 
-        var exception = await Record.ExceptionAsync(() => reader.ReadAsync(context.User, TestContext.Current.CancellationToken));
+        var exception = await Record.ExceptionAsync(() => ledgers.AcquireAsync(context.User, TestContext.Current.CancellationToken));
+
+        Assert.True(
+            exception is MicrosoftIdentityWebChallengeUserException or Microsoft.Identity.Client.MsalUiRequiredException,
+            exception?.ToString());
+    }
+}
+
+/// <summary>The signed-in pages follow the ledger: a Replica per person, kept current by the generated sync client.</summary>
+public class LiveLedgerTests(SignedInLedgerSiteFactory factory) : IClassFixture<SignedInLedgerSiteFactory>
+{
+    private static readonly ClaimsPrincipal Person = new(new ClaimsIdentity(SignedInSiteFactory.Claims, "Test"));
+
+    [Fact]
+    public async Task TheSignedInPagesRunInteractivelyAndThePublicPagesDoNot()
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        foreach (var page in new[] { "/dashboard", "/investments", $"/accounts/{StandInLedger.Account}" })
+        {
+            var html = await client.GetStringAsync(page, TestContext.Current.CancellationToken);
+
+            Assert.Contains("<!--Blazor:{\"type\":\"server\"", html);   // prerendered, then live over the circuit, frame and all
+            Assert.Contains("Joe 10", html);
+        }
+
+        foreach (var page in new[] { "/", "/privacy", "/your-plan" })
+        {
+            Assert.DoesNotContain("<!--Blazor:{\"type\":\"server\"", await client.GetStringAsync(page, TestContext.Current.CancellationToken));
+        }
+    }
+
+    [Fact]
+    public async Task AnAccountsTitleComesFromTheViewModel()
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        var html = await client.GetStringAsync($"/accounts/{StandInLedger.Account}", TestContext.Current.CancellationToken);
+
+        Assert.Contains("<title>Joe 10 · Tangent Atlas</title>", html);
+        Assert.Matches("<div class=\"ta-app-title\">.*Investments.*›</span> Joe 10", html.ReplaceLineEndings(" "));
+    }
+
+    [Fact]
+    public async Task ThePagesAskOnlyForTheTablesTheyRead()
+    {
+        using var lease = await factory.Services.GetRequiredService<LiveLedgers>().AcquireAsync(Person, TestContext.Current.CancellationToken);
+
+        string first;
+        lock (factory.Ledger.Requests)
+        {
+            first = factory.Ledger.Requests.Last(path => path.Contains("/changes?since=0", StringComparison.Ordinal));
+        }
+
+        var tables = System.Web.HttpUtility.ParseQueryString(new Uri(new Uri("http://ledger.test"), first).Query)["tables"]!.Split(',');
+        Assert.Contains("Position", tables);
+        Assert.Contains("AccountStatistic", tables);
+        Assert.Contains("Node", tables);          // a parent, added by the sync client
+        Assert.DoesNotContain("Event", tables);
+        Assert.DoesNotContain("Person", tables);
+        Assert.DoesNotContain("Member", tables);
+    }
+
+    [Fact]
+    public async Task APriceChangeReachesAnOpenPage()
+    {
+        using var lease = await factory.Services.GetRequiredService<LiveLedgers>().AcquireAsync(Person, TestContext.Current.CancellationToken);
+        Assert.NotNull(lease);
+        Assert.Equal(359_889.20m, Aapl(lease!.View!).MarketValue);
+        var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        lease.Changed += () => changed.TrySetResult();
+
+        factory.Ledger.Publish(Guid.Parse(StandInLedger.Tenant), new LedgerSyncChanges
+        {
+            EffectivePrice = new LedgerSyncTable<EffectivePriceDto>
+            {
+                Rows = [new EffectivePriceDto { AssetId = Guid.Parse(StandInLedger.Aapl), Price = 350m, Currency = "USD", AsOf = DateTimeOffset.Parse("2026-11-16T15:00:00Z", System.Globalization.CultureInfo.InvariantCulture), Source = PriceSource.Market }],
+            },
+        });
+
+        await changed.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        var account = lease.View!.Accounts.Single(item => item.AccountId == Guid.Parse(StandInLedger.Account));
+        Assert.Equal(368_200m, Aapl(lease.View).MarketValue);              // 1,052 shares × $350
+        Assert.Equal(1_056_856.12m, account.MarketValue);                   // the account follows
+        Assert.Equal(56_856.12m, account.Gain);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-16T15:00:00Z", System.Globalization.CultureInfo.InvariantCulture), lease.View.AsOf);
+    }
+
+    [Fact]
+    public async Task APersonsPagesShareOneReplica()
+    {
+        var ledgers = factory.Services.GetRequiredService<LiveLedgers>();
+        int Snapshots()
+        {
+            lock (factory.Ledger.Requests)
+            {
+                return factory.Ledger.Requests.Count(path => path.Contains("/changes?since=0", StringComparison.Ordinal));
+            }
+        }
+
+        using var first = await ledgers.AcquireAsync(Person, TestContext.Current.CancellationToken);
+        var before = Snapshots();
+        using var second = await ledgers.AcquireAsync(Person, TestContext.Current.CancellationToken);
+
+        Assert.Equal(before, Snapshots());
+        Assert.Same(first!.View, second!.View);
+    }
+
+    [Fact]
+    public async Task ATenantThePersonJoinsAppearsWithoutAReload()
+    {
+        factory.Ledger.IsMember = false;
+        try
+        {
+            using var lease = await factory.Services.GetRequiredService<LiveLedgers>().AcquireAsync(Person, TestContext.Current.CancellationToken);
+            Assert.Null(lease!.View);   // the dashboard says linking accounts is the next step
+            var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            lease.Changed += () => changed.TrySetResult();
+
+            factory.Ledger.IsMember = true;   // made a user of the Joe 10's tenant
+
+            await changed.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            Assert.Equal(3, lease.View!.Accounts.Single(account => account.AccountId == Guid.Parse(StandInLedger.Account)).Holdings.Count);
+            Assert.Null(lease.Problem);
+        }
+        finally
+        {
+            factory.Ledger.IsMember = true;
+        }
+    }
+
+    [Fact]
+    public async Task ATenantThePersonLeavesGoesWithoutAReload()
+    {
+        try
+        {
+            using var lease = await factory.Services.GetRequiredService<LiveLedgers>().AcquireAsync(Person, TestContext.Current.CancellationToken);
+            Assert.NotNull(lease!.View);
+            var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            lease.Changed += () => changed.TrySetResult();
+
+            factory.Ledger.IsRevoked = true;   // the tenant's feed refuses them before its list does
+            factory.Ledger.Wake();
+
+            await changed.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            Assert.Null(lease.View);
+            Assert.Null(lease.Problem);   // leaving a tenant isn't a failure
+        }
+        finally
+        {
+            factory.Ledger.IsRevoked = false;
+        }
+    }
+
+    private static HoldingView Aapl(LedgerView view) =>
+        view.Accounts.Single(account => account.AccountId == Guid.Parse(StandInLedger.Account)).Holdings.Single(holding => holding.Symbol == "AAPL");
+}
+
+public class LedgerTokenWithoutRequestTests(CredentialedLedgerSiteFactory factory) : IClassFixture<CredentialedLedgerSiteFactory>
+{
+    /// <summary>
+    /// The live ledger asks for the person's token with no request in hand (it outlives the page that started it): the
+    /// site's real token acquisition still answers, asking a person whose token it lacks to sign in again.
+    /// </summary>
+    [Fact]
+    public async Task TheTokenIsAskedForWithoutARequest()
+    {
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("oid", "00000000-0000-0000-0000-0000000000ab"), new Claim("tid", "d400d921-89c1-4c47-8d91-16c7c2ed76cb")],
+            "Test"));
+        Assert.Null(factory.Services.GetRequiredService<IHttpContextAccessor>().HttpContext);
+
+        var exception = await Record.ExceptionAsync(() => factory.Services.GetRequiredService<LiveLedgers>().AcquireAsync(user, TestContext.Current.CancellationToken));
 
         Assert.True(
             exception is MicrosoftIdentityWebChallengeUserException or Microsoft.Identity.Client.MsalUiRequiredException,

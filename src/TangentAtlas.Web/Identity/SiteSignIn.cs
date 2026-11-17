@@ -86,11 +86,14 @@ public static class SiteSignIn
                 ConfigureOpenIdConnect(options);
                 options.Scope.Add("email");
             });
-            services.AddHttpClient<LedgerReader>(client =>
+            // The signed-in pages' live ledgers.  A sync request waits up to 30 seconds for a change (a long poll), so the
+            // client waits longer than that before it calls the ledger unreachable.
+            services.AddHttpClient(LiveLedgers.HttpClientName, client =>
             {
                 client.BaseAddress = new Uri(ledger.Server!);
-                client.Timeout = TimeSpan.FromSeconds(20);
+                client.Timeout = TimeSpan.FromSeconds(75);
             });
+            services.AddSingleton<LiveLedgers>();
         }
         else
         {

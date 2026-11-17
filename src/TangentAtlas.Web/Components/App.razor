@@ -14,11 +14,20 @@
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["TangentAtlas.Web.styles.css"]" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <HeadOutlet />
+    <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 <body>
-    <Routes />
+    <Routes @rendermode="PageRenderMode" ContentsView="ContentsViews.From(HttpContext)" />
     <ReconnectModal />
     <script src="_framework/blazor.web.js"></script>
 </body>
 </html>
+
+@code {
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+
+    // The signed-in pages run interactively, frame and all, so everything on them that comes from the ledger (an
+    // account's name in the title bar as much as its holdings) is part of the live view model.  The public pages are
+    // static: Pages/Public's [ExcludeFromInteractiveRouting].
+    private IComponentRenderMode? PageRenderMode => HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+}

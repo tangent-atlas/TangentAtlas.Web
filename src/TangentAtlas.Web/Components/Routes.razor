@@ -1,4 +1,5 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
+﻿<CascadingValue Value="ContentsView" IsFixed="true">
+<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
@@ -19,3 +20,12 @@
         </LayoutView>
     </NotFound>
 </Router>
+</CascadingValue>
+
+@code {
+    /// <summary>
+    /// Tiles or details for an account's holdings: the person's choice, from its cookie, read when the page loads.  A new
+    /// choice goes through /contents-view, which sets the cookie and loads the page again, so the value never changes here.
+    /// </summary>
+    [Parameter] public ContentsView ContentsView { get; set; }
+}

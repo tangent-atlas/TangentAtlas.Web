@@ -2,9 +2,11 @@
 @attribute [Authorize]
 @layout TangentAtlas.Web.Components.Layout.AppLayout
 @inherits LedgerPage
+@* One account: its figures, chart and holdings.  The title and the way back are the account's too, so they follow the
+   ledger like the rest (an account linked while its page is open gets its name). *@
 <PageTitle>@(Account?.Name ?? "Account") · Tangent Atlas</PageTitle>
 <SectionContent SectionName="app-title">
-    <a class="ta-back" href="@(Account is { } shown && AccountGroups.All.FirstOrDefault(group => group.Types.Contains(shown.Type))?.Page is { } page ? page : "dashboard")">@(Account is { } here ? AccountGroups.All.FirstOrDefault(group => group.Types.Contains(here.Type))?.Name ?? "Dashboard" : "Dashboard")</a>
+    <a class="ta-back" href="@(Group?.Page ?? "dashboard")">@(Group?.Name ?? "Dashboard")</a>
     <span class="ta-crumb">›</span> @(Account?.Name ?? "Account")
 </SectionContent>
 
@@ -13,12 +15,16 @@
     {
         <div class="ta-status" role="status"><span class="ta-chip ta-chip-warning">Ledger</span><span>@LedgerProblem</span></div>
     }
-    else if (Account is not { } account)
+
+    @if (Account is not { } account)
     {
-        <section class="ta-card">
-            <h1 class="ta-card-title">Not one of your accounts</h1>
-            <p class="ta-card-sub">This account isn't among the accounts you can see.</p>
-        </section>
+        if (LedgerProblem is null)
+        {
+            <section class="ta-card">
+                <h1 class="ta-card-title">Not one of your accounts</h1>
+                <p class="ta-card-sub">This account isn't among the accounts you can see.</p>
+            </section>
+        }
     }
     else
     {
@@ -68,7 +74,7 @@
                 <div class="ta-tiles-grid">
                     @foreach (var holding in account.Holdings)
                     {
-                        <div class="ta-holding-tile">
+                        <div @key="holding.Symbol" class="ta-holding-tile">
                             <Picture Kind="@(holding.IsCash ? PictureKind.Currency : PictureKind.Ticker)" Code="@holding.Symbol" />
                             <div class="ta-holding-symbol">@holding.Name</div>
                             <div class="ta-holding-shares">@(holding.IsCash ? "Cash" : $"{holding.Quantity.ToString("N0", English)} shares")</div>
@@ -88,7 +94,7 @@
                     <tbody>
                         @foreach (var holding in account.Holdings)
                         {
-                            <tr>
+                            <tr @key="holding.Symbol">
                                 <th scope="row"><span class="ta-details-name"><Picture Kind="@(holding.IsCash ? PictureKind.Currency : PictureKind.Ticker)" Code="@holding.Symbol" /><span>@holding.Name</span></span></th>
                                 <td>@(holding.IsCash ? "" : holding.Quantity.ToString("N0", English))</td>
                                 <td>@(holding.IsCash ? "" : Money(holding.Price, 2))</td>
@@ -107,11 +113,12 @@
 @code {
     [Parameter] public Guid AccountId { get; set; }
 
-    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    /// <summary>Tiles or details: the person's choice, which the site reads from its cookie when the page is opened.</summary>
+    [CascadingParameter] private ContentsView View { get; set; }
 
     private AccountView? Account => LedgerAccounts.FirstOrDefault(account => account.AccountId == AccountId);
 
-    private ContentsView View => ContentsViews.From(HttpContext);
+    private AccountGroup? Group => Account is { } shown ? AccountGroups.All.FirstOrDefault(group => group.Types.Contains(shown.Type)) : null;
 
     private string Here => $"/accounts/{AccountId}";
 }

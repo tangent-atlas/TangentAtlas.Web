@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @layout TangentAtlas.Web.Components.Layout.AppLayout
 @inherits LedgerPage
+@* The signed-in home: the person's accounts by group, their investments' figures, and net worth over time. *@
 <PageTitle>Dashboard · Tangent Atlas</PageTitle>
 <SectionContent SectionName="app-title">Dashboard</SectionContent>
 
@@ -21,7 +22,7 @@
                 <div class="ta-group-accounts">
                     @foreach (var account in accounts)
                     {
-                        <a class="ta-group-account" href="@($"accounts/{account.AccountId}")"><span>@account.Name</span><span>@Money(account.MarketValue, 2)</span></a>
+                        <a @key="account.AccountId" class="ta-group-account" href="@($"accounts/{account.AccountId}")"><span>@account.Name</span><span>@Money(account.MarketValue, 2)</span></a>
                     }
                     @if (accounts.Count == 0)
                     {
@@ -54,7 +55,7 @@
                     <tbody>
                         @foreach (var account in investments)
                         {
-                            <tr>
+                            <tr @key="account.AccountId">
                                 <td><a href="@($"accounts/{account.AccountId}")">@account.Name</a>@if (account.IsPaper) { <span class="ta-chip">Paper money</span> }</td>
                                 <td>@Money(account.MarketValue)</td>
                                 <td>@Percent(account.Performance?.TotalReturn)</td>

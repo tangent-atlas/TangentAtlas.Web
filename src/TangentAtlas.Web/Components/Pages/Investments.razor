@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @layout TangentAtlas.Web.Components.Layout.AppLayout
 @inherits LedgerPage
+@* Every investment account, totalled. *@
 <PageTitle>Investments · Tangent Atlas</PageTitle>
 <SectionContent SectionName="app-title">Investments</SectionContent>
 
@@ -37,7 +38,7 @@
                 <tbody>
                     @foreach (var account in accounts)
                     {
-                        <tr>
+                        <tr @key="account.AccountId">
                             <td>
                                 <a href="@($"accounts/{account.AccountId}")">@account.Name</a>@if (account.IsPaper) { <span class="ta-chip">Paper money</span> }
                                 <span class="ta-account-where">@account.Institution@(account.Number is { } number ? $" · {number}" : "")</span>
