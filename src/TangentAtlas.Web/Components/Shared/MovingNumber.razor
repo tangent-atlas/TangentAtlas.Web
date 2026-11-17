@@ -1,0 +1,29 @@
+@* A number that shows which way it last moved: green when it rises, red when it falls, fading back to its usual colour over
+   two seconds.  The first value shown is not a move (a page opening, or holdings arriving), and neither is a value
+   appearing or disappearing.  Each move restarts the fade: the span is drawn afresh (its key changes). *@
+<span @key="moves" class="@direction">@Text</span>
+
+@code {
+    private decimal? last;
+
+    private string? direction;
+
+    private int moves;
+
+    /// <summary>The number, which decides the direction of a move.</summary>
+    [Parameter, EditorRequired] public decimal? Value { get; set; }
+
+    /// <summary>The number as the page shows it.</summary>
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+
+    protected override void OnParametersSet()
+    {
+        if (last is { } before && Value is { } now && now != before)
+        {
+            direction = now > before ? "ta-moved-up" : "ta-moved-down";
+            moves++;
+        }
+
+        last = Value;
+    }
+}
