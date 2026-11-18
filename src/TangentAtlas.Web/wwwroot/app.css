@@ -9,8 +9,10 @@
     --ta-green-dark: #0F6E56;     /* text, links and buttons (6:1 on white) */
     --ta-green-darker: #0a4f3e;
     --ta-green-light: #E1F5EE;
-    --ta-moved-up: #008000;       /* a rise, at its brightest: a deep primary green (5.1:1 on white; brighter greens read as lime) */
-    --ta-moved-down: #FF0000;     /* a fall, at its brightest: a primary red */
+    --ta-moved-up: #006B00;       /* a tick up: dark green text (5.4:1 on its wash) */
+    --ta-moved-up-wash: #C6F0C6;  /* a tick up: the light green behind it */
+    --ta-moved-down: #B00000;     /* a tick down: dark red text (5.3:1 on its wash) */
+    --ta-moved-down-wash: #FFD0D0; /* a tick down: the light red behind it */
     --ta-text: #1a1a1a;
     --ta-text-body: #374151;
     --ta-text-muted: #4b5563;
@@ -1813,21 +1815,39 @@ h1:focus {
     top: 0.5rem;
 }
 
-/* A number that moved: a primary green up or red down, fading back to its usual colour (black or grey) over five seconds. */
+/* A price that ticked, as trading screens show it: a green (up) or red (down) wash behind the number, held for half a second
+   and faded out over the next second.  The negative margin keeps the padding from moving the text.  With "reduce motion"
+   set, the wash shows and goes without fading. */
+.ta-moved-up,
+.ta-moved-down {
+    border-radius: 3px;
+    padding: 0 2px;
+    margin: 0 -2px;
+}
+
 .ta-moved-up {
-    animation: ta-moved-up 5s linear;
+    animation: ta-moved-up 1.5s linear;
 }
 
 .ta-moved-down {
-    animation: ta-moved-down 5s linear;
+    animation: ta-moved-down 1.5s linear;
 }
 
 @keyframes ta-moved-up {
-    0%, 5% { color: var(--ta-moved-up); }
+    0%, 33% { color: var(--ta-moved-up); background-color: var(--ta-moved-up-wash); }
+    100% { background-color: transparent; }
 }
 
 @keyframes ta-moved-down {
-    0%, 5% { color: var(--ta-moved-down); }
+    0%, 33% { color: var(--ta-moved-down); background-color: var(--ta-moved-down-wash); }
+    100% { background-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ta-moved-up,
+    .ta-moved-down {
+        animation-timing-function: steps(1, end);
+    }
 }
 
 /* The status bar: the score first and largest, then the figures behind it.  It stays under the top bar as the page

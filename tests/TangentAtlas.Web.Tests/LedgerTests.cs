@@ -391,7 +391,7 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.DoesNotContain("<polyline", html);
         Assert.Contains("2.19", html);                                // the Sharpe ratio, in the investments card
         // The status bar: the score of all investments (one account here, so its Sharpe ratio), under the top bar.
-        Assert.Matches(@"class=""ta-status-bar"" aria-label=""Score: All investments""[\s\S]*?ta-score-value""><span>2\.19</span>", html);
+        Assert.Matches(@"class=""ta-status-bar"" aria-label=""Score: All investments""[\s\S]*?ta-score-value"">2\.19</div>", html);
         Assert.DoesNotContain("Your rules", html);
     }
 
@@ -435,9 +435,9 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         var tiles = WebUtility.HtmlDecode(await client.GetStringAsync(page, TestContext.Current.CancellationToken));
         Assert.Contains("ta-tiles-grid", tiles);
         // A tile: ticker, shares, price, value, in that order; no weight bar.
-        Assert.Matches(@"ta-holding-symbol"">AAPL</div>\s*<div class=""ta-holding-shares"">1,052 shares</div>\s*<div class=""ta-holding-price""><span>\$342\.10</span> per share</div>\s*<div class=""ta-holding-value""><span>\$359,889\.20</span></div>", tiles);
+        Assert.Matches(@"ta-holding-symbol"">AAPL</div>\s*<div class=""ta-holding-shares"">1,052 shares</div>\s*<div class=""ta-holding-price""><span>\$342\.10</span> per share</div>\s*<div class=""ta-holding-value"">\$359,889\.20</div>", tiles);
         // Cash is an asset like any other: its code, its quantity, its price of $1.00, its value.
-        Assert.Matches(@"ta-holding-symbol"">USD</div>\s*<div class=""ta-holding-shares"">127,656 shares</div>\s*<div class=""ta-holding-price""><span>\$1\.00</span> per share</div>\s*<div class=""ta-holding-value""><span>\$127,656\.12</span></div>", tiles);
+        Assert.Matches(@"ta-holding-symbol"">USD</div>\s*<div class=""ta-holding-shares"">127,656 shares</div>\s*<div class=""ta-holding-price""><span>\$1\.00</span> per share</div>\s*<div class=""ta-holding-value"">\$127,656\.12</div>", tiles);
         Assert.DoesNotContain("ta-drift", tiles);
 
         var choose = await client.GetAsync(ContentsViews.Link(ContentsView.Details, page), TestContext.Current.CancellationToken);
@@ -496,7 +496,7 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.Contains("Joe 10", html);
         Assert.DoesNotContain("Paper money", html);                // the name and the number's last four identify it
         Assert.Contains("Invested by the Joe 10 model.", html);
-        Assert.Matches(@"class=""ta-status-bar"" aria-label=""Score: Joe 10""[\s\S]*?ta-score-value""><span>2\.19</span>", html);
+        Assert.Matches(@"class=""ta-status-bar"" aria-label=""Score: Joe 10""[\s\S]*?ta-score-value"">2\.19</div>", html);
         Assert.Contains("<polyline", html);        // the account's chart stays, last in its card
         Assert.Contains("$1,048,545", html);       // worth
         Assert.Contains("4.86%", html);            // total return

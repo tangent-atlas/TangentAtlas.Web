@@ -1,18 +1,19 @@
 @* The status bar: the score (the Sharpe ratio: return for each unit of risk taken) first and largest, then the figures
    behind it.  It sits under the top bar of every signed-in page that has investments to score, scoped to what the page
-   shows (all of a person's investments, or one account), and moves as prices do. *@
+   shows (all of a person's investments, or one account), and moves as prices do.  Its figures update quietly: they change
+   with every tick of every holding, so flashing them would keep the bar lit; the tick itself flashes on the holding's price. *@
 <section class="ta-status-bar" aria-label="@($"Score: {Scope}")">
     <div class="ta-score">
         <div class="ta-score-label">Sharpe ratio</div>
-        <div class="ta-score-value"><MovingNumber Value="Performance?.SharpeRatio" Text="@Number(Performance?.SharpeRatio)" /></div>
+        <div class="ta-score-value">@Number(Performance?.SharpeRatio)</div>
         <div class="ta-score-scope">@Scope</div>
     </div>
     <dl class="ta-status-figures">
-        <div><dt>Return</dt><dd><MovingNumber Value="Performance?.TotalReturn" Text="@Percent(Performance?.TotalReturn)" /></dd></div>
-        <div><dt>Volatility</dt><dd><MovingNumber Value="Performance?.Volatility" Text="@Percent(Performance?.Volatility)" /></dd></div>
-        <div><dt>Worth</dt><dd><MovingNumber Value="Worth" Text="@Money(Worth)" /></dd></div>
+        <div><dt>Return</dt><dd>@Percent(Performance?.TotalReturn)</dd></div>
+        <div><dt>Volatility</dt><dd>@Percent(Performance?.Volatility)</dd></div>
+        <div><dt>Worth</dt><dd>@Money(Worth)</dd></div>
         <div><dt>Put in</dt><dd>@Money(PutIn)</dd></div>
-        <div><dt>Gain</dt><dd><MovingNumber Value="Gain" Text="@Money(Gain)" /></dd></div>
+        <div><dt>Gain</dt><dd>@Money(Gain)</dd></div>
     </dl>
 </section>
 
