@@ -1829,3 +1829,84 @@ h1:focus {
 @keyframes ta-moved-down {
     0%, 5% { color: var(--ta-moved-down); }
 }
+
+/* The status bar: the score first and largest, then the figures behind it.  It stays under the top bar as the page
+   scrolls, so the score is always in view. */
+.ta-status-bar {
+    position: sticky;
+    top: 64px;
+    z-index: 9;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 40px;
+    padding: 14px 28px;
+    background: var(--ta-bg);
+    border-bottom: 1px solid var(--ta-border);
+}
+
+.ta-score {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas: "label label" "value scope";
+    align-items: baseline;
+    column-gap: 12px;
+}
+
+.ta-score-label {
+    grid-area: label;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ta-text-muted);
+}
+
+.ta-score-value {
+    grid-area: value;
+    font-family: var(--ta-serif);
+    font-size: 44px;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+}
+
+.ta-score-scope {
+    grid-area: scope;
+    font-size: 14px;
+    color: var(--ta-text-muted);
+}
+
+.ta-status-figures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    margin: 0;
+}
+
+.ta-status-figures dt {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ta-text-muted);
+}
+
+.ta-status-figures dd {
+    margin: 0;
+    font-family: var(--ta-serif);
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 760px) {
+    .ta-status-bar {
+        padding: 10px 16px;
+        gap: 8px 20px;
+    }
+
+    .ta-score-value {
+        font-size: 34px;
+    }
+
+    .ta-status-figures dd {
+        font-size: 18px;
+    }
+}

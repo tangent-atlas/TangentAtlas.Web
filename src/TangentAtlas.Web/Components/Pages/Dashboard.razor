@@ -2,9 +2,16 @@
 @attribute [Authorize]
 @layout TangentAtlas.Web.Components.Layout.AppLayout
 @inherits LedgerPage
-@* The signed-in home: the person's accounts by group, their investments' figures, and net worth over time. *@
+@* The signed-in home: the score of the person's investments (the status bar), their accounts by group, and each
+   investment account's figures. *@
 <PageTitle>Dashboard · Tangent Atlas</PageTitle>
 <SectionContent SectionName="app-title">Dashboard</SectionContent>
+
+@{ var allInvestments = LedgerAccounts.In(AccountGroups.All[1]); }
+@if (allInvestments.Count > 0)
+{
+    <SectionContent SectionName="status-bar"><StatusBar Scope="All investments" Performance="AccountGroups.PerformanceOf(allInvestments)" Worth="allInvestments.Sum(account => account.MarketValue ?? 0m)" PutIn="allInvestments.Sum(account => account.NetContributions)" Gain="allInvestments.Sum(account => account.Gain ?? 0m)" /></SectionContent>
+}
 
 <div class="ta-dashboard">
     <section class="ta-card" aria-labelledby="accounts-heading">
@@ -56,7 +63,7 @@
                         @foreach (var account in investments)
                         {
                             <tr @key="account.AccountId">
-                                <td><a href="@($"accounts/{account.AccountId}")">@account.Name</a>@if (account.IsPaper) { <span class="ta-chip">Paper money</span> }</td>
+                                <td><a href="@($"accounts/{account.AccountId}")">@account.Name</a></td>
                                 <td>@Money(account.MarketValue)</td>
                                 <td>@Percent(account.Performance?.TotalReturn)</td>
                                 <td class="ta-optional">@Percent(account.Performance?.Volatility)</td>
@@ -68,24 +75,6 @@
             </section>
         }
 
-        <section class="ta-card" aria-labelledby="net-worth-heading">
-            <h2 id="net-worth-heading" class="ta-card-title">Net worth</h2>
-            @{ var series = AccountGroups.NetWorth(LedgerAccounts); }
-            <div class="ta-card-figure">@Money(LedgerAccounts.Sum(AccountGroups.Contribution))</div>
-            <p class="ta-card-sub">
-                @if (series.Count >= 2)
-                {
-                    var change = series[^1].Value - series[0].Value;
-                    <span class="@(change >= 0 ? "ta-up" : "ta-down")">@(change >= 0 ? "+" : "−")@Money(Math.Abs(change))</span>
-                    <span> since @series[0].Date.ToString("MMMM d", English), deposits included</span>
-                }
-                else if (LedgerAccounts.Count > 0)
-                {
-                    <span>Its history starts with the next close.</span>
-                }
-            </p>
-            <ValueChart Points="series" />
-        </section>
     </div>
 </div>
 

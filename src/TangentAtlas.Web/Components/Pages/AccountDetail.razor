@@ -28,22 +28,15 @@
     }
     else
     {
+        <SectionContent SectionName="status-bar"><StatusBar Scope="@account.Name" Performance="account.Performance" Worth="account.MarketValue" PutIn="account.NetContributions" Gain="account.Gain" /></SectionContent>
         <section class="ta-card" aria-labelledby="account-heading">
             <div class="ta-eyebrow">@account.Institution@(account.Number is { } number ? $" · {number}" : "")</div>
-            <h1 id="account-heading" class="ta-card-title">@account.Name @if (account.IsPaper) { <span class="ta-chip">Paper money</span> }</h1>
+            <h1 id="account-heading" class="ta-card-title">@account.Name</h1>
             @if (account.ModelName is { } model)
             {
-                <p class="ta-card-sub">Invested by the @model model@(account.IsPaper ? ": it rebalances at 3:45 pm New York time on market days and fills at the close." : ".")</p>
+                <p class="ta-card-sub">Invested by the @model model.</p>
             }
-            <div class="ta-figures">
-                <div><div class="ta-figure-label">Worth</div><div class="ta-figure-value ta-up">@Money(account.MarketValue)</div></div>
-                <div><div class="ta-figure-label">Put in</div><div class="ta-figure-value">@Money(account.NetContributions)</div></div>
-                <div><div class="ta-figure-label">Gain</div><div class="ta-figure-value">@Money(account.Gain)</div></div>
-                <div><div class="ta-figure-label">Return</div><div class="ta-figure-value">@Percent(account.Performance?.TotalReturn)</div></div>
-                <div><div class="ta-figure-label">Volatility</div><div class="ta-figure-value">@Percent(account.Performance?.Volatility)</div></div>
-                <div><div class="ta-figure-label">Sharpe ratio</div><div class="ta-figure-value">@Number(account.Performance?.SharpeRatio)</div></div>
-            </div>
-            <p class="ta-card-sub" style="margin-top: 14px">
+            <p class="ta-card-sub">
                 @if (account.Performance is { From: { } from, Through: { } through, Returns: > 0 } performance)
                 {
                     @($"Measured at each close from {from.ToString("MMMM d", English)} to {through.ToString("MMMM d, yyyy", English)}: {performance.Returns} daily return{(performance.Returns == 1 ? "" : "s")}, worst drop {Percent(performance.MaximumDrawdown)}{(performance.IsRanked ? "." : "; ranked after 20.")} {Updated}")

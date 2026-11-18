@@ -31,7 +31,6 @@ public sealed record AccountView(
     string Type,
     string Institution,
     string? Number,
-    bool IsPaper,
     decimal? MarketValue,
     decimal Cash,
     decimal NetContributions,

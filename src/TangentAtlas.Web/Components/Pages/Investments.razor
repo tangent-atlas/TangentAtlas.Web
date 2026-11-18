@@ -13,14 +13,9 @@
     <div class="ta-status" role="status"><span class="ta-chip ta-chip-warning">Ledger</span><span>@LedgerProblem</span></div>
 }
 
+<SectionContent SectionName="status-bar"><StatusBar Scope="All investments" Performance="AccountGroups.PerformanceOf(accounts)" Worth="accounts.Sum(account => account.MarketValue ?? 0m)" PutIn="accounts.Sum(account => account.NetContributions)" Gain="accounts.Sum(account => account.Gain ?? 0m)" /></SectionContent>
+
 <div class="ta-dashboard-main">
-    <section class="ta-card" aria-label="All investments">
-        <div class="ta-figures">
-            <div><div class="ta-figure-label">Worth</div><div class="ta-figure-value">@Money(accounts.Sum(account => account.MarketValue ?? 0m))</div></div>
-            <div><div class="ta-figure-label">Put in</div><div class="ta-figure-value">@Money(accounts.Sum(account => account.NetContributions))</div></div>
-            <div><div class="ta-figure-label">Gain</div><div class="ta-figure-value">@Money(accounts.Sum(account => account.Gain ?? 0m))</div></div>
-        </div>
-    </section>
 
     <section class="ta-card" aria-labelledby="investment-accounts">
         <h2 id="investment-accounts" class="ta-card-title">Accounts</h2>
@@ -40,7 +35,7 @@
                     {
                         <tr @key="account.AccountId">
                             <td>
-                                <a href="@($"accounts/{account.AccountId}")">@account.Name</a>@if (account.IsPaper) { <span class="ta-chip">Paper money</span> }
+                                <a href="@($"accounts/{account.AccountId}")">@account.Name</a>
                                 <span class="ta-account-where">@account.Institution@(account.Number is { } number ? $" · {number}" : "")</span>
                             </td>
                             <td>@Money(account.MarketValue)</td>

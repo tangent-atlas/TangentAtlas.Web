@@ -1,0 +1,39 @@
+@* The status bar: the score (the Sharpe ratio: return for each unit of risk taken) first and largest, then the figures
+   behind it.  It sits under the top bar of every signed-in page that has investments to score, scoped to what the page
+   shows (all of a person's investments, or one account), and moves as prices do. *@
+<section class="ta-status-bar" aria-label="@($"Score: {Scope}")">
+    <div class="ta-score">
+        <div class="ta-score-label">Sharpe ratio</div>
+        <div class="ta-score-value"><MovingNumber Value="Performance?.SharpeRatio" Text="@Number(Performance?.SharpeRatio)" /></div>
+        <div class="ta-score-scope">@Scope</div>
+    </div>
+    <dl class="ta-status-figures">
+        <div><dt>Return</dt><dd><MovingNumber Value="Performance?.TotalReturn" Text="@Percent(Performance?.TotalReturn)" /></dd></div>
+        <div><dt>Volatility</dt><dd><MovingNumber Value="Performance?.Volatility" Text="@Percent(Performance?.Volatility)" /></dd></div>
+        <div><dt>Worth</dt><dd><MovingNumber Value="Worth" Text="@Money(Worth)" /></dd></div>
+        <div><dt>Put in</dt><dd>@Money(PutIn)</dd></div>
+        <div><dt>Gain</dt><dd><MovingNumber Value="Gain" Text="@Money(Gain)" /></dd></div>
+    </dl>
+</section>
+
+@code {
+    private static readonly System.Globalization.CultureInfo English = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+
+    /// <summary>What is scored: "All investments", or an account's name.</summary>
+    [Parameter, EditorRequired] public string Scope { get; set; } = "";
+
+    /// <summary>The ledger's measure of the returns; null where there is none (several accounts together, for now).</summary>
+    [Parameter] public PerformanceView? Performance { get; set; }
+
+    [Parameter] public decimal? Worth { get; set; }
+
+    [Parameter] public decimal PutIn { get; set; }
+
+    [Parameter] public decimal? Gain { get; set; }
+
+    private static string Money(decimal? value) => value is { } number ? number.ToString("C0", English) : "—";
+
+    private static string Percent(decimal? value) => value is { } number ? number.ToString("P2", English) : "—";
+
+    private static string Number(decimal? value) => value is { } number ? number.ToString("0.00", English) : "—";
+}
