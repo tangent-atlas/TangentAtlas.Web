@@ -1,5 +1,6 @@
-@* A number that shows which way it last moved: green when it rises, red when it falls, fading back to its usual colour over
-   five seconds.  The first value shown is not a move (a page opening, or holdings arriving), and neither is a value
+@* A price that shows which way it last ticked, the way trading screens do: a green or red wash behind the number for half a
+   second, fading out over the next second (AG Grid's defaults).  Only prices flash; the figures that follow from them
+   (market values, the status bar) update quietly, so the page isn't busy.  The first value shown is not a move (a page opening, or holdings arriving), and neither is a value
    appearing or disappearing.  Each move restarts the fade: the span is drawn afresh (its key changes). *@
 <span @key="moves" class="@direction">@Text</span>
 
