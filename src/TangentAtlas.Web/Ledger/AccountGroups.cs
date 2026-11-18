@@ -27,6 +27,12 @@ public static class AccountGroups
     /// <summary>What an account adds to net worth: its value, or less what it owes.</summary>
     public static decimal Contribution(AccountView account) => IsDebt(account) ? -Math.Abs(account.MarketValue ?? 0m) : account.MarketValue ?? 0m;
 
+    /// <summary>
+    /// The score of several accounts together.  The ledger measures each account's returns; until it measures a
+    /// household's (several accounts' combined returns, deposits taken out), only a single account has one.
+    /// </summary>
+    public static PerformanceView? PerformanceOf(IReadOnlyList<AccountView> accounts) => accounts.Count == 1 ? accounts[0].Performance : null;
+
     public static IReadOnlyList<AccountView> In(this IEnumerable<AccountView> accounts, AccountGroup group) =>
         accounts.Where(account => group.Types.Contains(account.Type)).ToArray();
 

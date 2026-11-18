@@ -387,10 +387,11 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.Contains("Linking: coming soon", html);                // banking, assets, liabilities
         Assert.Contains($"href=\"accounts/{StandInLedger.Account}\"", html);
         Assert.Contains("href=\"investments\"", html);
-        Assert.Contains("Net worth", html);
-        Assert.Contains("deposits included", html);
-        Assert.Contains("<polyline", html);
+        Assert.DoesNotContain("Net worth", html);                     // its chart is gone for now
+        Assert.DoesNotContain("<polyline", html);
         Assert.Contains("2.19", html);                                // the Sharpe ratio, in the investments card
+        // The status bar: the score of all investments (one account here, so its Sharpe ratio), under the top bar.
+        Assert.Matches(@"class=""ta-status-bar"" aria-label=""Score: All investments""[\s\S]*?ta-score-value""><span>2\.19</span>", html);
         Assert.DoesNotContain("Your rules", html);
     }
 
@@ -493,8 +494,10 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         var html = await client.GetStringAsync($"/accounts/{StandInLedger.Account}", TestContext.Current.CancellationToken);
 
         Assert.Contains("Joe 10", html);
-        Assert.Contains("Paper money", html);
-        Assert.Contains("Invested by the Joe 10 model", html);
+        Assert.DoesNotContain("Paper money", html);                // the name and the number's last four identify it
+        Assert.Contains("Invested by the Joe 10 model.", html);
+        Assert.Matches(@"class=""ta-status-bar"" aria-label=""Score: Joe 10""[\s\S]*?ta-score-value""><span>2\.19</span>", html);
+        Assert.Contains("<polyline", html);        // the account's chart stays, last in its card
         Assert.Contains("$1,048,545", html);       // worth
         Assert.Contains("4.86%", html);            // total return
         Assert.Contains("25.58%", html);           // volatility

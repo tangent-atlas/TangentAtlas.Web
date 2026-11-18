@@ -81,7 +81,6 @@ public static class LedgerProjection
             account.AccountType.ToString(),
             institution?.Name ?? "",
             account.ExternalAccountId is { Length: > 0 } external ? "••" + external[Math.Max(0, external.Length - 4)..] : null,
-            institution?.Source == EventSource.Simulator,
             worth,
             positions.Where(item => item.Position.AssetType == AssetType.Cash).Sum(item => item.Value ?? 0m),
             contributions,
