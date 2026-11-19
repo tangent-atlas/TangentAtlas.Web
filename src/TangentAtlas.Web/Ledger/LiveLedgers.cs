@@ -251,6 +251,13 @@ public sealed class LiveLedgers(
             {
                 throw new LedgerUnavailableException($"The ledger at {http.BaseAddress} can't be reached.", exception);
             }
+            catch (Exception exception) when (exception is not (LedgerUnavailableException or MicrosoftIdentityWebChallengeUserException or Microsoft.Identity.Client.MsalUiRequiredException) && !stopping.IsCancellationRequested)
+            {
+                // Anything else (a timeout, a reply it can't read): the page shows the notice instead of the error page, and
+                // the next page load starts again.  Logged in full, since the person sees only the notice.
+                logger.LogError(exception, "Couldn't start a person's live ledger; their page shows the notice.");
+                throw new LedgerUnavailableException("Your accounts couldn't be loaded just now. Reload the page to try again.", exception);
+            }
 
             lock (viewGate)
             {

@@ -149,6 +149,9 @@ public sealed class StandInLedger : HttpMessageHandler
     /// <summary>The person also belongs to another tenant, listed first (as the walkthrough's sample firm is in production).</summary>
     public bool AlsoInAnotherTenant { get; set; }
 
+    /// <summary>What the person's tenant list fails with, if anything: a timeout, as after the page was left idle.</summary>
+    public Exception? TenantsFailWith { get; set; }
+
     public List<string> Requests { get; } = [];
 
     /// <summary>Wakes the waiting long polls, as a commit would (they answer with whatever is now true).</summary>
@@ -193,6 +196,11 @@ public sealed class StandInLedger : HttpMessageHandler
 
         if (request.RequestUri.AbsolutePath == "/v1/me/tenants")
         {
+            if (TenantsFailWith is { } failure)
+            {
+                throw failure;
+            }
+
             return Ok(!IsMember ? "[]" : AlsoInAnotherTenant ? $"[\"{OtherTenant}\",\"{Tenant}\"]" : $"[\"{Tenant}\"]");
         }
 
@@ -604,6 +612,30 @@ public class LiveLedgerTests(SignedInLedgerSiteFactory factory) : IClassFixture<
 
         Assert.Contains("<title>Joe 10 · Tangent Atlas</title>", html);
         Assert.Matches("<div class=\"ta-app-title\">.*Investments.*›</span> Joe 10", html.ReplaceLineEndings(" "));
+    }
+
+    [Fact]
+    public async Task AFailureStartingTheLedgerShowsTheNoticeAndTheNextLoadRecovers()
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        factory.Ledger.TenantsFailWith = new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout of 75 seconds elapsing.");
+        try
+        {
+            var response = await client.GetAsync("/dashboard", TestContext.Current.CancellationToken);
+            var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.DoesNotContain("An error occurred while processing your request", html);
+            Assert.Contains("Your accounts couldn&#x27;t be loaded just now. Reload the page to try again.", html);
+        }
+        finally
+        {
+            factory.Ledger.TenantsFailWith = null;
+        }
+
+        var again = await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken);
+        Assert.Contains("Joe 10", again);
+        Assert.DoesNotContain("couldn&#x27;t be loaded", again);
     }
 
     [Fact]
