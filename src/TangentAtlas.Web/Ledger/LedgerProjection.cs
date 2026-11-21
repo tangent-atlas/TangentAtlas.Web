@@ -45,7 +45,7 @@ public static class LedgerProjection
         var positions = account.Positions.Select(position => (Position: position, Value: MarketValue(position, partition))).ToArray();
         decimal? worth = positions.Any(item => item.Value is null) ? null : positions.Sum(item => item.Value!.Value);
         var contributions = account.AccountFlow?.NetContributions ?? 0m;
-        var model = account.Model;
+        var model = GoverningModel(account);
         var targets = model?.Weights.ToDictionary(weight => weight.AssetId, weight => weight.Fraction) ?? [];
 
         // A model's weights cover what it invests in; the cash it keeps is the rest.
@@ -109,4 +109,22 @@ public static class LedgerProjection
     private static string SymbolOf(Node node) =>
         node.Symbols.Where(symbol => symbol.Scheme is SymbolScheme.Ticker or SymbolScheme.Currency).OrderBy(symbol => symbol.Scheme != SymbolScheme.Ticker).ThenBy(symbol => symbol.Code, StringComparer.Ordinal).Select(symbol => symbol.Code).FirstOrDefault()
         ?? NameOf(node);
+
+    /// <summary>
+    /// The model that governs an account, as the ledger decides it: its portfolio's, or else the nearest parent
+    /// portfolio's that has one.  Closed portfolios govern nothing; a loop in the tree governs nothing.
+    /// </summary>
+    private static Model? GoverningModel(Account account)
+    {
+        var seen = new HashSet<Guid> { account.AccountId };
+        for (var parent = account.Node.EdgeByChild?.Parent; parent is not null && seen.Add(parent.NodeId); parent = parent.EdgeByChild?.Parent)
+        {
+            if (parent.Portfolio is { Model: { } model } && parent.NodeStatus == NodeStatus.Active)
+            {
+                return model;
+            }
+        }
+
+        return null;
+    }
 }

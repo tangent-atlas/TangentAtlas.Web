@@ -29,7 +29,7 @@ public sealed class LiveLedgers(
 
     /// <summary>The tables the signed-in pages read; the sync client adds their parents (accounts, assets, nodes, models).</summary>
     public static readonly IReadOnlyList<string> Tables =
-        ["Position", "EffectivePrice", "CurrencyRate", "AccountFlow", "AccountDay", "AccountStatistic", "Weight", "Symbol", "Institution"];
+        ["Position", "EffectivePrice", "CurrencyRate", "AccountFlow", "AccountDay", "AccountStatistic", "Weight", "Symbol", "Institution", "Edge", "Portfolio", "PortfolioDay", "PortfolioStatistic"];
 
     /// <summary>The ledger's JSON: web names, enums as their names.</summary>
     internal static readonly JsonSerializerOptions Json = CreateJson();

@@ -267,23 +267,32 @@ public sealed class StandInLedger : HttpMessageHandler
             return new LedgerSyncChanges
             {
                 Node = Rows(new NodeDto { NodeId = Guid.Parse(OtherAccount), DisplayName = "Smith Trust", FullName = "Smith Trust", NodeType = NodeType.Account }),
-                Account = Rows(new AccountDto { AccountId = Guid.Parse(OtherAccount), AccountType = AccountType.Brokerage, AccountRole = AccountRole.ManagedAccount, Currency = "USD" }),
+                Account = Rows(new AccountDto { AccountId = Guid.Parse(OtherAccount), AccountType = AccountType.Brokerage, Currency = "USD" }),
             };
         }
 
         var close = DateTimeOffset.Parse("2026-11-13T21:35:00Z", System.Globalization.CultureInfo.InvariantCulture);
         var (account, aapl, msft, dollar, broker, model) = (Guid.Parse(Account), Guid.Parse(Aapl), Guid.Parse(Msft), Guid.Parse(Dollar), Guid.Parse(Broker), Guid.Parse(Model));
+
+        // The household holds the Joe 10 portfolio, whose model governs the account in it.
+        var (household, portfolio) = (Guid.Parse("4a6f6531-3020-7061-7065-7200000000a1"), Guid.Parse("4a6f6531-3020-7061-7065-7200000000a2"));
         return new LedgerSyncChanges
         {
             CurrencyRate = Rows(new CurrencyRateDto { FromCurrency = "USD", ToCurrency = "USD", Rate = 1m }),
             Institution = Rows(new InstitutionDto { InstitutionId = broker, Name = "Tangent Atlas Paper Brokerage", Source = EventSource.Simulator }),
             Model = Rows(new ModelDto { ModelId = model, Name = "Joe 10", Band = 0.05m }),
             Node = Rows(
+                new NodeDto { NodeId = household, DisplayName = "Household", FullName = "Household", NodeType = NodeType.Household },
+                new NodeDto { NodeId = portfolio, DisplayName = "Joe 10", FullName = "Joe 10", NodeType = NodeType.Portfolio },
                 new NodeDto { NodeId = account, DisplayName = "Joe 10", FullName = "Joe 10 paper account", NodeType = NodeType.Account },
                 new NodeDto { NodeId = aapl, DisplayName = "Apple", FullName = "Apple Inc.", NodeType = NodeType.Asset },
                 new NodeDto { NodeId = msft, DisplayName = "Microsoft", FullName = "Microsoft Corporation", NodeType = NodeType.Asset },
                 new NodeDto { NodeId = dollar, DisplayName = "US dollar", FullName = "United States dollar", NodeType = NodeType.Asset }),
-            Account = Rows(new AccountDto { AccountId = account, AccountType = AccountType.Brokerage, AccountRole = AccountRole.ManagedAccount, Currency = "USD", ExternalAccountId = "PAPER-100010", InstitutionId = broker, ModelId = model }),
+            Account = Rows(new AccountDto { AccountId = account, AccountType = AccountType.Brokerage, Currency = "USD", ExternalAccountId = "PAPER-100010", InstitutionId = broker }),
+            Portfolio = Rows(new PortfolioDto { PortfolioId = portfolio, ModelId = model }),
+            Edge = Rows(
+                new EdgeDto { ChildNodeId = portfolio, ParentNodeId = household, Position = 0, Since = new DateOnly(2026, 10, 15) },
+                new EdgeDto { ChildNodeId = account, ParentNodeId = portfolio, Position = 0, Since = new DateOnly(2026, 10, 15) }),
             AccountDay = Rows(
                 new AccountDayDto { AccountId = account, Date = new DateOnly(2026, 10, 15), Value = 999_978.82m, Flow = 1_000_000m },
                 new AccountDayDto { AccountId = account, Date = new DateOnly(2026, 10, 16), Value = 990_730.22m, Flow = 0m, Return = -0.0092m },
