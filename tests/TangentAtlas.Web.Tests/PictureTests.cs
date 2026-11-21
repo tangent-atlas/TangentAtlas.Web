@@ -87,6 +87,12 @@ public class LedgerCredentialTests
     }
 
     [Fact]
+    public void TheSiteAsksToReadAndToWriteTheLedger() =>
+        Assert.Equal(
+            ["api://x/Ledger.Read", "api://x/Ledger.Write"],
+            new TangentAtlas.Web.Ledger.LedgerOptions { Scope = " api://x/Ledger.Read  api://x/Ledger.Write " }.Scopes);
+
+    [Fact]
     public void WithoutACertificateTheLedgerIsNotConfigured() =>
         Assert.False(new TangentAtlas.Web.Ledger.LedgerOptions { Server = "https://ledger.example", Scope = "api://x/Ledger.Read" }.IsConfigured);
 }

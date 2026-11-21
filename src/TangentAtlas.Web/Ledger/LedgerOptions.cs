@@ -15,8 +15,15 @@ public sealed class LedgerOptions
     /// <summary>The ledger server, such as http://127.0.0.1:5180 (TangentAtlas.LedgerService's Start-LocalLedger.ps1).</summary>
     public string? Server { get; set; }
 
-    /// <summary>The permission the site asks for, as the person: api://&lt;Ledger API client ID&gt;/Ledger.Read.</summary>
+    /// <summary>
+    /// The permissions the site asks for, as the person, separated by spaces: api://&lt;Ledger API client ID&gt;/Ledger.Read
+    /// and api://&lt;Ledger API client ID&gt;/Ledger.Write (the site reads the ledger and, through the person's actions,
+    /// changes it).
+    /// </summary>
     public string? Scope { get; set; }
+
+    /// <summary>The permissions in <see cref="Scope"/>, one by one.</summary>
+    public IReadOnlyList<string> Scopes => (Scope ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
     /// <summary>
     /// The thumbprint of the website's development certificate, in the current user's personal store with a private key

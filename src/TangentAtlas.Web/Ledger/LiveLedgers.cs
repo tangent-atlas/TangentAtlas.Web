@@ -56,7 +56,7 @@ public sealed class LiveLedgers(
         {
             if (!ledgers.TryGetValue(key, out var found) || found.IsStopped)
             {
-                found = new LiveLedger(key, user, options.Scope!, options.TenantRefresh, httpClients.CreateClient(HttpClientName), scopes.CreateScope(), logger, Fail);
+                found = new LiveLedger(key, user, options.Scopes, options.TenantRefresh, httpClients.CreateClient(HttpClientName), scopes.CreateScope(), logger, Fail);
                 ledgers[key] = found;
             }
 
@@ -170,7 +170,7 @@ public sealed class LiveLedgers(
         private readonly HttpClient http;
         private readonly IServiceScope scope;
         private readonly ClaimsPrincipal user;
-        private readonly string ledgerScope;
+        private readonly IReadOnlyList<string> ledgerScopes;
         private readonly TimeSpan tenantRefresh;
         private readonly ILogger logger;
         private readonly Action<LiveLedger> fail;
@@ -182,11 +182,11 @@ public sealed class LiveLedgers(
         private volatile LedgerView? view;
         private volatile string? problem;
 
-        public LiveLedger(string key, ClaimsPrincipal user, string ledgerScope, TimeSpan tenantRefresh, HttpClient http, IServiceScope scope, ILogger logger, Action<LiveLedger> fail)
+        public LiveLedger(string key, ClaimsPrincipal user, IReadOnlyList<string> ledgerScopes, TimeSpan tenantRefresh, HttpClient http, IServiceScope scope, ILogger logger, Action<LiveLedger> fail)
         {
             Key = key;
             this.user = user;
-            this.ledgerScope = ledgerScope;
+            this.ledgerScopes = ledgerScopes;
             this.tenantRefresh = tenantRefresh;
             this.http = http;
             this.scope = scope;
@@ -411,7 +411,7 @@ public sealed class LiveLedgers(
             // The scheme that signed the person in and holds their token: the site's default scheme is the cookie, which
             // Microsoft.Identity.Web can't take its settings from.
             var tokens = scope.ServiceProvider.GetRequiredService<ITokenAcquisition>();
-            var token = await tokens.GetAccessTokenForUserAsync([ledgerScope], authenticationScheme: OpenIdConnectDefaults.AuthenticationScheme, user: user);
+            var token = await tokens.GetAccessTokenForUserAsync(ledgerScopes, authenticationScheme: OpenIdConnectDefaults.AuthenticationScheme, user: user);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 

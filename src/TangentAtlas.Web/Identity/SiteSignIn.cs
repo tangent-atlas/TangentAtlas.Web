@@ -79,7 +79,7 @@ public static class SiteSignIn
                     ConfigureCookie,
                     OpenIdConnectDefaults.AuthenticationScheme,
                     CookieAuthenticationDefaults.AuthenticationScheme)
-                .EnableTokenAcquisitionToCallDownstreamApi([ledger.Scope!])
+                .EnableTokenAcquisitionToCallDownstreamApi([.. ledger.Scopes])
                 .AddInMemoryTokenCaches();
             services.PostConfigure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {

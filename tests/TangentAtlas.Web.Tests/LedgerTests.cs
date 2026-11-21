@@ -16,7 +16,7 @@ namespace TangentAtlas.Web.Tests;
 /// <summary>The site connected to a ledger: sign-in returns a code; the signed-in page reads the ledger as the person.</summary>
 public class LedgerSiteFactory : ConfiguredSiteFactory
 {
-    public const string Scope = "api://99999999-8888-7777-6666-555555555555/Ledger.Read";
+    public const string Scope = "api://99999999-8888-7777-6666-555555555555/Ledger.Read api://99999999-8888-7777-6666-555555555555/Ledger.Write";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -92,7 +92,7 @@ public class SignedInLedgerSiteFactory : LedgerSiteFactory
     private sealed class StandInTokens : ITokenAcquisition
     {
         public Task<string> GetAccessTokenForUserAsync(IEnumerable<string> scopes, string? authenticationScheme, string? tenantId = null, string? userFlow = null, ClaimsPrincipal? user = null, TokenAcquisitionOptions? tokenAcquisitionOptions = null) =>
-            Task.FromResult(scopes.SequenceEqual([Scope]) && authenticationScheme == "OpenIdConnect" ? "the-persons-token" : "wrong-scope-or-scheme");
+            Task.FromResult(scopes.SequenceEqual(Scope.Split(' ')) && authenticationScheme == "OpenIdConnect" ? "the-persons-token" : "wrong-scope-or-scheme");
 
         public Task<Microsoft.Identity.Client.AuthenticationResult> GetAuthenticationResultForUserAsync(IEnumerable<string> scopes, string? authenticationScheme, string? tenantId = null, string? userFlow = null, ClaimsPrincipal? user = null, TokenAcquisitionOptions? tokenAcquisitionOptions = null) =>
             throw new NotSupportedException();
@@ -360,7 +360,7 @@ public class LedgerSignInTests(LedgerSiteFactory factory) : IClassFixture<Ledger
     private readonly HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     [Fact]
-    public async Task SignInAsksForACodeAndThePersonsLedgerReadPermission()
+    public async Task SignInAsksForACodeAndThePersonsLedgerPermissions()
     {
         var response = await client.GetAsync("/account/signin", TestContext.Current.CancellationToken);
 
@@ -371,9 +371,8 @@ public class LedgerSignInTests(LedgerSiteFactory factory) : IClassFixture<Ledger
         Assert.Contains("response_type=code", location);
         Assert.Contains("offline_access", location);
         Assert.Contains("email", location);
-        Assert.Contains(LedgerSiteFactory.Scope, location);
+        Assert.All(LedgerSiteFactory.Scope.Split(' '), scope => Assert.Contains(scope, location));   // to read and to write
         Assert.Contains("code_challenge=", location);   // PKCE
-        Assert.DoesNotContain("Ledger.Write", location);
     }
 
     /// <summary>
