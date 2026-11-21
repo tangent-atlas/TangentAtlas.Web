@@ -29,7 +29,7 @@ public sealed class LiveLedgers(
 
     /// <summary>The tables the signed-in pages read; the sync client adds their parents (accounts, assets, nodes, models).</summary>
     public static readonly IReadOnlyList<string> Tables =
-        ["Position", "EffectivePrice", "CurrencyRate", "AccountFlow", "AccountDay", "AccountStatistic", "Weight", "Symbol", "Institution", "Edge", "Portfolio", "PortfolioDay", "PortfolioStatistic"];
+        ["Position", "EffectivePrice", "CurrencyRate", "AccountFlow", "AccountDay", "AccountStatistic", "Weight", "Symbol", "Institution", "Edge", "Portfolio", "PortfolioDay", "PortfolioStatistic", "Favorite", "Restriction"];
 
     /// <summary>The ledger's JSON: web names, enums as their names.</summary>
     internal static readonly JsonSerializerOptions Json = CreateJson();
@@ -178,6 +178,7 @@ public sealed class LiveLedgers(
         private readonly Dictionary<Guid, Follower> followers = [];
         private readonly List<Task> running = [];
         private IReadOnlyList<Guid> tenantIds = [];
+        private Dictionary<Guid, Guid> myUserIds = [];
         private volatile LedgerView? view;
         private volatile string? problem;
 
@@ -279,7 +280,9 @@ public sealed class LiveLedgers(
             }
 
             var joined = listed.Where(tenantId => !IsFollowed(tenantId)).Select(tenantId => new LedgerSyncClient(http, replica, tenantId, Tables, AuthorizeAsync, Json)).ToArray();
+            var mine = joined.Select(client => GetMyUserIdAsync(client.TenantId, cancellationToken)).ToArray();
             await Task.WhenAll(joined.Select(client => client.SyncAsync(TimeSpan.Zero, cancellationToken)));
+            var found = await Task.WhenAll(mine);
             if (joined.Length == 0 && gone.Length == 0 && tenantIds.Count > 0)
             {
                 return;
@@ -293,6 +296,16 @@ public sealed class LiveLedgers(
                     Drop(tenantId);
                 }
 
+                var known = new Dictionary<Guid, Guid>(myUserIds.Where(pair => listed.Contains(pair.Key)));
+                foreach (var (tenantId, userId) in joined.Zip(found, (client, userId) => (client.TenantId, userId)))
+                {
+                    if (userId is { } id)
+                    {
+                        known[tenantId] = id;
+                    }
+                }
+
+                myUserIds = known;
                 foreach (var client in joined)
                 {
                     var follower = new Follower(client, CancellationTokenSource.CreateLinkedTokenSource(stopping.Token));
@@ -302,7 +315,7 @@ public sealed class LiveLedgers(
                 }
 
                 tenantIds = listed;
-                view = listed.Count == 0 ? null : LedgerProjection.Project(listed, replica);
+                view = listed.Count == 0 ? null : LedgerProjection.Project(listed, replica, myUserIds);
             }
 
             if (joined.Length > 0 || gone.Length > 0)
@@ -356,6 +369,28 @@ public sealed class LiveLedgers(
             }
         }
 
+        /// <summary>
+        /// The person's own user key in a tenant (what their favorites are keyed by), as the ledger tells them; null if it
+        /// can't say.  Without it their dashboard shows no favorites, and nothing else is affected.
+        /// </summary>
+        private async Task<Guid?> GetMyUserIdAsync(Guid tenantId, CancellationToken cancellationToken)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"v1/tenants/{tenantId}/me");
+            AtlasLedger.Model.Ledger.AddContractHeaders(request.Headers);
+            await AuthorizeAsync(request, cancellationToken);
+            using var response = await http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning("The ledger answered {Status} to v1/tenants/{TenantId}/me: no favorites shown there.", (int)response.StatusCode, tenantId);
+                return null;
+            }
+
+            return (await response.Content.ReadFromJsonAsync<MyUser>(Json, cancellationToken))?.UserId;
+        }
+
+        /// <summary>The ledger's answer to "who am I in this tenant".</summary>
+        private sealed record MyUser(Guid UserId);
+
         private async Task<IReadOnlyList<Guid>> GetTenantsAsync(CancellationToken cancellationToken)
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "v1/me/tenants");
@@ -400,7 +435,7 @@ public sealed class LiveLedgers(
                 {
                     Drop(follower.Client.TenantId);
                     tenantIds = [.. tenantIds.Where(tenantId => tenantId != follower.Client.TenantId)];
-                    view = tenantIds.Count == 0 ? null : LedgerProjection.Project(tenantIds, replica);
+                    view = tenantIds.Count == 0 ? null : LedgerProjection.Project(tenantIds, replica, myUserIds);
                 }
 
                 Changed?.Invoke();
@@ -426,7 +461,7 @@ public sealed class LiveLedgers(
         {
             lock (viewGate)
             {
-                view = tenantIds.Count == 0 ? null : LedgerProjection.Project(tenantIds, replica);
+                view = tenantIds.Count == 0 ? null : LedgerProjection.Project(tenantIds, replica, myUserIds);
             }
 
             Changed?.Invoke();

@@ -2,82 +2,85 @@
 @attribute [Authorize]
 @layout TangentAtlas.Web.Components.Layout.AppLayout
 @inherits LedgerPage
-@* The signed-in home: the score of the person's investments (the status bar), their accounts by group, and each
-   investment account's figures. *@
+@* The signed-in home: the household's tree of portfolios on the left (the household itself is never shown; a name opens
+   its page), and a card for each portfolio the person has starred on the right, in the layout of Ken's portfolios on
+   Your plan. *@
 <PageTitle>Dashboard · Tangent Atlas</PageTitle>
 <SectionContent SectionName="app-title">Dashboard</SectionContent>
 
-@{ var allInvestments = LedgerAccounts.In(AccountGroups.All[1]); }
-@if (allInvestments.Count > 0)
-{
-    <SectionContent SectionName="status-bar"><StatusBar Scope="All investments" Performance="AccountGroups.PerformanceOf(allInvestments)" Worth="allInvestments.Sum(account => account.MarketValue ?? 0m)" PutIn="allInvestments.Sum(account => account.NetContributions)" Gain="allInvestments.Sum(account => account.Gain ?? 0m)" /></SectionContent>
-}
-
+@{ var portfolios = Ledger?.Portfolios ?? []; var unfiled = Ledger?.Unfiled ?? []; var favorites = Ledger?.Favorites ?? []; }
 <div class="ta-dashboard">
-    <section class="ta-card" aria-labelledby="accounts-heading">
-        <h2 id="accounts-heading" class="ta-card-title">Accounts</h2>
+    <section class="ta-card" aria-labelledby="portfolios-heading">
+        <h2 id="portfolios-heading" class="ta-card-title">Portfolios</h2>
         <p class="ta-card-sub">@(LedgerAccounts.Count == 0 ? "Linking accounts is the next step to open." : Updated)</p>
-        <div class="ta-groups-total"><span>All accounts</span><span>@Money(LedgerAccounts.Sum(AccountGroups.Contribution), 2)</span></div>
-        @foreach (var group in AccountGroups.All)
-        {
-            var accounts = LedgerAccounts.In(group);
-            <details class="ta-group" open="@(accounts.Count > 0)">
-                <summary>
-                    <span><span class="ta-group-name">@group.Name</span><span class="ta-group-kinds">@group.Kinds</span></span>
-                    <span>@(accounts.Count > 0 ? Money(accounts.Sum(account => account.MarketValue ?? 0m) * (group.IsDebt ? -1 : 1), 2) : "")</span>
-                </summary>
-                <div class="ta-group-accounts">
-                    @foreach (var account in accounts)
-                    {
-                        <a @key="account.AccountId" class="ta-group-account" href="@($"accounts/{account.AccountId}")"><span>@account.Name</span><span>@Money(account.MarketValue, 2)</span></a>
-                    }
-                    @if (accounts.Count == 0)
-                    {
-                        <div class="ta-group-empty">Linking: coming soon</div>
-                    }
-                    else if (group.Page is { } groupPage)
-                    {
-                        <a class="ta-group-all" href="@groupPage">All @group.Name.ToLowerInvariant() →</a>
-                    }
-                </div>
-            </details>
-        }
+        <div class="ta-tree">
+            @foreach (var portfolio in portfolios)
+            {
+                @Branch(portfolio)
+            }
+            @if (unfiled.Count > 0)
+            {
+                <details class="ta-group" open>
+                    <summary><span class="ta-group-name">Not in a portfolio</span><span></span></summary>
+                    <div class="ta-group-accounts">
+                        @foreach (var account in unfiled)
+                        {
+                            <a @key="account.AccountId" class="ta-group-account" href="@($"accounts/{account.AccountId}")"><span>@account.Name</span><span>@Money(account.MarketValue, 2)</span></a>
+                        }
+                    </div>
+                </details>
+            }
+        </div>
     </section>
 
     <div class="ta-dashboard-main">
-        <h2 class="ta-greeting">Hello, @FirstName!</h2>
-
         @if (LedgerProblem is not null)
         {
             <div class="ta-status" role="status"><span class="ta-chip ta-chip-warning">Ledger</span><span>@LedgerProblem</span></div>
         }
 
-        @if (LedgerAccounts.In(AccountGroups.All[1]) is { Count: > 0 } investments)
+        @foreach (var portfolio in favorites)
         {
-            <section class="ta-card" aria-labelledby="investments-heading">
-                <h2 id="investments-heading" class="ta-card-title"><a href="investments">Investments</a></h2>
-                <p class="ta-card-sub">Measured at each close, deposits taken out.</p>
-                <table class="ta-account-rows">
-                    <thead><tr><th scope="col">Account</th><th scope="col">Worth</th><th scope="col">Return</th><th scope="col" class="ta-optional">Volatility</th><th scope="col">Sharpe</th></tr></thead>
-                    <tbody>
-                        @foreach (var account in investments)
-                        {
-                            <tr @key="account.AccountId">
-                                <td><a href="@($"accounts/{account.AccountId}")">@account.Name</a></td>
-                                <td>@Money(account.MarketValue)</td>
-                                <td>@Percent(account.Performance?.TotalReturn)</td>
-                                <td class="ta-optional">@Percent(account.Performance?.Volatility)</td>
-                                <td>@Number(account.Performance?.SharpeRatio)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+            <section @key="portfolio.PortfolioId" class="ta-card ta-portfolio-card" aria-label="@portfolio.Name">
+                <PortfolioCard Portfolio="portfolio" Link="true" />
             </section>
         }
-
+        @if (favorites.Count == 0 && portfolios.Count > 0)
+        {
+            <section class="ta-card">
+                <p class="ta-card-sub">Your starred portfolios show here. Open a portfolio in the tree to see it in full.</p>
+            </section>
+        }
     </div>
 </div>
 
 @code {
-    private string FirstName => (Person?.DisplayName ?? "").Split([' ', '@'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+    /// <summary>A portfolio in the tree: its name and value, then its portfolios and its accounts, open.</summary>
+    private RenderFragment Branch(PortfolioView portfolio) =>
+        @<details @key="portfolio.PortfolioId" class="ta-group ta-tree-portfolio" open>
+            <summary>
+                <span class="ta-tree-name">
+                    @if (portfolio.IsFavorite)
+                    {
+                        <span class="ta-star" title="Starred: on your dashboard" aria-label="Starred">★</span>
+                    }
+                    <a class="ta-group-name" href="@($"portfolios/{portfolio.PortfolioId}")">@portfolio.Name</a>
+                </span>
+                <span>@Money(portfolio.MarketValue, 2)</span>
+            </summary>
+            <div class="ta-group-accounts">
+                @foreach (var child in portfolio.Portfolios)
+                {
+                    @Branch(child)
+                }
+                @foreach (var account in portfolio.Accounts)
+                {
+                    <a @key="account.AccountId" class="ta-group-account" href="@($"accounts/{account.AccountId}")"><span>@account.Name</span><span>@Money(account.MarketValue, 2)</span></a>
+                }
+                @if (portfolio.Portfolios.Count == 0 && portfolio.Accounts.Count == 0)
+                {
+                    <div class="ta-group-empty">Empty</div>
+                }
+            </div>
+        </details>;
 }

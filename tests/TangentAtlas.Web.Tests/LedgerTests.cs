@@ -154,6 +154,12 @@ public sealed class StandInLedger : HttpMessageHandler
 
     public List<string> Requests { get; } = [];
 
+    /// <summary>The person's user key in the Joe 10's tenant.</summary>
+    public const string MyUserId = "5a000000-0000-0000-0000-0000000000a1";
+
+    /// <summary>Whether the person has starred the Joe 10 portfolio.</summary>
+    public bool IsStarred { get; set; } = true;
+
     /// <summary>Wakes the waiting long polls, as a commit would (they answer with whatever is now true).</summary>
     public void Wake()
     {
@@ -202,6 +208,13 @@ public sealed class StandInLedger : HttpMessageHandler
             }
 
             return Ok(!IsMember ? "[]" : AlsoInAnotherTenant ? $"[\"{OtherTenant}\",\"{Tenant}\"]" : $"[\"{Tenant}\"]");
+        }
+
+        // Who the person is in a tenant: their own user key (in the Joe 10's tenant only; elsewhere they have no favorites).
+        var me = System.Text.RegularExpressions.Regex.Match(request.RequestUri.AbsolutePath, "^/v1/tenants/([0-9a-f-]{36})/me$");
+        if (me.Success)
+        {
+            return me.Groups[1].Value == Tenant ? Ok($"{{\"userId\":\"{MyUserId}\"}}") : new HttpResponseMessage(HttpStatusCode.NotFound);
         }
 
         var match = System.Text.RegularExpressions.Regex.Match(request.RequestUri.AbsolutePath, "^/v1/tenants/([0-9a-f-]{36})/changes$");
@@ -260,7 +273,7 @@ public sealed class StandInLedger : HttpMessageHandler
 
     private static LedgerSyncTable<T> Rows<T>(params T[] rows) => new() { Rows = rows };
 
-    private static LedgerSyncChanges Snapshot(Guid tenantId)
+    private LedgerSyncChanges Snapshot(Guid tenantId)
     {
         if (tenantId == Guid.Parse(OtherTenant))
         {
@@ -298,6 +311,16 @@ public sealed class StandInLedger : HttpMessageHandler
                 new AccountDayDto { AccountId = account, Date = new DateOnly(2026, 10, 16), Value = 990_730.22m, Flow = 0m, Return = -0.0092m },
                 new AccountDayDto { AccountId = account, Date = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, Flow = 0m, Return = -0.0045m }),
             AccountFlow = Rows(new AccountFlowDto { AccountId = account, NetContributions = 1_000_000m }),
+            Favorite = Rows<FavoriteDto>(IsStarred ? [new FavoriteDto { UserId = Guid.Parse(MyUserId), PortfolioId = portfolio, Position = 0 }, new FavoriteDto { UserId = Guid.NewGuid(), PortfolioId = portfolio, Position = 0 }] : [new FavoriteDto { UserId = Guid.NewGuid(), PortfolioId = portfolio, Position = 0 }]),
+            Restriction = Rows(new RestrictionDto { PortfolioId = portfolio, Scheme = "Ticker", Code = "META" }),
+            PortfolioDay = Rows(
+                new PortfolioDayDto { PortfolioId = portfolio, Date = new DateOnly(2026, 10, 15), Value = 999_978.82m, Flow = 1_000_000m },
+                new PortfolioDayDto { PortfolioId = portfolio, Date = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, Flow = 0m, Return = -0.0045m }),
+            PortfolioStatistic = Rows(new PortfolioStatisticDto
+            {
+                PortfolioId = portfolio, From = new DateOnly(2026, 10, 15), Through = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, NetFlows = 1_000_000m, Returns = 21,
+                TotalReturn = 0.048568m, AnnualizedReturn = 0.766676m, Volatility = 0.255758m, SharpeRatio = 2.187468m, MaximumDrawdown = 0.04146m, IsRanked = true,
+            }),
             AccountStatistic = Rows(new AccountStatisticDto
             {
                 AccountId = account, From = new DateOnly(2026, 10, 15), Through = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, NetFlows = 1_000_000m, Returns = 21,
@@ -394,22 +417,52 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
     private readonly HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     [Fact]
-    public async Task TheDashboardGroupsTheAccountsAndTotalsWhatThePersonOwns()
+    public async Task TheDashboardShowsThePortfolioTreeAndACardForEachStarredPortfolio()
     {
         factory.Ledger.IsMember = true;
         var html = WebUtility.HtmlDecode(await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken));
 
-        Assert.Contains("All accounts", html);
-        Assert.Contains("$1,048,545.32", html);                       // the investments group, and all accounts
-        Assert.Contains("Linking: coming soon", html);                // banking, assets, liabilities
-        Assert.Contains($"href=\"accounts/{StandInLedger.Account}\"", html);
-        Assert.Contains("href=\"investments\"", html);
-        Assert.DoesNotContain("Net worth", html);                     // its chart is gone for now
-        Assert.DoesNotContain("<polyline", html);
-        Assert.Contains("2.19", html);                                // the Sharpe ratio, in the investments card
-        // The status bar: the score of all investments (one account here, so its Sharpe ratio), under the top bar.
-        Assert.Matches(@"class=""ta-status-bar"" aria-label=""Score: All investments""[\s\S]*?ta-score-value"">2\.19</div>", html);
-        Assert.DoesNotContain("Your rules", html);
+        // The tree: the Joe 10 portfolio, starred, its name opening its page, holding its account; the household is never
+        // shown.
+        Assert.Matches(@"ta-tree-portfolio[\s\S]*?ta-star[\s\S]*?href=""portfolios/4a6f6531-3020-7061-7065-7200000000a2"">Joe 10</a>[\s\S]*?\$1,048,545\.32[\s\S]*?href=""accounts/" + StandInLedger.Account, html);
+        Assert.DoesNotContain(">Household<", html);
+        Assert.DoesNotContain("Not in a portfolio", html);
+
+        // The card of the starred portfolio (the person's own favorite; another user's is not theirs), in Ken's layout.
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "ta-portfolio-card\""));
+        Assert.Contains("aria-label=\"Joe 10: MSFT $561k, AAPL $360k, Cash $128k\"", html);
+        Assert.Contains("Since October 15, 2026", html);
+        Assert.Matches(@"Return so far</span><span class=""ta-plan-value"">4\.9%", html);   // under a year: not annualized
+        Assert.Matches(@"Sharpe ratio</span><span class=""ta-plan-value"">2\.19", html);
+        Assert.Matches(@"Worst drop</span><span class=""ta-plan-value"">−4\.1%", html);
+        Assert.Matches(@"\$1,000,000 grew to</span><span class=""ta-plan-value"">\$1,049k", html);
+
+        // Gone for now: the status bar, the greeting, the accounts grouped by type.
+        Assert.DoesNotContain("ta-status-bar", html);
+        Assert.DoesNotContain("Hello,", html);
+        Assert.DoesNotContain("Linking: coming soon", html);
+    }
+
+    [Fact]
+    public async Task ThePortfolioPageShowsItsCardContentsModelAndHoldings()
+    {
+        factory.Ledger.IsMember = true;
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/portfolios/4a6f6531-3020-7061-7065-7200000000a2", TestContext.Current.CancellationToken));
+
+        Assert.Matches("<div class=\"ta-app-title\">.*Dashboard.*›</span> Joe 10", html.ReplaceLineEndings(" "));
+        Assert.Contains("Portfolio · ★ Starred", html);
+        Assert.Contains("aria-label=\"Joe 10: MSFT $561k, AAPL $360k, Cash $128k\"", html);
+        Assert.Contains("<polyline", html);                                        // its value at each close
+        // The pane on the left: what it holds, its account opening the account's page, each row's menu not yet active.
+        Assert.Matches(@"<nav class=""ta-card ta-portfolio-pane""[\s\S]*?In Joe 10[\s\S]*?href=""accounts/" + StandInLedger.Account + @"""[\s\S]*?aria-label=""Manage Joe 10"" disabled|<nav class=""ta-card ta-portfolio-pane""[\s\S]*?In Joe 10[\s\S]*?href=""accounts/" + StandInLedger.Account + @"""[\s\S]*?disabled[^>]*aria-label=""Manage Joe 10""", html);
+        Assert.Contains("Tangent Atlas Paper Brokerage ••0010", html);
+        Assert.DoesNotContain("In this portfolio", html);
+        Assert.Contains("Invested by the Joe 10 model.", html);
+        Assert.Contains("Restricted list: META.", html);
+        Assert.Contains("1,100", html);                                            // its MSFT shares, across its accounts
+
+        var other = WebUtility.HtmlDecode(await client.GetStringAsync($"/portfolios/{Guid.NewGuid()}", TestContext.Current.CancellationToken));
+        Assert.Contains("Not one of your portfolios", other);
     }
 
     [Fact]
@@ -422,6 +475,7 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
             var html = WebUtility.HtmlDecode(await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken));
 
             Assert.Contains("Smith Trust", html);
+            Assert.Contains("Not in a portfolio", html);   // the other tenant's account is in no portfolio: still shown
             Assert.Contains($"href=\"accounts/{StandInLedger.Account}\"", html);   // the Joe 10, in the second tenant
             Assert.Contains("$1,048,545.32", html);
         }
@@ -534,7 +588,7 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
 
         Assert.DoesNotContain("Your net worth", html);
         Assert.DoesNotContain("When the storm hits", html);
-        Assert.Contains("href=\"investments\"", html);
+        Assert.Contains("href=\"investments\"", html);   // in the menu
         Assert.Contains("Sign out", html);
     }
 
@@ -547,16 +601,43 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.Contains("Not one of your accounts", html);
         Assert.DoesNotContain("AAPL", html);
     }
+}
 
+/// <summary>
+/// A person who has starred nothing.  A site of its own: the site keeps each person's live ledger between requests, so a
+/// test that has already loaded a starred portfolio would show it here.
+/// </summary>
+public class NothingStarredTests(SignedInLedgerSiteFactory factory) : IClassFixture<SignedInLedgerSiteFactory>
+{
+    [Fact]
+    public async Task TheDashboardSaysWhereStarredPortfoliosGo()
+    {
+        factory.Ledger.IsMember = true;
+        factory.Ledger.IsStarred = false;
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken));
+
+        Assert.DoesNotContain("ta-portfolio-card\"", html);
+        Assert.DoesNotContain("ta-star", html);
+        Assert.Contains("Your starred portfolios show here.", html);
+        Assert.Contains("href=\"portfolios/4a6f6531-3020-7061-7065-7200000000a2\"", html);   // still in the tree
+    }
+}
+
+/// <summary>
+/// A person who belongs to no tenant.  A site of its own, for the same reason as <see cref="NothingStarredTests"/>.
+/// </summary>
+public class NoTenantTests(SignedInLedgerSiteFactory factory) : IClassFixture<SignedInLedgerSiteFactory>
+{
     [Fact]
     public async Task APersonWithNoTenantSeesThePageAsBefore()
     {
         factory.Ledger.IsMember = false;
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         var html = await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain("Paper money", html);
         Assert.Contains("Linking accounts is the next step to open.", html);
-        factory.Ledger.IsMember = true;
     }
 }
 

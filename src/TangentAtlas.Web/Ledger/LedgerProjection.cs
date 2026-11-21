@@ -16,9 +16,15 @@ public static class LedgerProjection
     /// </summary>
     /// <param name="tenantIds">The person's tenants, as the ledger lists them.</param>
     /// <param name="replica">The Replica that holds them.</param>
-    public static LedgerView Project(IReadOnlyList<Guid> tenantIds, AtlasLedger.Model.Ledger replica)
+    /// <param name="myUserIds">The person's own user key in each tenant, as the ledger told them: what their favorites are
+    /// keyed by.  A tenant missing here shows no favorites.</param>
+    public static LedgerView Project(IReadOnlyList<Guid> tenantIds, AtlasLedger.Model.Ledger replica, IReadOnlyDictionary<Guid, Guid>? myUserIds = null)
     {
+        myUserIds ??= new Dictionary<Guid, Guid>();
+        var favorites = new List<PortfolioView>();
         var accounts = new List<AccountView>();
+        var portfolios = new List<PortfolioView>();
+        var unfiled = new List<AccountView>();
         DateTimeOffset? asOf = null;
         foreach (var tenantId in tenantIds)
         {
@@ -29,7 +35,27 @@ public static class LedgerProjection
 
             lock (partition.SyncRoot)
             {
-                accounts.AddRange(partition.Accounts.OrderBy(account => account.AccountId).Select(account => Project(account, partition)));
+                var views = partition.Accounts.OrderBy(account => account.AccountId).Select(account => Project(account, partition)).ToArray();
+                accounts.AddRange(views);
+                var byId = views.ToDictionary(view => view.AccountId);
+
+                // The household is the root and is never shown: the tree starts at its portfolios.  A portfolio outside the
+                // tree is shown at the top too, so nothing disappears.
+                var top = partition.Nodes
+                    .Where(node => node.NodeType == NodeType.Household && node.NodeStatus == NodeStatus.Active)
+                    .SelectMany(household => Children(household))
+                    .Concat(partition.Portfolios.Select(portfolio => portfolio.Node).Where(node => node.EdgeByChild is null).OrderBy(node => node.DisplayName, StringComparer.CurrentCulture))
+                    .Where(node => node.NodeType == NodeType.Portfolio && node.NodeStatus == NodeStatus.Active);
+                var starred = myUserIds.TryGetValue(tenantId, out var me)
+                    ? partition.Favorites.Where(favorite => favorite.UserId == me).OrderBy(favorite => favorite.Position).Select(favorite => favorite.PortfolioId).ToArray()
+                    : [];
+                var tops = top.Select(node => ProjectPortfolio(node, byId, [], starred)).ToArray();
+                portfolios.AddRange(tops);
+                var all = tops.SelectMany(Flatten).ToDictionary(portfolio => portfolio.PortfolioId);
+                favorites.AddRange(starred.Where(all.ContainsKey).Select(portfolioId => all[portfolioId]));
+                unfiled.AddRange(partition.Accounts
+                    .Where(account => account.Node.NodeStatus == NodeStatus.Active && account.Node.EdgeByChild?.Parent is not { NodeType: NodeType.Portfolio, NodeStatus: NodeStatus.Active })
+                    .Select(account => byId[account.AccountId]));
                 foreach (var price in partition.EffectivePrices)
                 {
                     asOf = asOf is null || price.AsOf > asOf ? price.AsOf : asOf;
@@ -37,8 +63,96 @@ public static class LedgerProjection
             }
         }
 
-        return new LedgerView(tenantIds, asOf, accounts);
+        return new LedgerView(tenantIds, asOf, accounts, portfolios, unfiled, favorites);
     }
+
+    /// <summary>A node's children, in the household's order (position, then name).</summary>
+    private static IEnumerable<Node> Children(Node node) =>
+        node.EdgesByParent.OrderBy(edge => edge.Position).ThenBy(edge => edge.Child.DisplayName, StringComparer.CurrentCulture).Select(edge => edge.Child);
+
+    private static PortfolioView ProjectPortfolio(Node node, IReadOnlyDictionary<Guid, AccountView> accounts, HashSet<Guid> seen, IReadOnlyCollection<Guid> starred)
+    {
+        seen.Add(node.NodeId);
+        var children = Children(node).Where(child => child.NodeStatus == NodeStatus.Active && !seen.Contains(child.NodeId)).ToArray();
+        var portfolios = children.Where(child => child.NodeType == NodeType.Portfolio).Select(child => ProjectPortfolio(child, accounts, seen, starred)).ToArray();
+        var direct = children.Where(child => child.NodeType == NodeType.Account && accounts.ContainsKey(child.NodeId)).Select(child => accounts[child.NodeId]).ToArray();
+        var all = direct.Concat(portfolios.SelectMany(AllAccounts)).ToArray();
+        decimal? worth = all.Any(account => account.MarketValue is null) ? null : all.Sum(account => account.MarketValue!.Value);
+        var statistics = node.Portfolio?.PortfolioStatistic;
+        return new PortfolioView(
+            node.NodeId,
+            string.IsNullOrWhiteSpace(node.DisplayName) ? "Portfolio" : node.DisplayName,
+            worth,
+            AddUp(all.SelectMany(account => account.Holdings), worth),
+            statistics is null
+                ? null
+                : new PerformanceView(statistics.From, statistics.Through, statistics.Returns, statistics.TotalReturn, statistics.AnnualizedReturn, statistics.Volatility, statistics.SharpeRatio, statistics.MaximumDrawdown, statistics.IsRanked),
+            statistics?.NetFlows ?? 0m,
+            portfolios,
+            direct,
+            starred.Contains(node.NodeId),
+            node.Portfolio?.PortfolioDays.OrderBy(day => day.Date).Select(day => new DayView(day.Date, day.Value, day.Flow, day.Return)).ToArray() ?? [],
+            GoverningModel(node, out var inherited)?.Name,
+            inherited,
+            Lineage(node).SelectMany(ancestor => ancestor.Portfolio?.Restrictions ?? []).Select(restriction => restriction.Code).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray());
+    }
+
+    /// <summary>A portfolio and every portfolio in it, at any depth.</summary>
+    public static IEnumerable<PortfolioView> Flatten(PortfolioView portfolio) => portfolio.Portfolios.SelectMany(Flatten).Prepend(portfolio);
+
+    /// <summary>A portfolio, wherever it is in the person's tree.</summary>
+    public static PortfolioView? FindPortfolio(LedgerView? view, Guid portfolioId) =>
+        view?.Portfolios.SelectMany(Flatten).FirstOrDefault(portfolio => portfolio.PortfolioId == portfolioId);
+
+    /// <summary>A node and its parents, nearest first, stopping before a loop comes round.</summary>
+    private static IEnumerable<Node> Lineage(Node node)
+    {
+        var seen = new HashSet<Guid>();
+        for (var current = node; current is not null && seen.Add(current.NodeId); current = current.EdgeByChild?.Parent)
+        {
+            yield return current;
+        }
+    }
+
+    /// <summary>The model that governs a portfolio: its own, or the nearest active parent's.</summary>
+    private static Model? GoverningModel(Node node, out bool inherited)
+    {
+        inherited = false;
+        foreach (var current in Lineage(node))
+        {
+            if (current.Portfolio is { Model: { } model } && current.NodeStatus == NodeStatus.Active)
+            {
+                inherited = current.NodeId != node.NodeId;
+                return model;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Every account in a portfolio, at any depth.</summary>
+    public static IEnumerable<AccountView> AllAccounts(PortfolioView portfolio) => portfolio.Accounts.Concat(portfolio.Portfolios.SelectMany(AllAccounts));
+
+    /// <summary>Holdings added up across accounts, asset by asset: the largest first, cash last.</summary>
+    private static HoldingView[] AddUp(IEnumerable<HoldingView> holdings, decimal? worth) =>
+        holdings
+            .GroupBy(holding => (holding.Symbol, holding.IsCash))
+            .Select(group =>
+            {
+                var first = group.First();
+                decimal? value = group.Any(holding => holding.MarketValue is null) ? null : group.Sum(holding => holding.MarketValue!.Value);
+                return first with
+                {
+                    Quantity = group.Sum(holding => holding.Quantity),
+                    MarketValue = value,
+                    Weight = value is { } amount && worth is > 0m ? amount / worth.Value : null,
+                    TargetWeight = null,
+                };
+            })
+            .OrderBy(holding => holding.IsCash)
+            .ThenByDescending(holding => holding.MarketValue ?? 0m)
+            .ThenBy(holding => holding.Symbol, StringComparer.Ordinal)
+            .ToArray();
 
     private static AccountView Project(Account account, LedgerPartition partition)
     {

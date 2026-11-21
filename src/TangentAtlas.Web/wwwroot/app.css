@@ -1524,6 +1524,155 @@ h1:focus {
     font-size: 14px;
 }
 
+/* The household's tree: a portfolio inside another sits indented, without its own box. */
+.ta-tree-portfolio .ta-tree-portfolio {
+    border: 0;
+    border-top: 1px solid var(--ta-border);
+    border-radius: 0;
+    margin-top: 0;
+}
+
+    .ta-tree-portfolio .ta-tree-portfolio summary {
+        padding: 8px 0;
+    }
+
+    .ta-tree-portfolio .ta-tree-portfolio .ta-group-accounts {
+        padding: 0 0 4px 16px;
+    }
+
+/* A portfolio card: Ken's layout from Your plan, with the portfolio's worth beside its name. */
+.ta-portfolio-card .ta-holdings {
+    max-width: none;
+}
+
+.ta-portfolio-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.ta-portfolio-card-worth {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+}
+
+.ta-portfolio-card .ta-plan-stats {
+    gap: 12px 36px;
+}
+
+.ta-portfolio-card .ta-plan-value {
+    font-size: 26px;
+}
+
+.ta-portfolio-card a.ta-holdings-name {
+    color: var(--ta-text);
+    text-decoration: none;
+}
+
+    .ta-portfolio-card a.ta-holdings-name:hover {
+        color: var(--ta-green-dark);
+    }
+
+/* The tree: a starred portfolio's star, then its name, which opens its page. */
+.ta-tree-name {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+    .ta-tree-name a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+        .ta-tree-name a:hover {
+            color: var(--ta-green-dark);
+        }
+
+.ta-star {
+    color: #c99a06;
+}
+
+/* The portfolio page. */
+.ta-portfolio-card .ta-chart {
+    margin-top: 28px;
+}
+
+.ta-muted {
+    color: var(--ta-text-muted);
+    font-size: 13px;
+}
+
+.ta-portfolio-contents {
+    padding: 0;
+}
+
+/* The portfolio page's pane: what the portfolio holds, each row with its (for now inactive) menu. */
+.ta-pane-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ta-pane-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px solid var(--ta-border);
+}
+
+    .ta-pane-row .ta-group-account {
+        flex: 1;
+        min-width: 0;
+        border-top: 0;
+    }
+
+.ta-pane-detail {
+    display: block;
+    font-size: 12.5px;
+    color: var(--ta-text-muted);
+}
+
+.ta-icon-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--ta-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ta-text-muted);
+    font-size: 16px;
+    line-height: 1;
+}
+
+    .ta-icon-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+.ta-placeholder-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+    .ta-placeholder-actions .ta-btn {
+        border: 1px solid var(--ta-border);
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+.ta-placeholder {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px dashed var(--ta-border);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--ta-text-muted);
+}
+
 /* A chart of value over time. */
 .ta-chart {
     position: relative;

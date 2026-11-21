@@ -1,0 +1,39 @@
+@* A portfolio in Ken's layout from Your plan: its name and worth, the holdings bar, when it is measured from, and the row
+   of figures.  On the dashboard the name opens the portfolio's page. *@
+@{ var bar = PortfolioCards.Bar(Portfolio); }
+<div class="ta-holdings">
+    <div class="ta-portfolio-card-head">
+        @if (Link)
+        {
+            <a class="ta-holdings-name" href="@($"portfolios/{Portfolio.PortfolioId}")">@Portfolio.Name</a>
+        }
+        else
+        {
+            <span class="ta-holdings-name">@Portfolio.Name</span>
+        }
+        <span class="ta-portfolio-card-worth">@(Portfolio.MarketValue?.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("en-US")) ?? "—")</span>
+    </div>
+    @if (bar.Count > 0)
+    {
+        <div class="ta-holdings-bar" role="img" aria-label="@PortfolioCards.Describe(Portfolio, bar)">
+            @foreach (var segment in bar)
+            {
+                <div class="ta-holdings-seg @segment.CssClass" style="width: @(segment.Width.ToString(System.Globalization.CultureInfo.InvariantCulture))%"><b>@segment.Label</b>@segment.Amount</div>
+            }
+        </div>
+    }
+    <p class="ta-caption">@PortfolioCards.Since(Portfolio)</p>
+    <div class="ta-plan-stats">
+        @foreach (var figure in PortfolioCards.Figures(Portfolio))
+        {
+            <div class="ta-plan-stat"><span>@figure.Label</span><span class="ta-plan-value">@figure.Value</span></div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public PortfolioView Portfolio { get; set; } = default!;
+
+    /// <summary>Whether the name opens the portfolio's page.</summary>
+    [Parameter] public bool Link { get; set; }
+}

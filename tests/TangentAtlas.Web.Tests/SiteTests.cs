@@ -270,11 +270,10 @@ public class SignedInTests(SignedInSiteFactory factory) : IClassFixture<SignedIn
     private readonly HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     [Fact]
-    public async Task TheSignedInPageGreetsThePersonAndSaysWhereTheBetaStands()
+    public async Task TheSignedInPageSaysWhereTheBetaStands()
     {
         var html = await client.GetStringAsync("/dashboard", TestContext.Current.CancellationToken);
 
-        Assert.Contains("Hello, pat!", html);   // Entra's placeholder name "unknown" is not shown
         Assert.Contains("Linking accounts is the next step to open.", html);
         Assert.Contains("action=\"/account/signout\"", html);
     }

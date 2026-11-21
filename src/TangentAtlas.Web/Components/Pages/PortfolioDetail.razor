@@ -1,0 +1,126 @@
+@page "/portfolios/{PortfolioId:guid}"
+@attribute [Authorize]
+@layout TangentAtlas.Web.Components.Layout.AppLayout
+@inherits LedgerPage
+@* One portfolio.  On the left, a pane of what it holds (its portfolios, then its accounts), to open and, once the site
+   can write to the ledger, to manage.  On the right, its card and its value at each close, its model and restricted list,
+   and its holdings across its accounts.  A first version: the three controls, their five-year history and Commit Changes
+   come here next, in the place marked. *@
+<PageTitle>@(Portfolio?.Name ?? "Portfolio") · Tangent Atlas</PageTitle>
+<SectionContent SectionName="app-title">
+    <a class="ta-back" href="dashboard">Dashboard</a>
+    <span class="ta-crumb">›</span> @(Portfolio?.Name ?? "Portfolio")
+</SectionContent>
+
+<div class="@(Portfolio is null ? "ta-dashboard-main" : "ta-dashboard")">
+    @if (Portfolio is { } held)
+    {
+        <nav class="ta-card ta-portfolio-pane" aria-labelledby="pane-heading">
+            <div class="ta-pane-head">
+                <h2 id="pane-heading" class="ta-card-title">In @held.Name</h2>
+                <button type="button" class="ta-icon-btn" disabled title="Add a portfolio or an account: coming with editing" aria-label="Add">+</button>
+            </div>
+            <div class="ta-group-accounts ta-portfolio-contents">
+                @foreach (var child in held.Portfolios)
+                {
+                    <div @key="child.PortfolioId" class="ta-pane-row">
+                        <a class="ta-group-account" href="@($"portfolios/{child.PortfolioId}")">
+                            <span class="ta-tree-name">@if (child.IsFavorite) { <span class="ta-star" aria-label="Starred">★</span> }<span>@child.Name</span></span>
+                            <span>@Money(child.MarketValue, 2)</span>
+                        </a>
+                        <button type="button" class="ta-icon-btn" disabled title="Rename, star, move or remove: coming with editing" aria-label="@($"Manage {child.Name}")">⋯</button>
+                    </div>
+                }
+                @foreach (var account in held.Accounts)
+                {
+                    <div @key="account.AccountId" class="ta-pane-row">
+                        <a class="ta-group-account" href="@($"accounts/{account.AccountId}")">
+                            <span>@account.Name<span class="ta-pane-detail">@account.Institution@(account.Number is { } number ? $" {number}" : "")</span></span>
+                            <span>@Money(account.MarketValue, 2)</span>
+                        </a>
+                        <button type="button" class="ta-icon-btn" disabled title="Rename, move or close: coming with editing" aria-label="@($"Manage {account.Name}")">⋯</button>
+                    </div>
+                }
+                @if (held.Portfolios.Count == 0 && held.Accounts.Count == 0)
+                {
+                    <div class="ta-group-empty">Nothing in it yet.</div>
+                }
+            </div>
+        </nav>
+    }
+
+    <div class="ta-dashboard-main">
+    @if (LedgerProblem is not null)
+    {
+        <div class="ta-status" role="status"><span class="ta-chip ta-chip-warning">Ledger</span><span>@LedgerProblem</span></div>
+    }
+
+    @if (Portfolio is not { } portfolio)
+    {
+        if (LedgerProblem is null)
+        {
+            <section class="ta-card">
+                <h1 class="ta-card-title">Not one of your portfolios</h1>
+                <p class="ta-card-sub">This portfolio isn't among the portfolios you can see.</p>
+            </section>
+        }
+    }
+    else
+    {
+        <section class="ta-card ta-portfolio-card" aria-labelledby="portfolio-heading">
+            <div class="ta-eyebrow">Portfolio@(portfolio.IsFavorite ? " · ★ Starred" : "")</div>
+            <h1 id="portfolio-heading" class="ta-visually-hidden">@portfolio.Name</h1>
+            <PortfolioCard Portfolio="portfolio" />
+            <ValueChart Points="Values(portfolio)" />
+        </section>
+
+        <section class="ta-card" aria-labelledby="model-heading">
+            <h2 id="model-heading" class="ta-card-title">Model</h2>
+            <p class="ta-card-sub">
+                @if (portfolio.ModelName is { } model)
+                {
+                    @($"Invested by the {model} model{(portfolio.IsModelInherited ? ", from the portfolio it is in" : "")}.")
+                }
+                else
+                {
+                    @("No model: tracked, not managed.")
+                }
+            </p>
+            <p class="ta-card-sub">@($"Restricted list: {(portfolio.Restricted.Count == 0 ? "none" : string.Join(", ", portfolio.Restricted))}.")</p>
+            <div class="ta-placeholder">The three controls (the number of companies, the risk, the restricted list), what these settings would have done over five years, and Commit Changes come here.</div>
+        </section>
+
+        <section class="ta-card" aria-labelledby="holdings-heading">
+            <h2 id="holdings-heading" class="ta-card-title">Holdings</h2>
+            <p class="ta-card-sub">Across all its accounts.</p>
+            <table class="ta-paper-holdings">
+                <thead>
+                    <tr><th scope="col">Holding</th><th scope="col">Shares</th><th scope="col">Price</th><th scope="col">Value</th><th scope="col">Weight</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var holding in portfolio.Holdings)
+                    {
+                        <tr @key="holding.Symbol">
+                            <th scope="row"><span class="ta-details-name"><Picture Kind="@(holding.IsCash ? PictureKind.Currency : PictureKind.Ticker)" Code="@holding.Symbol" /><span>@holding.Name</span></span></th>
+                            <td>@holding.Quantity.ToString("N0", English)</td>
+                            <td><MovingNumber Value="holding.Price" Text="@Money(holding.Price, 2)" /></td>
+                            <td>@Money(holding.MarketValue, 2)</td>
+                            <td>@Percent(holding.Weight)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid PortfolioId { get; set; }
+
+    private PortfolioView? Portfolio => LedgerProjection.FindPortfolio(Ledger, PortfolioId);
+
+    /// <summary>Its value at each close.</summary>
+    private static IReadOnlyList<(DateOnly Date, decimal Value)> Values(PortfolioView portfolio) =>
+        portfolio.Days.Where(day => day.Value is not null).Select(day => (day.Date, day.Value!.Value)).ToArray();
+}
