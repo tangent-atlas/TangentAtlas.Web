@@ -77,9 +77,12 @@ public static class PortfolioCards
         ];
     }
 
-    /// <summary>When the figures are measured from, for the caption.</summary>
-    public static string Since(PortfolioView portfolio) =>
-        portfolio.Performance?.From is { } from ? $"Since {from.ToString("MMMM d, yyyy", CultureInfo.GetCultureInfo("en-US"))}" : "Not measured yet: figures follow its first close.";
+    /// <summary>
+    /// When the figures are measured from, for the caption; null before the first measured close (the figures' dashes say
+    /// so already).
+    /// </summary>
+    public static string? Since(PortfolioView portfolio) =>
+        portfolio.Performance?.From is { } from ? $"Since {from.ToString("MMMM d, yyyy", CultureInfo.GetCultureInfo("en-US"))}" : null;
 
     /// <summary>A dollar amount, short: $830k, $1,054k; under $10,000 in full.</summary>
     public static string Short(decimal? value)

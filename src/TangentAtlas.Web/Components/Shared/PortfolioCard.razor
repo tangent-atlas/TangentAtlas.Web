@@ -22,7 +22,10 @@
             }
         </div>
     }
-    <p class="ta-caption">@PortfolioCards.Since(Portfolio)</p>
+    @if (PortfolioCards.Since(Portfolio) is { } since)
+    {
+        <p class="ta-caption">@since</p>
+    }
     <div class="ta-plan-stats">
         @foreach (var figure in PortfolioCards.Figures(Portfolio))
         {

@@ -1428,7 +1428,7 @@ h1:focus {
 
 .ta-dashboard {
     display: grid;
-    grid-template-columns: minmax(260px, 340px) 1fr;
+    grid-template-columns: minmax(340px, 440px) 1fr;   /* the tree: names, numbers and values side by side */
     gap: 20px;
     align-items: start;
 }

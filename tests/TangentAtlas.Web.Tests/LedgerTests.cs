@@ -323,7 +323,7 @@ public sealed class StandInLedger : HttpMessageHandler
             {
                 PortfolioId = portfolio, From = new DateOnly(2026, 10, 15), Through = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, NetFlows = 1_000_000m, Returns = 21,
                 TotalReturn = 0.048568m, AnnualizedReturn = 0.766676m, Volatility = 0.255758m, SharpeRatio = 2.187468m, MaximumDrawdown = 0.04146m, IsRanked = true,
-            }) : Rows<PortfolioStatisticDto>([]),
+            }) : Rows(new PortfolioStatisticDto { PortfolioId = portfolio, NetFlows = 0m }),   // as the ledger writes it before its first measured close
             AccountStatistic = Rows(new AccountStatisticDto
             {
                 AccountId = account, From = new DateOnly(2026, 10, 15), Through = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, NetFlows = 1_000_000m, Returns = 21,
@@ -652,7 +652,8 @@ public class UnmeasuredPortfolioTests(SignedInLedgerSiteFactory factory) : IClas
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         var html = WebUtility.HtmlDecode(await client.GetStringAsync("/portfolios/4a6f6531-3020-7061-7065-7200000000a2", TestContext.Current.CancellationToken));
 
-        Assert.Contains("Not measured yet: figures follow its first close.", html);
+        Assert.DoesNotContain("Not measured yet", html);                    // the figures' dashes say so
+        Assert.DoesNotContain("<p class=\"ta-caption\">Since", html);
         Assert.Matches(@"\$1,000,000 grew to</span><span class=""ta-plan-value"">\$1,049k", html);
     }
 }

@@ -78,7 +78,9 @@ public static class LedgerProjection
         var direct = children.Where(child => child.NodeType == NodeType.Account && accounts.ContainsKey(child.NodeId)).Select(child => accounts[child.NodeId]).ToArray();
         var all = direct.Concat(portfolios.SelectMany(AllAccounts)).ToArray();
         decimal? worth = all.Any(account => account.MarketValue is null) ? null : all.Sum(account => account.MarketValue!.Value);
-        var statistics = node.Portfolio?.PortfolioStatistic;
+        // The ledger writes a portfolio's statistics row before it has measured a close (no From, nothing paid in yet):
+        // until it has one, there are no statistics to show.
+        var statistics = node.Portfolio?.PortfolioStatistic is { From: not null } measured ? measured : null;
         return new PortfolioView(
             node.NodeId,
             string.IsNullOrWhiteSpace(node.DisplayName) ? "Portfolio" : node.DisplayName,
