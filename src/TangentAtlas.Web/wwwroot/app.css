@@ -1594,6 +1594,32 @@ h1:focus {
     color: #c99a06;
 }
 
+/* A portfolio opens and closes by its triangle; it starts closed. */
+.ta-tree-portfolio > summary .ta-tree-name::before {
+    content: "▸";
+    display: inline-block;
+    width: 1em;
+    color: var(--ta-text-muted);
+    transition: transform 0.15s ease;
+}
+
+.ta-tree-portfolio[open] > summary .ta-tree-name::before {
+    transform: rotate(90deg);
+}
+
+/* An account in the tree: indented under its portfolio, in lighter type, as banks list them ("Checking ••4821"). */
+.ta-tree-account {
+    padding-left: 1.4em;
+    font-size: 14px;
+    color: var(--ta-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ta-tree-portfolio > summary .ta-tree-name::before {
+        transition: none;
+    }
+}
+
 /* The portfolio page. */
 .ta-portfolio-card .ta-chart {
     margin-top: 28px;

@@ -3,8 +3,8 @@
 @layout TangentAtlas.Web.Components.Layout.AppLayout
 @inherits LedgerPage
 @* The signed-in home: the household's tree of portfolios on the left (the household itself is never shown; a name opens
-   its page), and a card for each portfolio the person has starred on the right, in the layout of Ken's portfolios on
-   Your plan. *@
+   its page; only the first level shows until a portfolio is expanded, and this browser remembers what was expanded), and
+   a card for each portfolio the person has starred on the right, in the layout of Ken's portfolios on Your plan. *@
 <PageTitle>Dashboard · Tangent Atlas</PageTitle>
 <SectionContent SectionName="app-title">Dashboard</SectionContent>
 
@@ -25,7 +25,7 @@
                     <div class="ta-group-accounts">
                         @foreach (var account in unfiled)
                         {
-                            <a @key="account.AccountId" class="ta-group-account" href="@($"accounts/{account.AccountId}")"><span>@account.Name</span><span>@Money(account.MarketValue, 2)</span></a>
+                            @AccountRow(account)
                         }
                     </div>
                 </details>
@@ -55,9 +55,13 @@
 </div>
 
 @code {
-    /// <summary>A portfolio in the tree: its name and value, then its portfolios and its accounts, open.</summary>
+    /// <summary>
+    /// A portfolio in the tree: its name and value, then, when expanded, its portfolios and its accounts.  Closed at first;
+    /// the site's tree script reopens what this browser had expanded (the open attribute is the browser's, so a re-render
+    /// doesn't close it).
+    /// </summary>
     private RenderFragment Branch(PortfolioView portfolio) =>
-        @<details @key="portfolio.PortfolioId" class="ta-group ta-tree-portfolio" open>
+        @<details @key="portfolio.PortfolioId" class="ta-group ta-tree-portfolio" data-tree-id="@portfolio.PortfolioId">
             <summary>
                 <span class="ta-tree-name">
                     @if (portfolio.IsFavorite)
@@ -75,7 +79,7 @@
                 }
                 @foreach (var account in portfolio.Accounts)
                 {
-                    <a @key="account.AccountId" class="ta-group-account" href="@($"accounts/{account.AccountId}")"><span>@account.Name</span><span>@Money(account.MarketValue, 2)</span></a>
+                    @AccountRow(account)
                 }
                 @if (portfolio.Portfolios.Count == 0 && portfolio.Accounts.Count == 0)
                 {
@@ -83,4 +87,14 @@
                 }
             </div>
         </details>;
+
+    /// <summary>
+    /// An account in the tree, as banks list them: its name and the last four of its number ("Checking ••4821"), in
+    /// lighter type than a portfolio; its institution on hover.
+    /// </summary>
+    private RenderFragment AccountRow(AccountView account) =>
+        @<a @key="account.AccountId" class="ta-group-account ta-tree-account" href="@($"accounts/{account.AccountId}")" title="@account.Institution">
+            <span>@account.Name@(account.Number is { } number ? $" {number}" : "")</span>
+            <span>@Money(account.MarketValue, 2)</span>
+        </a>;
 }

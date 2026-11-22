@@ -160,6 +160,9 @@ public sealed class StandInLedger : HttpMessageHandler
     /// <summary>Whether the person has starred the Joe 10 portfolio.</summary>
     public bool IsStarred { get; set; } = true;
 
+    /// <summary>Whether the ledger has measured the Joe 10 portfolio yet (its statistics exist after its first close).</summary>
+    public bool IsPortfolioMeasured { get; set; } = true;
+
     /// <summary>Wakes the waiting long polls, as a commit would (they answer with whatever is now true).</summary>
     public void Wake()
     {
@@ -292,12 +295,12 @@ public sealed class StandInLedger : HttpMessageHandler
         return new LedgerSyncChanges
         {
             CurrencyRate = Rows(new CurrencyRateDto { FromCurrency = "USD", ToCurrency = "USD", Rate = 1m }),
-            Institution = Rows(new InstitutionDto { InstitutionId = broker, Name = "Tangent Atlas Paper Brokerage", Source = EventSource.Simulator }),
+            Institution = Rows(new InstitutionDto { InstitutionId = broker, Name = "Play Money Brokerage", Source = EventSource.Simulator }),
             Model = Rows(new ModelDto { ModelId = model, Name = "Joe 10", Band = 0.05m }),
             Node = Rows(
                 new NodeDto { NodeId = household, DisplayName = "Household", FullName = "Household", NodeType = NodeType.Household },
                 new NodeDto { NodeId = portfolio, DisplayName = "Joe 10", FullName = "Joe 10", NodeType = NodeType.Portfolio },
-                new NodeDto { NodeId = account, DisplayName = "Joe 10", FullName = "Joe 10 paper account", NodeType = NodeType.Account },
+                new NodeDto { NodeId = account, DisplayName = "Play Money", FullName = "Joe 10's Play Money account", NodeType = NodeType.Account },
                 new NodeDto { NodeId = aapl, DisplayName = "Apple", FullName = "Apple Inc.", NodeType = NodeType.Asset },
                 new NodeDto { NodeId = msft, DisplayName = "Microsoft", FullName = "Microsoft Corporation", NodeType = NodeType.Asset },
                 new NodeDto { NodeId = dollar, DisplayName = "US dollar", FullName = "United States dollar", NodeType = NodeType.Asset }),
@@ -316,11 +319,11 @@ public sealed class StandInLedger : HttpMessageHandler
             PortfolioDay = Rows(
                 new PortfolioDayDto { PortfolioId = portfolio, Date = new DateOnly(2026, 10, 15), Value = 999_978.82m, Flow = 1_000_000m },
                 new PortfolioDayDto { PortfolioId = portfolio, Date = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, Flow = 0m, Return = -0.0045m }),
-            PortfolioStatistic = Rows(new PortfolioStatisticDto
+            PortfolioStatistic = IsPortfolioMeasured ? Rows(new PortfolioStatisticDto
             {
                 PortfolioId = portfolio, From = new DateOnly(2026, 10, 15), Through = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, NetFlows = 1_000_000m, Returns = 21,
                 TotalReturn = 0.048568m, AnnualizedReturn = 0.766676m, Volatility = 0.255758m, SharpeRatio = 2.187468m, MaximumDrawdown = 0.04146m, IsRanked = true,
-            }),
+            }) : Rows<PortfolioStatisticDto>([]),
             AccountStatistic = Rows(new AccountStatisticDto
             {
                 AccountId = account, From = new DateOnly(2026, 10, 15), Through = new DateOnly(2026, 11, 13), Value = 1_048_545.32m, NetFlows = 1_000_000m, Returns = 21,
@@ -427,6 +430,13 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.DoesNotContain(">Household<", html);
         Assert.DoesNotContain("Not in a portfolio", html);
 
+        // The tree starts closed (the browser's script reopens what this browser expanded); an account reads as banks list
+        // them, its name and the last four of its number, with its institution on hover.
+        Assert.Matches(@"<details class=""ta-group ta-tree-portfolio"" data-tree-id=""4a6f6531-3020-7061-7065-7200000000a2"">", html);
+        Assert.DoesNotMatch(@"<details[^>]*ta-tree-portfolio[^>]*\sopen", html);
+        Assert.Matches(@"class=""ta-group-account ta-tree-account"" href=""accounts/" + StandInLedger.Account + @""" title=""Play Money Brokerage"">\s*<span>Play Money ••0010</span>", html);
+        Assert.Contains("js/tree.js", html);
+
         // The card of the starred portfolio (the person's own favorite; another user's is not theirs), in Ken's layout.
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "ta-portfolio-card\""));
         Assert.Contains("aria-label=\"Joe 10: MSFT $561k, AAPL $360k, Cash $128k\"", html);
@@ -453,8 +463,8 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.Contains("aria-label=\"Joe 10: MSFT $561k, AAPL $360k, Cash $128k\"", html);
         Assert.Contains("<polyline", html);                                        // its value at each close
         // The pane on the left: what it holds, its account opening the account's page, each row's menu not yet active.
-        Assert.Matches(@"<nav class=""ta-card ta-portfolio-pane""[\s\S]*?In Joe 10[\s\S]*?href=""accounts/" + StandInLedger.Account + @"""[\s\S]*?aria-label=""Manage Joe 10"" disabled|<nav class=""ta-card ta-portfolio-pane""[\s\S]*?In Joe 10[\s\S]*?href=""accounts/" + StandInLedger.Account + @"""[\s\S]*?disabled[^>]*aria-label=""Manage Joe 10""", html);
-        Assert.Contains("Tangent Atlas Paper Brokerage ••0010", html);
+        Assert.Matches(@"<nav class=""ta-card ta-portfolio-pane""[\s\S]*?In Joe 10[\s\S]*?href=""accounts/" + StandInLedger.Account + @"""[\s\S]*?aria-label=""Manage Play Money"" disabled|<nav class=""ta-card ta-portfolio-pane""[\s\S]*?In Joe 10[\s\S]*?href=""accounts/" + StandInLedger.Account + @"""[\s\S]*?disabled[^>]*aria-label=""Manage Play Money""", html);
+        Assert.Contains("Play Money Brokerage ••0010", html);
         Assert.DoesNotContain("In this portfolio", html);
         Assert.Contains("Invested by the Joe 10 model.", html);
         Assert.Contains("Restricted list: META.", html);
@@ -491,7 +501,7 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         var html = WebUtility.HtmlDecode(await client.GetStringAsync("/investments", TestContext.Current.CancellationToken));
 
         Assert.Contains($"href=\"accounts/{StandInLedger.Account}\"", html);
-        Assert.Contains("Tangent Atlas Paper Brokerage · ••0010", html);
+        Assert.Contains("Play Money Brokerage · ••0010", html);
         Assert.Contains("$1,048,545", html);
         Assert.Contains("4.86%", html);
     }
@@ -563,10 +573,10 @@ public class LedgerAccountsTests(SignedInLedgerSiteFactory factory) : IClassFixt
         factory.Ledger.IsMember = true;
         var html = await client.GetStringAsync($"/accounts/{StandInLedger.Account}", TestContext.Current.CancellationToken);
 
-        Assert.Contains("Joe 10", html);
+        Assert.Contains("Play Money", html);
         Assert.DoesNotContain("Paper money", html);                // the name and the number's last four identify it
         Assert.Contains("Invested by the Joe 10 model.", html);
-        Assert.Matches(@"class=""ta-status-bar"" aria-label=""Score: Joe 10""[\s\S]*?ta-score-value"">2\.19</div>", html);
+        Assert.Matches(@"class=""ta-status-bar"" aria-label=""Score: Play Money""[\s\S]*?ta-score-value"">2\.19</div>", html);
         Assert.Contains("<polyline", html);        // the account's chart stays, last in its card
         Assert.Contains("$1,048,545", html);       // worth
         Assert.Contains("4.86%", html);            // total return
@@ -620,6 +630,30 @@ public class NothingStarredTests(SignedInLedgerSiteFactory factory) : IClassFixt
         Assert.DoesNotContain("ta-star", html);
         Assert.Contains("Your starred portfolios show here.", html);
         Assert.Contains("href=\"portfolios/4a6f6531-3020-7061-7065-7200000000a2\"", html);   // still in the tree
+    }
+}
+
+/// <summary>
+/// A portfolio not measured yet.  A site of its own: a person's live ledger is kept between requests, so a test that
+/// changes the stand-in's rows needs a site no other test has loaded.
+/// </summary>
+public class UnmeasuredPortfolioTests(SignedInLedgerSiteFactory factory) : IClassFixture<SignedInLedgerSiteFactory>
+{
+    /// <summary>
+    /// Before the ledger has measured a portfolio (its first day), its card says what has been put in so far, from its
+    /// accounts, not $0.
+    /// </summary>
+    [Fact]
+    public async Task ACardBeforeItsFirstCloseSaysWhatWasPutIn()
+    {
+        factory.Ledger.IsMember = true;
+        factory.Ledger.IsStarred = true;
+        factory.Ledger.IsPortfolioMeasured = false;
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/portfolios/4a6f6531-3020-7061-7065-7200000000a2", TestContext.Current.CancellationToken));
+
+        Assert.Contains("Not measured yet: figures follow its first close.", html);
+        Assert.Matches(@"\$1,000,000 grew to</span><span class=""ta-plan-value"">\$1,049k", html);
     }
 }
 
@@ -683,7 +717,7 @@ public class LiveLedgerTests(SignedInLedgerSiteFactory factory) : IClassFixture<
             var html = await client.GetStringAsync(page, TestContext.Current.CancellationToken);
 
             Assert.Contains("<!--Blazor:{\"type\":\"server\"", html);   // prerendered, then live over the circuit, frame and all
-            Assert.Contains("Joe 10", html);
+            Assert.Contains("Play Money", html);
         }
 
         foreach (var page in new[] { "/", "/privacy", "/your-plan" })
@@ -699,8 +733,8 @@ public class LiveLedgerTests(SignedInLedgerSiteFactory factory) : IClassFixture<
 
         var html = await client.GetStringAsync($"/accounts/{StandInLedger.Account}", TestContext.Current.CancellationToken);
 
-        Assert.Contains("<title>Joe 10 · Tangent Atlas</title>", html);
-        Assert.Matches("<div class=\"ta-app-title\">.*Investments.*›</span> Joe 10", html.ReplaceLineEndings(" "));
+        Assert.Contains("<title>Play Money · Tangent Atlas</title>", html);
+        Assert.Matches("<div class=\"ta-app-title\">.*Investments.*›</span> Play Money", html.ReplaceLineEndings(" "));
     }
 
     [Fact]

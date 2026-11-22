@@ -87,7 +87,8 @@ public static class LedgerProjection
             statistics is null
                 ? null
                 : new PerformanceView(statistics.From, statistics.Through, statistics.Returns, statistics.TotalReturn, statistics.AnnualizedReturn, statistics.Volatility, statistics.SharpeRatio, statistics.MaximumDrawdown, statistics.IsRanked),
-            statistics?.NetFlows ?? 0m,
+            // Before its first measured close the books have no total yet: what its accounts have had paid in so far.
+            statistics?.NetFlows ?? all.Sum(account => account.NetContributions),
             portfolios,
             direct,
             starred.Contains(node.NodeId),
