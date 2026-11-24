@@ -88,3 +88,6 @@ public sealed record LedgerView(
 
 /// <summary>The ledger couldn't be read (down, or answering with an error); the page says so.</summary>
 public sealed class LedgerUnavailableException(string message, Exception? inner = null) : Exception(message, inner);
+
+/// <summary>The ledger didn't take a change (or the website wouldn't send it); the message is for the person.</summary>
+public sealed class LedgerWriteException(string message, Exception? inner = null) : Exception(message, inner);

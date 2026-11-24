@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
@@ -94,6 +95,8 @@ public static class SiteSignIn
                 client.Timeout = TimeSpan.FromSeconds(75);
             });
             services.AddSingleton<LiveLedgers>();
+            services.TryAddSingleton(TimeProvider.System);
+            services.AddSingleton<MarketReturns>();   // the five-year preview's returns, worked out once and shared
         }
         else
         {

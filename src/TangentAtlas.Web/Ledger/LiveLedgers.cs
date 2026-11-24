@@ -416,6 +416,123 @@ public sealed class LiveLedgers(
         }
 
         /// <summary>
+        /// What a new portfolio needs from each of the person's tenants that has a household to put it in, in the order the
+        /// ledger lists them.
+        /// </summary>
+        public IReadOnlyList<NewPortfolioContext> NewPortfolioContexts()
+        {
+            IReadOnlyList<Guid> listed;
+            Dictionary<Guid, Guid> mine;
+            lock (viewGate)
+            {
+                (listed, mine) = (tenantIds, myUserIds);
+            }
+
+            return listed
+                .Select(tenantId => replica.FindPartition(tenantId) is { } partition ? NewPortfolios.ContextOf(partition, tenantId, mine.TryGetValue(tenantId, out var me) ? me : null) : null)
+                .OfType<NewPortfolioContext>()
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Writes a new portfolio to the ledger as the person (delegated Ledger.Write): its rows in one batch, then its Play
+        /// Money deposit; returns once the person's Replica has the portfolio, so its page can open.
+        /// </summary>
+        /// <returns>The new portfolio's key.</returns>
+        /// <exception cref="LedgerWriteException">The plan has problems, or the ledger refused it.</exception>
+        public async Task<Guid> CreatePortfolioAsync(NewPortfolioPlan plan, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(plan);
+            if (NewPortfolioContexts().FirstOrDefault(context => context.TenantId == plan.TenantId) is not { } context)
+            {
+                throw new LedgerWriteException("That household isn't one of yours.");
+            }
+
+            if (NewPortfolios.Problems(plan, context) is { Count: > 0 } problems)
+            {
+                throw new LedgerWriteException(string.Join(" ", problems));
+            }
+
+            var write = NewPortfolios.Build(plan, context, DateTimeOffset.UtcNow, () => Guid.CreateVersion7());
+            await PostAsync($"v1/tenants/{plan.TenantId}/batch", write.Rows, Json, "The ledger didn't take the new portfolio", cancellationToken);
+            await PostAsync($"v1/tenants/{plan.TenantId}/events", write.Deposit, EventMessages.Options, "The portfolio is there, but its Play Money deposit wasn't taken", cancellationToken);
+
+            // Its rows arrive by the sync; wait (briefly) so the page it opens already shows it.
+            var deadline = DateTimeOffset.UtcNow.AddSeconds(10);
+            while (DateTimeOffset.UtcNow < deadline && !Holds(plan.TenantId, write.PortfolioId, write.AccountId))
+            {
+                await Task.Delay(100, cancellationToken);
+            }
+
+            return write.PortfolioId;
+        }
+
+        /// <summary>
+        /// The raw market history of some tickers (five years and a quarter, with the risk-free rate), from the ledger, as
+        /// the person: a member of the tenant may read it.
+        /// </summary>
+        /// <exception cref="LedgerUnavailableException">The ledger couldn't be read.</exception>
+        public async Task<MarketHistoryAnswer> GetMarketHistoryAsync(Guid tenantId, IReadOnlyList<string> tickers, CancellationToken cancellationToken)
+        {
+            var path = $"v1/tenants/{tenantId}/market/history?tickers={Uri.EscapeDataString(string.Join(',', tickers))}";
+            using var request = new HttpRequestMessage(HttpMethod.Get, path);
+            AtlasLedger.Model.Ledger.AddContractHeaders(request.Headers);
+            await AuthorizeAsync(request, cancellationToken);
+            using var response = await http.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new LedgerUnavailableException($"The ledger answered {(int)response.StatusCode} to {path}.");
+            }
+
+            return await response.Content.ReadFromJsonAsync<MarketHistoryAnswer>(Json, cancellationToken)
+                ?? throw new LedgerUnavailableException("The ledger's market history was empty.");
+        }
+
+        private bool Holds(Guid tenantId, Guid portfolioId, Guid accountId)
+        {
+            if (replica.FindPartition(tenantId) is not { } partition)
+            {
+                return false;
+            }
+
+            lock (partition.SyncRoot)
+            {
+                return partition.FindPortfolio(portfolioId) is not null && partition.FindAccount(accountId) is { AccountFlow: not null };
+            }
+        }
+
+        private async Task PostAsync<T>(string path, T body, JsonSerializerOptions json, string failure, CancellationToken cancellationToken)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body, options: json) };
+            AtlasLedger.Model.Ledger.AddContractHeaders(request.Headers);
+            await AuthorizeAsync(request, cancellationToken);
+            HttpResponseMessage response;
+            try
+            {
+                response = await http.SendAsync(request, cancellationToken);
+            }
+            catch (HttpRequestException exception)
+            {
+                throw new LedgerWriteException($"{failure}: the ledger can't be reached.", exception);
+            }
+
+            using (response)
+            {
+                if (!response.IsSuccessStatusCode)
+                {
+                    var detail = await response.Content.ReadAsStringAsync(cancellationToken);
+                    logger.LogWarning("The ledger answered {Status} to POST {Path}: {Detail}", (int)response.StatusCode, path, detail);
+                    throw new LedgerWriteException(response.StatusCode switch
+                    {
+                        System.Net.HttpStatusCode.Forbidden => $"{failure}: your sign-in doesn't allow changes. Sign out and in again.",
+                        System.Net.HttpStatusCode.NotFound => $"{failure}: that household isn't one of yours.",
+                        _ => $"{failure} ({(int)response.StatusCode}).",
+                    });
+                }
+            }
+        }
+
+        /// <summary>
         /// Follows one tenant until stopped.  Network failures are retried by the client.  A tenant that no longer admits
         /// the person (404) is dropped, as if they had left it; any other refusal stops the whole ledger.
         /// </summary>
@@ -494,6 +611,15 @@ public sealed class LiveLedgerLease : IDisposable
 
     /// <summary>Why the view stopped updating, if it did.</summary>
     public string? Problem => ledger.Problem;
+
+    /// <summary>What a new portfolio needs from each of the person's households.</summary>
+    public IReadOnlyList<NewPortfolioContext> NewPortfolioContexts() => ledger.NewPortfolioContexts();
+
+    /// <summary>The raw market history of some tickers, as the person; see <see cref="LiveLedgers.LiveLedger.GetMarketHistoryAsync"/>.</summary>
+    public Task<MarketHistoryAnswer> GetMarketHistoryAsync(Guid tenantId, IReadOnlyList<string> tickers, CancellationToken cancellationToken) => ledger.GetMarketHistoryAsync(tenantId, tickers, cancellationToken);
+
+    /// <summary>Writes a new portfolio as the person; see <see cref="LiveLedgers.LiveLedger.CreatePortfolioAsync"/>.</summary>
+    public Task<Guid> CreatePortfolioAsync(NewPortfolioPlan plan, CancellationToken cancellationToken) => ledger.CreatePortfolioAsync(plan, cancellationToken);
 
     public void Dispose()
     {

@@ -154,6 +154,12 @@ public sealed class StandInLedger : HttpMessageHandler
 
     public List<string> Requests { get; } = [];
 
+    /// <summary>How many times the market history was asked for.</summary>
+    public int MarketRequests { get; set; }
+
+    /// <summary>What the website wrote, in order: each POST's path and body.</summary>
+    public List<(string Path, string Body)> Writes { get; } = [];
+
     /// <summary>The person's user key in the Joe 10's tenant.</summary>
     public const string MyUserId = "5a000000-0000-0000-0000-0000000000a1";
 
@@ -203,6 +209,11 @@ public sealed class StandInLedger : HttpMessageHandler
             return new HttpResponseMessage(HttpStatusCode.Unauthorized);
         }
 
+        if (request.Method == HttpMethod.Post)
+        {
+            return await WriteAsync(request, cancellationToken);
+        }
+
         if (request.RequestUri.AbsolutePath == "/v1/me/tenants")
         {
             if (TenantsFailWith is { } failure)
@@ -218,6 +229,36 @@ public sealed class StandInLedger : HttpMessageHandler
         if (me.Success)
         {
             return me.Groups[1].Value == Tenant ? Ok($"{{\"userId\":\"{MyUserId}\"}}") : new HttpResponseMessage(HttpStatusCode.NotFound);
+        }
+
+        // Market history: five years and a quarter of weekday closes for any ticker but NOPE, and the risk-free rate.
+        var market = System.Text.RegularExpressions.Regex.Match(request.RequestUri.AbsolutePath, "^/v1/tenants/([0-9a-f-]{36})/market/history$");
+        if (market.Success)
+        {
+            lock (Requests)
+            {
+                MarketRequests++;
+            }
+
+            var asked = System.Web.HttpUtility.ParseQueryString(request.RequestUri.Query)["tickers"]!.Split(',');
+            var through = new DateOnly(2026, 11, 20);
+            var from = through.AddYears(-5).AddMonths(-3);
+            var days = Enumerable.Range(0, through.DayNumber - from.DayNumber + 1).Select(from.AddDays).Where(day => day.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday)).ToArray();
+            var answer = new
+            {
+                from,
+                through,
+                tickers = asked.Where(ticker => ticker != "NOPE").Select(ticker => new
+                {
+                    ticker,
+                    closes = days.Select((day, index) => new { date = day, close = 400m + (index % 7) - (index % 3) + (index / 50m) }),
+                    dividends = Array.Empty<object>(),
+                    splits = Array.Empty<object>(),
+                }),
+                riskFreeRates = new[] { new { date = from, rate = 0.04m } },
+                missing = asked.Where(ticker => ticker == "NOPE").ToDictionary(ticker => ticker, _ => "Its history couldn't be had from the market data vendor."),
+            };
+            return Ok(JsonSerializer.Serialize(answer, Json));
         }
 
         var match = System.Text.RegularExpressions.Regex.Match(request.RequestUri.AbsolutePath, "^/v1/tenants/([0-9a-f-]{36})/changes$");
@@ -262,6 +303,52 @@ public sealed class StandInLedger : HttpMessageHandler
             await Task.WhenAny(changed, Task.Delay(waitUntil - DateTimeOffset.UtcNow, cancellationToken));
             cancellationToken.ThrowIfCancellationRequested();
         }
+    }
+
+    /// <summary>
+    /// Takes a write as the ledger would from a member with Ledger.Write: a batch of inserted rows (the tree's and the
+    /// model's tables come back by the sync), or a transaction (a deposit: its account's net contributions come back).
+    /// </summary>
+    private async Task<HttpResponseMessage> WriteAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var body = await request.Content!.ReadAsStringAsync(cancellationToken);
+        lock (Writes)
+        {
+            Writes.Add((request.RequestUri!.AbsolutePath, body));
+        }
+
+        var match = System.Text.RegularExpressions.Regex.Match(request.RequestUri!.AbsolutePath, "^/v1/tenants/([0-9a-f-]{36})/(batch|events)$");
+        if (!match.Success || match.Groups[1].Value != Tenant)
+        {
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }
+
+        var tenantId = Guid.Parse(Tenant);
+        using var document = JsonDocument.Parse(body);
+        if (match.Groups[2].Value == "events")
+        {
+            var transaction = JsonSerializer.Deserialize<TransactionMessage>(body, EventMessages.Options)!;
+            var deposit = JsonSerializer.Deserialize<CashMovementEvent>(transaction.Events[0].Payload.GetRawText(), Json)!;
+            Publish(tenantId, new LedgerSyncChanges { AccountFlow = Rows(new AccountFlowDto { AccountId = deposit.AccountId, NetContributions = deposit.Items.Sum(item => item.Amount ?? 0m) }) });
+            return Ok(JsonSerializer.Serialize(new TransactionResult(transaction.TransactionId, TransactionStatus.Committed, sequence, []), EventMessages.Options));
+        }
+
+        T[] Of<T>(string table) => [.. document.RootElement.GetProperty("operations").EnumerateArray()
+            .Where(operation => operation.GetProperty("table").GetString() == table)
+            .Select(operation => operation.GetProperty("row").Deserialize<T>(Json)!)];
+        Publish(tenantId, new LedgerSyncChanges
+        {
+            Node = Rows(Of<NodeDto>("Node")),
+            Model = Rows(Of<ModelDto>("Model")),
+            Weight = Rows(Of<WeightDto>("Weight")),
+            Portfolio = Rows(Of<PortfolioDto>("Portfolio")),
+            Account = Rows(Of<AccountDto>("Account")),
+            Edge = Rows(Of<EdgeDto>("Edge")),
+            Favorite = Rows(Of<FavoriteDto>("Favorite")),
+            Symbol = Rows(Of<SymbolDto>("Symbol")),
+            Asset = Rows(Of<AssetDto>("Asset")),
+        });
+        return Ok("[]");
     }
 
     private static HttpResponseMessage Ok(string json) =>

@@ -18,7 +18,7 @@
         <nav class="ta-card ta-portfolio-pane" aria-labelledby="pane-heading">
             <div class="ta-pane-head">
                 <h2 id="pane-heading" class="ta-card-title">In @held.Name</h2>
-                <button type="button" class="ta-icon-btn" disabled title="Add a portfolio or an account: coming with editing" aria-label="Add">+</button>
+                <a class="ta-icon-btn" href="@($"portfolios/new?parent={held.PortfolioId}")" title="Add a portfolio in @held.Name" aria-label="@($"Add a portfolio in {held.Name}")">+</a>
             </div>
             <div class="ta-group-accounts ta-portfolio-contents">
                 @foreach (var child in held.Portfolios)

@@ -38,6 +38,9 @@ public abstract class LedgerPage : ComponentBase, IDisposable
 
     protected IReadOnlyList<AccountView> LedgerAccounts => Ledger?.Accounts ?? [];
 
+    /// <summary>The page's hold on the person's live ledger, for writing to it; null without one.</summary>
+    protected LiveLedgerLease? Lease => lease;
+
     protected override async Task OnInitializedAsync()
     {
         if (AuthenticationState is null)
@@ -92,6 +95,7 @@ public abstract class LedgerPage : ComponentBase, IDisposable
 
     public void Dispose()
     {
+        OnDisposing();
         if (lease is not null)
         {
             lease.Changed -= OnLedgerChanged;
@@ -100,6 +104,11 @@ public abstract class LedgerPage : ComponentBase, IDisposable
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>What a page lets go of when it closes, besides the ledger.</summary>
+    protected virtual void OnDisposing()
+    {
     }
 
     private void OnLedgerChanged() => _ = InvokeAsync(() =>

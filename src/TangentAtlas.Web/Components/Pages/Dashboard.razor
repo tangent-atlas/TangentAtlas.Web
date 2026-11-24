@@ -11,7 +11,13 @@
 @{ var portfolios = Ledger?.Portfolios ?? []; var unfiled = Ledger?.Unfiled ?? []; var favorites = Ledger?.Favorites ?? []; }
 <div class="ta-dashboard">
     <section class="ta-card" aria-labelledby="portfolios-heading">
-        <h2 id="portfolios-heading" class="ta-card-title">Portfolios</h2>
+        <div class="ta-pane-head">
+            <h2 id="portfolios-heading" class="ta-card-title">Portfolios</h2>
+            @if (portfolios.Count > 0)
+            {
+                <a class="ta-btn ta-btn-small ta-btn-outline" href="portfolios/new">+ New portfolio</a>
+            }
+        </div>
         <p class="ta-card-sub">@(LedgerAccounts.Count == 0 ? "Linking accounts is the next step to open." : Updated)</p>
         <div class="ta-tree">
             @foreach (var portfolio in portfolios)

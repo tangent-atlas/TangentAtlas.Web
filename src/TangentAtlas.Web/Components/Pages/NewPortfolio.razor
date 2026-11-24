@@ -1,0 +1,284 @@
+@page "/portfolios/new"
+@attribute [Authorize]
+@layout TangentAtlas.Web.Components.Layout.AppLayout
+@inherits LedgerPage
+@using AtlasLedger.Model
+@inject IJSRuntime JS
+@inject MarketReturns Returns
+@* A new portfolio, in three steps: what it holds (chosen holdings by percent: fixed weights, rebalanced), how much is
+   invested (fully, or under a volatility target the ledger's thermostat holds), and its name and place.  It gets a Play
+   Money account with the money it starts with; the ledger buys at its next rebalance.  A benchmark is made the same way:
+   SPY, a volatility target set to the Joe 10's measured volatility.  Below the form, what the settings would have done over
+   the last five years, worked out in the browser on every change (wwwroot/js/preview.js) from daily returns our server
+   works out once and shares. *@
+<PageTitle>New portfolio · Tangent Atlas</PageTitle>
+<SectionContent SectionName="app-title">
+    <a class="ta-back" href="dashboard">Dashboard</a>
+    <span class="ta-crumb">›</span> New portfolio
+</SectionContent>
+
+<div class="ta-dashboard-main ta-new-portfolio">
+    @if (LedgerProblem is not null)
+    {
+        <div class="ta-status" role="status"><span class="ta-chip ta-chip-warning">Ledger</span><span>@LedgerProblem</span></div>
+    }
+
+    @if (context is null)
+    {
+        if (LedgerProblem is null)
+        {
+            <section class="ta-card">
+                <h1 class="ta-card-title">New portfolio</h1>
+                <p class="ta-card-sub">There's no household to add a portfolio to yet.</p>
+            </section>
+        }
+    }
+    else
+    {
+        <form class="ta-card ta-form" @ref="form" @onsubmit="CreateAsync" @onsubmit:preventDefault>
+            <h1 class="ta-card-title">New portfolio</h1>
+            <p class="ta-card-sub">A portfolio of Play Money, set up in three steps. A benchmark is made the same way: SPY, say, at the Joe 10's volatility.</p>
+
+            <fieldset class="ta-step" disabled="@IsDisabled">
+                <legend><span class="ta-step-number">1</span> What it holds</legend>
+                <p class="ta-hint">Each holding's percent of what is invested. Rebalanced back to these percents.</p>
+                <div class="ta-holdings-edit" role="table" aria-label="Holdings">
+                    <div class="ta-holdings-edit-head" role="row">
+                        <span role="columnheader">Ticker</span><span role="columnheader">Kind</span><span role="columnheader">Percent</span><span></span>
+                    </div>
+                    @for (var index = 0; index < rows.Count; index++)
+                    {
+                        var row = rows[index];
+                        var known = IsKnown(row.Ticker);
+                        <div @key="row" class="ta-holdings-edit-row" role="row" data-preview-row>
+                            <input class="ta-input ta-input-ticker" aria-label="Ticker" placeholder="SPY" maxlength="10" @bind="row.Ticker" data-preview-ticker />
+                            <select class="ta-input" aria-label="Kind" @bind="row.Kind" disabled="@known" title="@(known ? "Already in your household" : "")">
+                                <option value="@AssetType.Fund">Fund</option>
+                                <option value="@AssetType.Equity">Stock</option>
+                            </select>
+                            <span class="ta-input-suffix"><input class="ta-input ta-input-number" type="number" min="0" max="100" step="any" aria-label="Percent" @bind="row.Percent" data-preview-percent />%</span>
+                            <button type="button" class="ta-icon-btn" aria-label="Remove" title="Remove" @onclick="() => rows.Remove(row)" disabled="@(rows.Count == 1)">×</button>
+                        </div>
+                    }
+                    <div class="ta-holdings-edit-foot">
+                        <button type="button" class="ta-btn ta-btn-small ta-btn-outline" @onclick="AddRow">+ Add a holding</button>
+                        <span class="@(Math.Abs(Total - 100m) < 0.001m ? "" : "ta-warning-text")">Total @Total.ToString("0.##", English)%</span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="ta-step" disabled="@IsDisabled">
+                <legend><span class="ta-step-number">2</span> How much is invested</legend>
+                <label class="ta-radio"><input type="radio" name="cash-rule" checked="@(!useTarget)" @onchange="() => useTarget = false" data-preview-full /> Fully invested</label>
+                <label class="ta-radio"><input type="radio" name="cash-rule" checked="@useTarget" @onchange="() => useTarget = true" /> Volatility target: the rest is kept in cash so the mix runs at this volatility</label>
+                @if (useTarget)
+                {
+                    <div class="ta-slider">
+                        <input type="range" min="0.01" max="1" step="0.01" aria-label="Volatility target" @bind="target" data-preview-target />
+                        <input class="ta-input ta-input-number" type="number" min="0.01" max="1" step="0.01" aria-label="Volatility target, as a number" @bind="target" />
+                        <span class="ta-slider-reading" data-preview-reading>@target.ToString("0.00", English) · @((target * 100m).ToString("0.#", English))% a year</span>
+                    </div>
+                    @if (context.Volatilities.Count > 0)
+                    {
+                        <p class="ta-hint">
+                            Measured so far:
+                            @foreach (var measured in context.Volatilities)
+                            {
+                                <button type="button" class="ta-btn ta-btn-small ta-btn-outline ta-measured" title="Use this figure" @onclick="() => target = Math.Round(measured.Volatility, 2)">@measured.Name @measured.Volatility.ToString("0.00", English)</button>
+                            }
+                        </p>
+                    }
+                    <p class="ta-hint">Measured each day over the last 21 trading days of closes, as the Joe 10's thermostat.</p>
+                }
+            </fieldset>
+
+            <fieldset class="ta-step" disabled="@IsDisabled">
+                <legend><span class="ta-step-number">3</span> Name and place</legend>
+                <label class="ta-field">
+                    <span>Name</span>
+                    <input class="ta-input" maxlength="@NewPortfolios.MaximumNameLength" placeholder="SPY Benchmark" @bind="name" />
+                </label>
+                <label class="ta-field">
+                    <span>Where it goes</span>
+                    <select class="ta-input" @bind="parentId">
+                        @foreach (var place in context.Places)
+                        {
+                            <option value="@place.NodeId">@(place.Depth == 0 ? "Top level, beside your other portfolios" : string.Concat(Enumerable.Repeat("— ", place.Depth)) + "In " + place.Name)</option>
+                        }
+                    </select>
+                </label>
+                <label class="ta-field">
+                    <span>Play Money to start with</span>
+                    <span class="ta-input-prefix">$<input class="ta-input ta-input-money" type="number" min="1" step="1" @bind="startingCash" data-preview-start /></span>
+                </label>
+                <label class="ta-check"><input type="checkbox" @bind="star" /> Star it: show it on my dashboard</label>
+            </fieldset>
+
+            @if (problems.Count > 0)
+            {
+                <ul class="ta-problems" role="alert">
+                    @foreach (var problem in problems)
+                    {
+                        <li>@problem</li>
+                    }
+                </ul>
+            }
+
+            <div class="ta-form-actions">
+                <button type="submit" class="ta-btn ta-btn-primary" disabled="@IsDisabled">@(saving ? "Creating…" : "Create portfolio")</button>
+                <a class="ta-btn ta-btn-outline" href="dashboard">Cancel</a>
+                <span class="ta-hint">It buys at the next rebalance: 3:45 pm New York time, on a market day.</span>
+            </div>
+        </form>
+
+        <section class="ta-card ta-preview" aria-labelledby="preview-heading">
+            <h2 id="preview-heading" class="ta-card-title">History · what these settings would have done over the last five years</h2>
+            @if (previewProblem is not null)
+            {
+                <p class="ta-card-sub">@previewProblem</p>
+            }
+            @* Drawn by the browser (wwwroot/js/preview.js) on every change; the page never renders into it. *@
+            <div @ref="panel" class="ta-preview-panel" aria-live="polite"><p class="ta-card-sub">Loading the history…</p></div>
+        </section>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "parent")] private Guid? Parent { get; set; }
+
+    private readonly List<HoldingRow> rows = [new() { Ticker = "SPY", Percent = 100m, Kind = AssetType.Fund }];
+    private NewPortfolioContext? context;
+    private bool useTarget = true;
+    private decimal target = 0.15m;
+    private string name = "";
+    private Guid parentId;
+    private decimal startingCash = 1_000_000m;
+    private bool star = true;
+    private bool saving;
+    private List<string> problems = [];
+    private ElementReference form;
+    private ElementReference panel;
+    private DotNetObjectReference<NewPortfolio>? self;
+    private string? previewProblem;
+
+    private decimal Total => rows.Sum(row => row.Percent);
+
+    /// <summary>Disabled until the page is live (a form can't be sent from the first, static rendering) and while saving.</summary>
+    private bool IsDisabled => saving || !RendererInfo.IsInteractive;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        context = Lease?.NewPortfolioContexts().FirstOrDefault();
+        if (context is not null)
+        {
+            parentId = Parent is { } parent && context.Places.Any(place => place.NodeId == parent) ? parent : context.HouseholdId;
+        }
+    }
+
+    /// <summary>
+    /// Once the page is live: the returns of the household's tickers and the common choices, worked out on our server (or
+    /// taken from what it has already worked out), handed to the browser, which draws the history from then on.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || context is null || Lease is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var preload = context.Tickers.Where(pair => pair.Value.Kind != AssetType.Cash).Select(pair => pair.Key)
+                .Concat(rows.Select(row => row.Ticker ?? ""))
+                .Concat(["SPY", "QQQ"]);
+            var data = await Returns.GetAsync(FetchAsync, preload, CancellationToken.None);
+            self ??= DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("tangentPreview.attach", form, panel, data, self);
+        }
+        catch (LedgerUnavailableException exception)
+        {
+            previewProblem = $"The history couldn't be loaded: {exception.Message}";
+            StateHasChanged();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page closed while the history was loading.
+        }
+    }
+
+    /// <summary>The returns of tickers the browser hasn't got yet (one typed into the form).</summary>
+    [JSInvokable]
+    public async Task<PreviewData> LoadPreviewTickers(string[] tickers)
+    {
+        if (context is null || Lease is null)
+        {
+            return new PreviewData(0, 0, 0, [], [], tickers.ToDictionary(ticker => ticker, _ => "Not signed in."));
+        }
+
+        try
+        {
+            return await Returns.GetAsync(FetchAsync, tickers.Take(20), CancellationToken.None);
+        }
+        catch (LedgerUnavailableException exception)
+        {
+            return new PreviewData(0, 0, 0, [], [], tickers.ToDictionary(ticker => ticker, _ => exception.Message));
+        }
+    }
+
+    private Task<MarketHistoryAnswer> FetchAsync(IReadOnlyList<string> tickers, CancellationToken cancellationToken) =>
+        Lease!.GetMarketHistoryAsync(context!.TenantId, tickers, cancellationToken);
+
+    protected override void OnDisposing() => self?.Dispose();
+
+    private bool IsKnown(string? ticker) => context?.Tickers.ContainsKey(NewPortfolios.Normalize(ticker)) == true;
+
+    private void AddRow() => rows.Add(new HoldingRow { Kind = AssetType.Equity });
+
+    private async Task CreateAsync()
+    {
+        if (Lease is null || context is null || saving)
+        {
+            return;
+        }
+
+        var plan = new NewPortfolioPlan(
+            context.TenantId,
+            name,
+            parentId,
+            rows.Select(row => new NewHolding(row.Ticker ?? "", row.Percent, IsKnown(row.Ticker) ? context.Tickers[NewPortfolios.Normalize(row.Ticker)].Kind : row.Kind)).ToArray(),
+            useTarget ? target : null,
+            startingCash,
+            star);
+        problems = [.. NewPortfolios.Problems(plan, context)];
+        if (problems.Count > 0)
+        {
+            return;
+        }
+
+        saving = true;
+        try
+        {
+            var portfolioId = await Lease.CreatePortfolioAsync(plan, CancellationToken.None);
+            Navigation.NavigateTo($"portfolios/{portfolioId}");
+        }
+        catch (LedgerWriteException exception)
+        {
+            problems = [exception.Message];
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    /// <summary>A row of the holdings being edited.</summary>
+    private sealed class HoldingRow
+    {
+        public string? Ticker { get; set; }
+
+        public decimal Percent { get; set; }
+
+        public AssetType Kind { get; set; } = AssetType.Equity;
+    }
+}

@@ -2105,3 +2105,164 @@ h1:focus {
         font-size: 18px;
     }
 }
+
+/* A link that looks like the small square buttons (the portfolio pane's +). */
+a.ta-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+
+    a.ta-icon-btn:hover {
+        color: var(--ta-green-dark);
+        border-color: var(--ta-green-dark);
+    }
+
+/* New portfolio: a form in three numbered steps. */
+.ta-new-portfolio { max-width: 760px; }
+
+.ta-form .ta-step {
+    border: none;
+    border-top: 1px solid var(--ta-border);
+    margin: 20px 0 0;
+    padding: 16px 0 0;
+    min-width: 0;
+}
+
+.ta-form legend {
+    font-weight: 600;
+    font-size: 15px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ta-step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--ta-green-light);
+    color: var(--ta-green-dark);
+    font-size: 12px;
+}
+
+.ta-hint {
+    color: var(--ta-text-muted);
+    font-size: 13px;
+    margin: 6px 0 10px;
+}
+
+.ta-input {
+    font: inherit;
+    font-size: 14px;
+    padding: 7px 10px;
+    border: 1px solid var(--ta-border-strong);
+    border-radius: 8px;
+    background: var(--ta-bg);
+    color: var(--ta-text);
+    box-sizing: border-box;
+}
+
+    .ta-input:focus-visible {
+        outline: 2px solid var(--ta-green-dark);
+        outline-offset: 1px;
+    }
+
+.ta-input-ticker { width: 100%; text-transform: uppercase; }
+.ta-input-number { width: 90px; text-align: right; }
+.ta-input-money { width: 160px; text-align: right; }
+.ta-input-suffix, .ta-input-prefix { display: inline-flex; align-items: center; gap: 4px; }
+
+.ta-holdings-edit-head, .ta-holdings-edit-row {
+    display: grid;
+    grid-template-columns: minmax(90px, 1fr) 110px 130px 28px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.ta-holdings-edit-head {
+    font-size: 12px;
+    color: var(--ta-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ta-holdings-edit-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.ta-warning-text { color: var(--ta-moved-down); }
+
+.ta-radio {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    margin: 6px 0;
+    font-size: 14px;
+}
+
+.ta-slider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 0 4px 24px;
+    flex-wrap: wrap;
+}
+
+    .ta-slider input[type=range] {
+        width: 260px;
+        accent-color: var(--ta-green-dark);
+    }
+
+.ta-slider-reading { font-variant-numeric: tabular-nums; color: var(--ta-text-body); }
+.ta-measured { margin: 2px 4px; }
+
+.ta-field {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+    .ta-field select.ta-input { max-width: 340px; }
+
+.ta-problems {
+    margin: 16px 0 0;
+    padding: 10px 14px 10px 30px;
+    border-radius: 8px;
+    background: var(--ta-moved-down-wash);
+    color: var(--ta-moved-down);
+    font-size: 14px;
+}
+
+.ta-form-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+    .ta-form-actions .ta-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 520px) {
+    .ta-field { grid-template-columns: 1fr; gap: 4px; }
+    .ta-holdings-edit-head, .ta-holdings-edit-row { grid-template-columns: 1fr 80px 100px 28px; }
+}
+
+/* The five-year preview, drawn by the browser below the New portfolio form. */
+.ta-preview { max-width: 760px; }
+.ta-preview .ta-plan-stats { margin: 8px 0 12px; }
